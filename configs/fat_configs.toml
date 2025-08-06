@@ -21,21 +21,21 @@
     maxopenconn = 10
 
   [mysql.read]
-    addr = "127.0.0.1:3306"
-    name = "go_gin_api"
-    pass = "123456789"
-    user = "root"
+    addr = "gz-cdb-pepynap7.sql.tencentcdb.com:63623"
+    name = "marriage_system"
+    pass = "19970901Zyt"
+    user = "marriage_system"
 
   [mysql.write]
-    addr = "127.0.0.1:3306"
-    name = "go_gin_api"
-    pass = "123456789"
-    user = "root"
+    addr = "gz-cdb-pepynap7.sql.tencentcdb.com:63623"
+    name = "marriage_system"
+    pass = "19970901Zyt"
+    user = "marriage_system"
 
 [redis]
   addr = "127.0.0.1:6379"
   db = "0"
   maxretries = 3
-  minidleconns = 5
+  minidleconns = 20
   pass = ""
-  poolsize = 10
+  poolsize = 50

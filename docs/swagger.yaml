@@ -1,5 +1,221 @@
 basePath: /
 definitions:
+  account.accountData:
+    properties:
+      belongGroup:
+        $ref: '#/definitions/account.orgInfo'
+        description: 所属组
+      belongTeam:
+        $ref: '#/definitions/account.orgInfo'
+        description: 所属团队
+      createdTimestamp:
+        description: 创建时间戳
+        type: integer
+      id:
+        description: 账户ID
+        type: string
+      lastLoginTimestamp:
+        description: 最后登录时间戳
+        type: integer
+      modifiedTimestamp:
+        description: 修改时间戳
+        type: integer
+      nickname:
+        description: 姓名
+        type: string
+      phone:
+        description: 手机号
+        type: string
+      roleType:
+        description: '角色类型: company_manager, group_manager, team_manager, employee'
+        type: string
+      status:
+        description: '状态: enabled, disabled'
+        type: string
+      username:
+        description: 用户名
+        type: string
+    type: object
+  account.accountHistoryData:
+    properties:
+      accountId:
+        description: 账户ID
+        type: string
+      content:
+        additionalProperties: true
+        description: 操作内容
+        type: object
+      id:
+        description: 历史记录ID
+        type: string
+      operateTimestamp:
+        description: 操作时间戳
+        type: integer
+      operateType:
+        description: 操作类型
+        type: string
+      operator_nickname:
+        description: 操作人姓名
+        type: string
+      operator_username:
+        description: 操作人用户名
+        type: string
+      operatorRoleType:
+        description: 操作人角色类型
+        type: string
+    type: object
+  account.createRequest:
+    properties:
+      belongGroup:
+        description: 所属组
+        type: string
+      nickname:
+        description: 姓名
+        type: string
+      password:
+        description: 密码
+        type: string
+      phone:
+        description: 手机号
+        type: string
+      roleType:
+        description: 角色类型
+        type: string
+      username:
+        description: 用户名
+        type: string
+    required:
+    - nickname
+    - password
+    - username
+    type: object
+  account.createResponse:
+    properties:
+      data:
+        $ref: '#/definitions/account.accountData'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  account.detailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/account.accountData'
+      success:
+        type: boolean
+    type: object
+  account.historiesResponse:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/account.accountHistoryData'
+        type: array
+      pageSize:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+    type: object
+  account.listResponse:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/account.accountData'
+        type: array
+      pageSize:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+    type: object
+  account.loginRequest:
+    properties:
+      password:
+        description: 密码
+        type: string
+      username:
+        description: 用户名
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  account.loginResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+      token:
+        type: string
+      userInfo:
+        $ref: '#/definitions/account.accountData'
+    type: object
+  account.logoutResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  account.orgInfo:
+    properties:
+      createdTimestamp:
+        description: 创建时间戳
+        type: integer
+      currentCnt:
+        description: 当前成员数量
+        type: integer
+      id:
+        description: 组织ID
+        type: integer
+      modifiedTimestamp:
+        description: 修改时间戳
+        type: integer
+      nickname:
+        description: 组织名称
+        type: string
+      username:
+        description: 组织用户名
+        type: string
+    type: object
+  account.updateRequest:
+    properties:
+      accountID:
+        description: 账户ID
+        type: string
+      belongGroup:
+        description: 所属组
+        type: string
+      belongTeam:
+        description: 所属团队
+        type: string
+      nickname:
+        description: 姓名
+        type: string
+      phone:
+        description: 手机号
+        type: string
+      status:
+        description: 状态
+        type: string
+    required:
+    - accountID
+    type: object
+  account.updateResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   admin.ListMenuData:
     properties:
       id:
@@ -127,6 +343,9 @@ definitions:
     properties:
       token:
         description: 用户身份标识
+        type: string
+      username:
+        description: 用户名
         type: string
     type: object
   admin.logoutResponse:
@@ -576,6 +795,150 @@ definitions:
       id:
         description: 主键ID
         type: integer
+    type: object
+  org_info.childrenResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/org_info.orgInfoData'
+        type: array
+      success:
+        type: boolean
+    type: object
+  org_info.createRequest:
+    properties:
+      maxCnt:
+        description: 最大成员数量
+        type: integer
+      orgDescription:
+        description: 组织描述
+        type: string
+      orgLevel:
+        description: '组织层级: 1-组, 2-团队'
+        type: integer
+      orgName:
+        description: 组织名称
+        type: string
+      orgType:
+        description: '组织类型: group, team'
+        type: string
+      parentOrgId:
+        description: 父组织ID
+        type: string
+    required:
+    - orgName
+    - orgType
+    type: object
+  org_info.createResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  org_info.deleteResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  org_info.detailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/org_info.orgInfoData'
+      success:
+        type: boolean
+    type: object
+  org_info.listResponse:
+    properties:
+      current:
+        type: integer
+      data:
+        items:
+          $ref: '#/definitions/org_info.orgInfoData'
+        type: array
+      pageSize:
+        type: integer
+      success:
+        type: boolean
+      total:
+        type: integer
+    type: object
+  org_info.orgInfoData:
+    properties:
+      createdTimestamp:
+        description: 创建时间戳
+        type: integer
+      currentCnt:
+        description: 当前成员数量
+        type: integer
+      id:
+        description: 组织ID
+        type: string
+      maxCnt:
+        description: 最大成员数量
+        type: integer
+      modifiedTimestamp:
+        description: 修改时间戳
+        type: integer
+      orgDescription:
+        description: 组织描述
+        type: string
+      orgLevel:
+        description: 组织层级
+        type: integer
+      orgName:
+        description: 组织名称
+        type: string
+      orgType:
+        description: 组织类型
+        type: string
+      parentOrgId:
+        description: 父组织ID
+        type: string
+    type: object
+  org_info.parentResponse:
+    properties:
+      data:
+        $ref: '#/definitions/org_info.orgInfoData'
+      success:
+        type: boolean
+    type: object
+  org_info.updateRequest:
+    properties:
+      maxCnt:
+        description: 最大成员数量
+        type: integer
+      orgDescription:
+        description: 组织描述
+        type: string
+      orgId:
+        description: 组织ID
+        type: string
+      orgLevel:
+        description: 组织层级
+        type: integer
+      orgName:
+        description: 组织名称
+        type: string
+      orgType:
+        description: 组织类型
+        type: string
+      parentOrgId:
+        description: 父组织ID
+        type: string
+    required:
+    - orgId
+    type: object
+  org_info.updateResponse:
+    properties:
+      message:
+        type: string
+      success:
+        type: boolean
     type: object
   tool.dbData:
     properties:
@@ -1647,7 +2010,7 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: 返回token和用户名
           schema:
             $ref: '#/definitions/admin.loginResponse'
         "400":
@@ -2134,6 +2497,494 @@ paths:
       summary: 发送消息
       tags:
       - API.tool
+  /api/user/{username}:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 通过用户名或用户ID获取管理员详情
+      parameters:
+      - description: 用户名或用户ID
+        in: path
+        name: username
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/admin.detailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      security:
+      - LoginToken: []
+      summary: 通过用户名或用户ID获取管理员详情
+      tags:
+      - API.admin
+  /api/v1/account-histories:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 分页获取账户操作历史记录
+      parameters:
+      - description: 账户ID
+        in: query
+        name: accountId
+        type: string
+      - description: 账户用户名
+        in: query
+        name: accountUsername
+        type: string
+      - default: 1
+        description: 当前页码
+        in: query
+        name: current
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.historiesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取账户历史记录
+      tags:
+      - API.account
+  /api/v1/accounts:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 分页获取账户列表，支持搜索和筛选
+      parameters:
+      - default: 1
+        description: 当前页码
+        in: query
+        name: current
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 用户名搜索
+        in: query
+        name: username
+        type: string
+      - description: 姓名搜索
+        in: query
+        name: nickname
+        type: string
+      - description: 角色类型筛选
+        in: query
+        name: roleType
+        type: string
+      - description: 状态筛选
+        in: query
+        name: status
+        type: string
+      - description: 手机号搜索
+        in: query
+        name: phone
+        type: string
+      - description: 所属组筛选
+        in: query
+        name: belongGroup
+        type: string
+      - description: 所属团队筛选
+        in: query
+        name: belongTeam
+        type: string
+      - default: "true"
+        description: 是否包含组信息
+        in: query
+        name: includeGroup
+        type: string
+      - default: "true"
+        description: 是否包含团队信息
+        in: query
+        name: includeTeam
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.listResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取账户列表
+      tags:
+      - API.account
+    post:
+      consumes:
+      - application/json
+      description: 创建新账户
+      parameters:
+      - description: 创建账户请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/account.createRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.createResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 创建账户
+      tags:
+      - API.account
+  /api/v1/accounts/{accountId}:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据账户ID获取详细信息
+      parameters:
+      - description: 账户ID
+        in: path
+        name: accountId
+        required: true
+        type: string
+      - default: "true"
+        description: 是否包含组信息
+        in: query
+        name: includeGroup
+        type: string
+      - default: "true"
+        description: 是否包含团队信息
+        in: query
+        name: includeTeam
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.detailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取账户详情
+      tags:
+      - API.account
+    put:
+      consumes:
+      - application/json
+      description: 更新账户信息
+      parameters:
+      - description: 账户ID
+        in: path
+        name: accountId
+        required: true
+        type: string
+      - description: 更新账户请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/account.updateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.updateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 更新账户
+      tags:
+      - API.account
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录接口
+      parameters:
+      - description: 登录请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/account.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.loginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 用户登录
+      tags:
+      - API.account
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 用户退出登录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/account.logoutResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 退出登录
+      tags:
+      - API.account
+  /api/v1/org-infos:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 分页获取组织信息列表，支持搜索和筛选
+      parameters:
+      - default: 1
+        description: 当前页码
+        in: query
+        name: current
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: pageSize
+        type: integer
+      - description: 组织名称搜索
+        in: query
+        name: orgName
+        type: string
+      - description: 组织类型筛选
+        in: query
+        name: orgType
+        type: string
+      - description: 组织层级筛选
+        in: query
+        name: orgLevel
+        type: integer
+      - description: 父组织ID筛选
+        in: query
+        name: parentOrgId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.listResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取组织信息列表
+      tags:
+      - API.org_info
+    post:
+      consumes:
+      - application/json
+      description: 创建新的组织信息
+      parameters:
+      - description: 创建组织请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/org_info.createRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.createResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 创建组织信息
+      tags:
+      - API.org_info
+  /api/v1/org-infos/{orgId}:
+    delete:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据组织ID删除组织信息
+      parameters:
+      - description: 组织ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.deleteResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 删除组织信息
+      tags:
+      - API.org_info
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据组织ID获取组织信息详情
+      parameters:
+      - description: 组织ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.detailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取组织信息详情
+      tags:
+      - API.org_info
+    put:
+      consumes:
+      - application/json
+      description: 根据组织ID更新组织信息
+      parameters:
+      - description: 组织ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      - description: 更新组织请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/org_info.updateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.updateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 更新组织信息
+      tags:
+      - API.org_info
+  /api/v1/org-infos/{orgId}/children:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据组织ID获取子组织列表
+      parameters:
+      - description: 组织ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.childrenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取子组织
+      tags:
+      - API.org_info
+  /api/v1/org-infos/{orgId}/parent:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 根据组织ID获取父组织信息
+      parameters:
+      - description: 组织ID
+        in: path
+        name: orgId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/org_info.parentResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取父组织
+      tags:
+      - API.org_info
   /helper/md5/{str}:
     get:
       consumes:

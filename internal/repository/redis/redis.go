@@ -1,6 +1,7 @@
 package redis
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -69,8 +70,22 @@ func redisConnect() (*redis.Client, error) {
 		MinIdleConns: cfg.MinIdleConns,
 	})
 
+	// 记录连接信息（不包含密码）
+	connInfo := fmt.Sprintf("%s/DB%d", cfg.Addr, cfg.Db)
+
 	if err := client.Ping().Err(); err != nil {
-		return nil, errors.Wrap(err, "ping redis err")
+		// 提供详细的错误诊断信息
+		var errorMsg string
+		if strings.Contains(err.Error(), "connection refused") {
+			errorMsg = fmt.Sprintf("无法连接到Redis服务器，请检查服务器地址和端口是否正确。连接信息: %s", connInfo)
+		} else if strings.Contains(err.Error(), "timeout") {
+			errorMsg = fmt.Sprintf("Redis连接超时，请检查网络连接和服务器状态。连接信息: %s", connInfo)
+		} else if strings.Contains(err.Error(), "NOAUTH") {
+			errorMsg = fmt.Sprintf("Redis认证失败，请检查密码是否正确。连接信息: %s", connInfo)
+		} else {
+			errorMsg = fmt.Sprintf("Redis连接失败: %v。连接信息: %s", err, connInfo)
+		}
+		return nil, errors.Wrap(err, errorMsg)
 	}
 
 	return client, nil

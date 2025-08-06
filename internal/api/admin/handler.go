@@ -36,6 +36,11 @@ type Handler interface {
 	// @Router /api/admin/info [get]
 	Detail() core.HandlerFunc
 
+	// DetailByUsername 通过用户名或用户ID获取管理员详情
+	// @Tags API.admin
+	// @Router /api/user/{username} [get]
+	DetailByUsername() core.HandlerFunc
+
 	// ModifyPersonalInfo 修改个人信息
 	// @Tags API.admin
 	// @Router /api/admin/modify_personal_info [patch]

@@ -1,0 +1,40 @@
+[hashids]
+  length = 12
+  secret = "6ab6122836cfef95f8db"
+
+[language]
+  local = "zh-cn"
+
+[mail]
+  host = "smtp.163.com"
+  pass = ""
+  port = 465
+  to = ""
+  user = ""
+
+[mysql]
+
+  [mysql.base]
+    connmaxlifetime = 60
+    maxidleconn = 60
+    maxopenconn = 10
+
+  [mysql.read]
+    addr = "gz-cdb-pepynap7.sql.tencentcdb.com:63623"
+    name = "marriage_system"
+    pass = "19970901Zyt"
+    user = "marriage_system"
+
+  [mysql.write]
+    addr = "gz-cdb-pepynap7.sql.tencentcdb.com:63623"
+    name = "marriage_system"
+    pass = "19970901Zyt"
+    user = "marriage_system"
+
+[redis]
+  addr = "127.0.0.1:6379"
+  db = "0"
+  maxretries = 3
+  minidleconns = 20
+  pass = ""
+  poolsize = 50 

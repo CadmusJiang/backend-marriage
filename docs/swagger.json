@@ -1522,7 +1522,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "返回token和用户名",
                         "schema": {
                             "$ref": "#/definitions/admin.loginResponse"
                         }
@@ -2287,6 +2287,743 @@
                 }
             }
         },
+        "/api/user/{username}": {
+            "get": {
+                "security": [
+                    {
+                        "LoginToken": []
+                    }
+                ],
+                "description": "通过用户名或用户ID获取管理员详情",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.admin"
+                ],
+                "summary": "通过用户名或用户ID获取管理员详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户名或用户ID",
+                        "name": "username",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/admin.detailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/account-histories": {
+            "get": {
+                "description": "分页获取账户操作历史记录",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "获取账户历史记录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户ID",
+                        "name": "accountId",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "账户用户名",
+                        "name": "accountUsername",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "当前页码",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.historiesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts": {
+            "get": {
+                "description": "分页获取账户列表，支持搜索和筛选",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "获取账户列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "当前页码",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户名搜索",
+                        "name": "username",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "姓名搜索",
+                        "name": "nickname",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "角色类型筛选",
+                        "name": "roleType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "手机号搜索",
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "所属组筛选",
+                        "name": "belongGroup",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "所属团队筛选",
+                        "name": "belongTeam",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "是否包含组信息",
+                        "name": "includeGroup",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "是否包含团队信息",
+                        "name": "includeTeam",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.listResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新账户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "创建账户",
+                "parameters": [
+                    {
+                        "description": "创建账户请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/account.createRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.createResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/accounts/{accountId}": {
+            "get": {
+                "description": "根据账户ID获取详细信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "获取账户详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户ID",
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "是否包含组信息",
+                        "name": "includeGroup",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "是否包含团队信息",
+                        "name": "includeTeam",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.detailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新账户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "更新账户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "账户ID",
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新账户请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/account.updateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.updateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "description": "用户登录接口",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "description": "登录请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/account.loginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.loginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "用户退出登录",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.account"
+                ],
+                "summary": "退出登录",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.logoutResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/org-infos": {
+            "get": {
+                "description": "分页获取组织信息列表，支持搜索和筛选",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "获取组织信息列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "当前页码",
+                        "name": "current",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "组织名称搜索",
+                        "name": "orgName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "组织类型筛选",
+                        "name": "orgType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "组织层级筛选",
+                        "name": "orgLevel",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "父组织ID筛选",
+                        "name": "parentOrgId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.listResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新的组织信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "创建组织信息",
+                "parameters": [
+                    {
+                        "description": "创建组织请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/org_info.createRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.createResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/org-infos/{orgId}": {
+            "get": {
+                "description": "根据组织ID获取组织信息详情",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "获取组织信息详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组织ID",
+                        "name": "orgId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.detailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "根据组织ID更新组织信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "更新组织信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组织ID",
+                        "name": "orgId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新组织请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/org_info.updateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.updateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据组织ID删除组织信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "删除组织信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组织ID",
+                        "name": "orgId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.deleteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/org-infos/{orgId}/children": {
+            "get": {
+                "description": "根据组织ID获取子组织列表",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "获取子组织",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组织ID",
+                        "name": "orgId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.childrenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/org-infos/{orgId}/parent": {
+            "get": {
+                "description": "根据组织ID获取父组织信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "API.org_info"
+                ],
+                "summary": "获取父组织",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "组织ID",
+                        "name": "orgId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/org_info.parentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
+        },
         "/helper/md5/{str}": {
             "get": {
                 "description": "加密",
@@ -2386,6 +3123,315 @@
         }
     },
     "definitions": {
+        "account.accountData": {
+            "type": "object",
+            "properties": {
+                "belongGroup": {
+                    "description": "所属组",
+                    "$ref": "#/definitions/account.orgInfo"
+                },
+                "belongTeam": {
+                    "description": "所属团队",
+                    "$ref": "#/definitions/account.orgInfo"
+                },
+                "createdTimestamp": {
+                    "description": "创建时间戳",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "账户ID",
+                    "type": "string"
+                },
+                "lastLoginTimestamp": {
+                    "description": "最后登录时间戳",
+                    "type": "integer"
+                },
+                "modifiedTimestamp": {
+                    "description": "修改时间戳",
+                    "type": "integer"
+                },
+                "nickname": {
+                    "description": "姓名",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "roleType": {
+                    "description": "角色类型: company_manager, group_manager, team_manager, employee",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态: enabled, disabled",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "account.accountHistoryData": {
+            "type": "object",
+            "properties": {
+                "accountId": {
+                    "description": "账户ID",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "操作内容",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "id": {
+                    "description": "历史记录ID",
+                    "type": "string"
+                },
+                "operateTimestamp": {
+                    "description": "操作时间戳",
+                    "type": "integer"
+                },
+                "operateType": {
+                    "description": "操作类型",
+                    "type": "string"
+                },
+                "operatorRoleType": {
+                    "description": "操作人角色类型",
+                    "type": "string"
+                },
+                "operator_nickname": {
+                    "description": "操作人姓名",
+                    "type": "string"
+                },
+                "operator_username": {
+                    "description": "操作人用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "account.createRequest": {
+            "type": "object",
+            "required": [
+                "nickname",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "belongGroup": {
+                    "description": "所属组",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "姓名",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "roleType": {
+                    "description": "角色类型",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "account.createResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/account.accountData"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "account.detailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/account.accountData"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "account.historiesResponse": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/account.accountHistoryData"
+                    }
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "account.listResponse": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/account.accountData"
+                    }
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "account.loginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "description": "密码",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "account.loginResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "userInfo": {
+                    "$ref": "#/definitions/account.accountData"
+                }
+            }
+        },
+        "account.logoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "account.orgInfo": {
+            "type": "object",
+            "properties": {
+                "createdTimestamp": {
+                    "description": "创建时间戳",
+                    "type": "integer"
+                },
+                "currentCnt": {
+                    "description": "当前成员数量",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "组织ID",
+                    "type": "integer"
+                },
+                "modifiedTimestamp": {
+                    "description": "修改时间戳",
+                    "type": "integer"
+                },
+                "nickname": {
+                    "description": "组织名称",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "组织用户名",
+                    "type": "string"
+                }
+            }
+        },
+        "account.updateRequest": {
+            "type": "object",
+            "required": [
+                "accountID"
+            ],
+            "properties": {
+                "accountID": {
+                    "description": "账户ID",
+                    "type": "string"
+                },
+                "belongGroup": {
+                    "description": "所属组",
+                    "type": "string"
+                },
+                "belongTeam": {
+                    "description": "所属团队",
+                    "type": "string"
+                },
+                "nickname": {
+                    "description": "姓名",
+                    "type": "string"
+                },
+                "phone": {
+                    "description": "手机号",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "type": "string"
+                }
+            }
+        },
+        "account.updateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "admin.ListMenuData": {
             "type": "object",
             "properties": {
@@ -2567,6 +3613,10 @@
             "properties": {
                 "token": {
                     "description": "用户身份标识",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -3210,6 +4260,215 @@
                 "id": {
                     "description": "主键ID",
                     "type": "integer"
+                }
+            }
+        },
+        "org_info.childrenResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/org_info.orgInfoData"
+                    }
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "org_info.createRequest": {
+            "type": "object",
+            "required": [
+                "orgName",
+                "orgType"
+            ],
+            "properties": {
+                "maxCnt": {
+                    "description": "最大成员数量",
+                    "type": "integer"
+                },
+                "orgDescription": {
+                    "description": "组织描述",
+                    "type": "string"
+                },
+                "orgLevel": {
+                    "description": "组织层级: 1-组, 2-团队",
+                    "type": "integer"
+                },
+                "orgName": {
+                    "description": "组织名称",
+                    "type": "string"
+                },
+                "orgType": {
+                    "description": "组织类型: group, team",
+                    "type": "string"
+                },
+                "parentOrgId": {
+                    "description": "父组织ID",
+                    "type": "string"
+                }
+            }
+        },
+        "org_info.createResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "org_info.deleteResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "org_info.detailResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/org_info.orgInfoData"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "org_info.listResponse": {
+            "type": "object",
+            "properties": {
+                "current": {
+                    "type": "integer"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/org_info.orgInfoData"
+                    }
+                },
+                "pageSize": {
+                    "type": "integer"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "org_info.orgInfoData": {
+            "type": "object",
+            "properties": {
+                "createdTimestamp": {
+                    "description": "创建时间戳",
+                    "type": "integer"
+                },
+                "currentCnt": {
+                    "description": "当前成员数量",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "组织ID",
+                    "type": "string"
+                },
+                "maxCnt": {
+                    "description": "最大成员数量",
+                    "type": "integer"
+                },
+                "modifiedTimestamp": {
+                    "description": "修改时间戳",
+                    "type": "integer"
+                },
+                "orgDescription": {
+                    "description": "组织描述",
+                    "type": "string"
+                },
+                "orgLevel": {
+                    "description": "组织层级",
+                    "type": "integer"
+                },
+                "orgName": {
+                    "description": "组织名称",
+                    "type": "string"
+                },
+                "orgType": {
+                    "description": "组织类型",
+                    "type": "string"
+                },
+                "parentOrgId": {
+                    "description": "父组织ID",
+                    "type": "string"
+                }
+            }
+        },
+        "org_info.parentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/org_info.orgInfoData"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "org_info.updateRequest": {
+            "type": "object",
+            "required": [
+                "orgId"
+            ],
+            "properties": {
+                "maxCnt": {
+                    "description": "最大成员数量",
+                    "type": "integer"
+                },
+                "orgDescription": {
+                    "description": "组织描述",
+                    "type": "string"
+                },
+                "orgId": {
+                    "description": "组织ID",
+                    "type": "string"
+                },
+                "orgLevel": {
+                    "description": "组织层级",
+                    "type": "integer"
+                },
+                "orgName": {
+                    "description": "组织名称",
+                    "type": "string"
+                },
+                "orgType": {
+                    "description": "组织类型",
+                    "type": "string"
+                },
+                "parentOrgId": {
+                    "description": "父组织ID",
+                    "type": "string"
+                }
+            }
+        },
+        "org_info.updateResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },

@@ -91,6 +91,18 @@ func init() {
 		r = bytes.NewReader(uatConfigs)
 	case "pro":
 		r = bytes.NewReader(proConfigs)
+	case "local":
+		// 尝试读取本地配置文件
+		viper.SetConfigName("local_configs")
+		viper.AddConfigPath("./configs")
+		if err := viper.ReadInConfig(); err == nil {
+			if err := viper.Unmarshal(config); err != nil {
+				panic(err)
+			}
+			return
+		}
+		// 如果本地配置文件不存在，使用dev配置
+		r = bytes.NewReader(devConfigs)
 	default:
 		r = bytes.NewReader(fatConfigs)
 	}

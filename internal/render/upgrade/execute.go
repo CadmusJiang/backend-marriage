@@ -45,6 +45,10 @@ func (h *handler) UpgradeExecute() core.HandlerFunc {
 			"table_sql":      tablesqls.CreateCronTaskTableSql(),
 			"table_data_sql": "",
 		},
+		"org": {
+			"table_sql":      tablesqls.CreateOrgInfoTableSql(),
+			"table_data_sql": tablesqls.CreateOrgInfoTableDataSql(),
+		},
 	}
 
 	upgradeTableOp := map[string]bool{

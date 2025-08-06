@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/xinliangnote/go-gin-api/configs"
@@ -42,14 +43,17 @@ type dbRepo struct {
 
 func New() (Repo, error) {
 	cfg := configs.Get().MySQL
-	dbr, err := dbConnect(cfg.Read.User, cfg.Read.Pass, cfg.Read.Addr, cfg.Read.Name)
+
+	// 连接读数据库
+	dbr, err := dbConnect(cfg.Read.User, cfg.Read.Pass, cfg.Read.Addr, cfg.Read.Name, "read")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("读数据库连接失败: %v", err)
 	}
 
-	dbw, err := dbConnect(cfg.Write.User, cfg.Write.Pass, cfg.Write.Addr, cfg.Write.Name)
+	// 连接写数据库
+	dbw, err := dbConnect(cfg.Write.User, cfg.Write.Pass, cfg.Write.Addr, cfg.Write.Name, "write")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("写数据库连接失败: %v", err)
 	}
 
 	return &dbRepo{
@@ -84,14 +88,17 @@ func (d *dbRepo) DbWClose() error {
 	return sqlDB.Close()
 }
 
-func dbConnect(user, pass, addr, dbName string) (*gorm.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=%t&loc=%s",
+func dbConnect(user, pass, addr, dbName, connType string) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=%t&loc=%s&allowNativePasswords=true",
 		user,
 		pass,
 		addr,
 		dbName,
 		true,
 		"Local")
+
+	// 记录连接信息（不包含密码）
+	connInfo := fmt.Sprintf("%s@%s/%s", user, addr, dbName)
 
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
@@ -101,7 +108,20 @@ func dbConnect(user, pass, addr, dbName string) (*gorm.DB, error) {
 	})
 
 	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("[db connection failed] Database name: %s", dbName))
+		// 提供详细的错误诊断信息
+		var errorMsg string
+		if strings.Contains(err.Error(), "Access denied") {
+			errorMsg = fmt.Sprintf("数据库访问被拒绝，请检查用户名和密码是否正确。连接信息: %s", connInfo)
+		} else if strings.Contains(err.Error(), "Unknown database") {
+			errorMsg = fmt.Sprintf("数据库不存在，请检查数据库名称是否正确。连接信息: %s", connInfo)
+		} else if strings.Contains(err.Error(), "connection refused") {
+			errorMsg = fmt.Sprintf("无法连接到数据库服务器，请检查服务器地址和端口是否正确。连接信息: %s", connInfo)
+		} else if strings.Contains(err.Error(), "timeout") {
+			errorMsg = fmt.Sprintf("数据库连接超时，请检查网络连接和服务器状态。连接信息: %s", connInfo)
+		} else {
+			errorMsg = fmt.Sprintf("数据库连接失败: %v。连接信息: %s", err, connInfo)
+		}
+		return nil, errors.Wrap(err, errorMsg)
 	}
 
 	db.Set("gorm:table_options", "CHARSET=utf8mb4")
@@ -110,7 +130,7 @@ func dbConnect(user, pass, addr, dbName string) (*gorm.DB, error) {
 
 	sqlDB, err := db.DB()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, fmt.Sprintf("获取数据库连接池失败: %s", connInfo))
 	}
 
 	// 设置连接池 用于设置最大打开的连接数，默认值为0表示不限制.设置最大的连接数，可以避免并发太高导致连接mysql出现too many connections的错误。

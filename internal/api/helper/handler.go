@@ -23,6 +23,21 @@ type Handler interface {
 	// @Tags Helper
 	// @Router /helper/sign [post]
 	Sign() core.HandlerFunc
+
+	// CheckDatabase 检查数据库表结构
+	// @Tags Helper
+	// @Router /api/v1/check-db [get]
+	CheckDatabase() core.HandlerFunc
+
+	// GetLogs 获取日志列表
+	// @Tags API.helper
+	// @Router /api/v1/logs [get]
+	GetLogs() core.HandlerFunc
+
+	// GetLogsRealtime 获取实时日志
+	// @Tags API.helper
+	// @Router /api/v1/logs/realtime [get]
+	GetLogsRealtime() core.HandlerFunc
 }
 
 type handler struct {

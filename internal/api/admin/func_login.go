@@ -15,12 +15,13 @@ import (
 )
 
 type loginRequest struct {
-	Username string `form:"username"` // 用户名
-	Password string `form:"password"` // 密码
+	Username string `json:"username"` // 用户名
+	Password string `json:"password"` // 密码
 }
 
 type loginResponse struct {
-	Token string `json:"token"` // 用户身份标识
+	Token    string `json:"token"`    // 用户身份标识
+	Username string `json:"username"` // 用户名
 }
 
 // Login 管理员登录
@@ -31,7 +32,7 @@ type loginResponse struct {
 // @Produce json
 // @Param username formData string true "用户名"
 // @Param password formData string true "MD5后的密码"
-// @Success 200 {object} loginResponse
+// @Success 200 {object} loginResponse "返回token和用户名"
 // @Failure 400 {object} code.Failure
 // @Router /api/login [post]
 // @Security LoginToken
@@ -39,7 +40,7 @@ func (h *handler) Login() core.HandlerFunc {
 	return func(c core.Context) {
 		req := new(loginRequest)
 		res := new(loginResponse)
-		if err := c.ShouldBindForm(req); err != nil {
+		if err := c.ShouldBindJSON(req); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,
@@ -144,6 +145,7 @@ func (h *handler) Login() core.HandlerFunc {
 		}
 
 		res.Token = token
+		res.Username = info.Username
 		c.Payload(res)
 	}
 }

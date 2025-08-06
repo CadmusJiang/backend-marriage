@@ -111,6 +111,9 @@ type Context interface {
 	// SetHeader 设置 Header
 	SetHeader(key, value string)
 
+	// Param 获取路径参数
+	Param(key string) string
+
 	// SessionUserInfo 当前用户信息
 	SessionUserInfo() proposal.SessionUserInfo
 	setSessionUserInfo(info proposal.SessionUserInfo)
@@ -278,6 +281,10 @@ func (c *context) GetHeader(key string) string {
 
 func (c *context) SetHeader(key, value string) {
 	c.ctx.Header(key, value)
+}
+
+func (c *context) Param(key string) string {
+	return c.ctx.Param(key)
 }
 
 func (c *context) SessionUserInfo() proposal.SessionUserInfo {

@@ -62,6 +62,22 @@ func (h *handler) Execute() core.HandlerFunc {
 			"table_sql":      tablesqls.CreateCronTaskTableSql(),
 			"table_data_sql": "",
 		},
+		"account": {
+			"table_sql":      tablesqls.CreateAccountTableSql(),
+			"table_data_sql": tablesqls.CreateAccountTableDataSql(),
+		},
+		"account_history": {
+			"table_sql":      tablesqls.CreateAccountHistoryTableSql(),
+			"table_data_sql": tablesqls.CreateAccountHistoryTableDataSql(),
+		},
+		"org": {
+			"table_sql":      tablesqls.CreateOrgInfoTableSql(),
+			"table_data_sql": tablesqls.CreateOrgInfoTableDataSql(),
+		},
+		"account_org_relation": {
+			"table_sql":      tablesqls.CreateAccountOrgRelationTableSql(),
+			"table_data_sql": tablesqls.CreateAccountOrgRelationTableDataSql(),
+		},
 	}
 
 	return func(ctx core.Context) {

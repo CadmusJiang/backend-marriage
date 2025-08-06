@@ -305,6 +305,7 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 				http.MethodPut,
 				http.MethodPatch,
 				http.MethodDelete,
+				http.MethodOptions,
 			},
 			AllowedHeaders:     []string{"*"},
 			AllowCredentials:   true,

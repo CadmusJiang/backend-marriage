@@ -35,7 +35,7 @@ import (
 func main() {
 	// 初始化 access logger
 	accessLogger, err := logger.NewJSONLogger(
-		logger.WithDisableConsole(),
+		// logger.WithDisableConsole(), // 注释掉以启用控制台输出
 		logger.WithField("domain", fmt.Sprintf("%s[%s]", configs.ProjectName, env.Active().Value())),
 		logger.WithTimeLayout(timeutil.CSTLayout),
 		logger.WithFileP(configs.ProjectAccessLogFile),
@@ -46,7 +46,7 @@ func main() {
 
 	// 初始化 cron logger
 	cronLogger, err := logger.NewJSONLogger(
-		logger.WithDisableConsole(),
+		// logger.WithDisableConsole(), // 注释掉以启用控制台输出
 		logger.WithField("domain", fmt.Sprintf("%s[%s]", configs.ProjectName, env.Active().Value())),
 		logger.WithTimeLayout(timeutil.CSTLayout),
 		logger.WithFileP(configs.ProjectCronLogFile),

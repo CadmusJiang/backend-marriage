@@ -4,7 +4,7 @@ var zhCNText = map[int]string{
 	ServerError:        "内部服务器错误",
 	TooManyRequests:    "请求过多",
 	ParamBindError:     "参数信息错误",
-	AuthorizationError: "签名信息错误",
+	AuthorizationError: "授权信息错误",
 	UrlSignError:       "参数签名错误",
 	CacheSetError:      "设置缓存失败",
 	CacheGetError:      "获取缓存失败",
