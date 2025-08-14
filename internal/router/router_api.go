@@ -1,9 +1,19 @@
 package router
 
 import (
+	"io"
+	"net/http"
+	"os"
+	"strings"
+
+	"github.com/xinliangnote/go-gin-api/configs"
 	"github.com/xinliangnote/go-gin-api/internal/api/account"
-	"github.com/xinliangnote/go-gin-api/internal/api/helper"
-	"github.com/xinliangnote/go-gin-api/internal/api/org_info"
+	"github.com/xinliangnote/go-gin-api/internal/api/analytics"
+	"github.com/xinliangnote/go-gin-api/internal/api/cooperation_store"
+	"github.com/xinliangnote/go-gin-api/internal/api/customer_authorization_record"
+	"github.com/xinliangnote/go-gin-api/internal/api/customer_authorization_record_history"
+	"github.com/xinliangnote/go-gin-api/internal/api/organization"
+	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 )
 
@@ -11,53 +21,156 @@ func setApiRouter(r *resource) {
 	// account
 	accountHandler := account.New(r.logger, r.db, r.cache)
 
-	// helper
-	helperHandler := helper.New(r.logger, r.db, r.cache)
+	// cooperation_store
+	cooperationStoreHandler := cooperation_store.New(r.logger, r.db, r.cache)
 
-	// org_info
-	orgInfoHandler := org_info.New(r.logger, r.db, r.cache)
+	// customer_authorization_record
+	customerAuthRecordHandler := customer_authorization_record.New(r.logger, r.db, r.db)
 
-	// API v1 路由组 - 无需登录验证
+	// customer_authorization_record_history
+	customerAuthRecordHistoryHandler := customer_authorization_record_history.New(r.logger, r.db, r.cache)
+
+	// helper 已移除
+
+	// organization
+	organizationHandler := organization.New(r.logger, r.db, r.cache)
+
+	// analytics
+	analyticsHandler := analytics.New(r.logger, r.db, r.db)
+
+	// API v1 路由组 - 无需登录验证（CoreAuth）
 	apiV1 := r.mux.Group("/api/v1")
 	{
-		// 认证相关接口
+		// CoreAuth
 		authAPI := apiV1.Group("/auth")
 		{
 			authAPI.POST("/login", accountHandler.Login())
 			authAPI.POST("/logout", accountHandler.Logout())
 		}
 
-		// 数据库检查接口
-		apiV1.GET("/check-db", helperHandler.CheckDatabase())
-
-		// 日志查看接口 - 无需认证
-		apiV1.GET("/logs", helperHandler.GetLogs())
-		apiV1.GET("/logs/realtime", helperHandler.GetLogsRealtime())
+		// helper 接口已删除
 	}
 
 	// 需要签名验证、登录验证、RBAC 权限验证
 	api := r.mux.Group("/api", core.WrapAuthHandler(r.interceptors.CheckLogin), r.interceptors.CheckRBAC())
 	{
-		// account management
+		// Organization
+		api.GET("/v1/groups", organizationHandler.GetGroups())
+		api.POST("/v1/groups", organizationHandler.CreateGroup())
+		api.GET("/v1/groups/:orgId", organizationHandler.GetOrgInfoDetail())
+		api.PUT("/v1/groups/:orgId", organizationHandler.UpdateGroup())
+		api.GET("/v1/groups/:orgId/history", organizationHandler.GetGroupHistory())
+
+		// teams endpoints
+		api.GET("/v1/teams", organizationHandler.ListTeams())
+		api.POST("/v1/teams", organizationHandler.CreateTeam())
+		api.GET("/v1/teams/:teamId", organizationHandler.GetTeam())
+		api.PUT("/v1/teams/:teamId", organizationHandler.UpdateTeam())
+		api.GET("/v1/teams/:teamId/history", organizationHandler.GetTeamHistory())
+		api.GET("/v1/teams/:teamId/members", organizationHandler.ListTeamMembers())
+		api.POST("/v1/teams/:teamId/members", organizationHandler.AddTeamMember())
+		api.DELETE("/v1/teams/:teamId/members/:memberId", organizationHandler.RemoveTeamMember())
+		api.PUT("/v1/teams/:teamId/members/:memberId/role", organizationHandler.UpdateTeamMemberRole())
+		api.GET("/v1/unassigned-account", organizationHandler.ListUnassignedAccounts())
+
+		// Analytics
+		api.GET("/v1/analytics/account/rankings", analyticsHandler.GetAccountRankings())
+		api.GET("/v1/analytics/account/trends", analyticsHandler.GetAccountTrends())
+		api.GET("/v1/analytics/teams/rankings", analyticsHandler.GetTeamsRankings())
+		api.GET("/v1/analytics/teams/trends", analyticsHandler.GetTeamsTrends())
+		api.GET("/v1/analytics/customer-authorization-record/composition", analyticsHandler.GetCustomerComposition())
+
+		// Customer
+		api.GET("/v1/customer-authorization-records", customerAuthRecordHandler.GetCustomerAuthorizationRecordList())
+		api.POST("/v1/customer-authorization-records", customerAuthRecordHandler.CreateCustomerAuthorizationRecord())
+		api.GET("/v1/customer-authorization-records/check-phone", customerAuthRecordHandler.CheckPhoneExistence())
+		api.GET("/v1/customer-authorization-records/:id", customerAuthRecordHandler.GetCustomerAuthorizationRecordDetail())
+		api.PUT("/v1/customer-authorization-records/:id", customerAuthRecordHandler.UpdateCustomerAuthorizationRecord())
+		// Customer History
+		api.GET("/v1/customer-authorization-record-histories", customerAuthRecordHistoryHandler.GetCustomerAuthorizationRecordHistoryList())
+		api.GET("/v1/customer-authorization-record-histories/:historyId", customerAuthRecordHistoryHandler.GetCustomerAuthorizationRecordHistoryDetail())
+
+		// CooperationStore
+		api.GET("/v1/cooperation-stores", cooperationStoreHandler.GetCooperationStoreList())
+		api.POST("/v1/cooperation-stores", cooperationStoreHandler.CreateCooperationStore())
+		api.GET("/v1/cooperation-stores/:id", cooperationStoreHandler.GetCooperationStoreDetail())
+		api.PUT("/v1/cooperation-stores/:id", cooperationStoreHandler.UpdateCooperationStore())
+		api.GET("/v1/cooperation-stores/:id/history", cooperationStoreHandler.GetCooperationStoreHistory())
+
+		// Account
 		api.GET("/v1/accounts", accountHandler.GetAccountList())
 		api.POST("/v1/accounts", accountHandler.CreateAccount())
 		api.GET("/v1/accounts/:accountId", accountHandler.GetAccountDetail())
 		api.PUT("/v1/accounts/:accountId", accountHandler.UpdateAccount())
+		api.PUT("/v1/accounts/:accountId/password", accountHandler.UpdateAccountPassword())
 		api.GET("/v1/account-histories", accountHandler.GetAccountHistories())
 
-		// groups management - 专门获取groups信息
-		api.GET("/v1/groups", orgInfoHandler.GetGroups())
+		// Me (Account)
+		api.GET("/v1/me", accountHandler.Me())
 
-		// teams management - 专门获取teams信息
-		api.GET("/v1/teams", orgInfoHandler.GetTeams())
+		// org-infos 路由移除，统一使用 /v1/groups 系列
+	}
 
-		// org_info management
-		api.GET("/v1/org-infos", orgInfoHandler.GetOrgInfoList())
-		api.POST("/v1/org-infos", orgInfoHandler.CreateOrgInfo())
-		api.GET("/v1/org-infos/:orgId", orgInfoHandler.GetOrgInfoDetail())
-		api.PUT("/v1/org-infos/:orgId", orgInfoHandler.UpdateOrgInfo())
-		api.DELETE("/v1/org-infos/:orgId", orgInfoHandler.DeleteOrgInfo())
-		api.GET("/v1/org-infos/:orgId/children", orgInfoHandler.GetOrgInfoChildren())
-		api.GET("/v1/org-infos/:orgId/parent", orgInfoHandler.GetOrgInfoParent())
+	// system 工具接口：最近日志
+	system := r.mux.Group("/system")
+	{
+		system.GET("/logs/latest", func(ctx core.Context) {
+			const maxReadSize = int64(1 << 20) // 1MB
+
+			readLastNLines := func(filePath string, maxBytes int64, n int) ([]string, error) {
+				f, err := os.Open(filePath)
+				if err != nil {
+					return nil, err
+				}
+				defer f.Close()
+
+				st, err := f.Stat()
+				if err != nil {
+					return nil, err
+				}
+
+				start := int64(0)
+				if st.Size() > maxBytes {
+					start = st.Size() - maxBytes
+				}
+
+				if _, err := f.Seek(start, io.SeekStart); err != nil {
+					return nil, err
+				}
+
+				data, err := io.ReadAll(f)
+				if err != nil {
+					return nil, err
+				}
+
+				s := string(data)
+				if start > 0 {
+					if idx := strings.IndexByte(s, '\n'); idx >= 0 {
+						s = s[idx+1:]
+					}
+				}
+
+				lines := strings.Split(s, "\n")
+				if len(lines) > 0 && lines[len(lines)-1] == "" {
+					lines = lines[:len(lines)-1]
+				}
+				if len(lines) > n {
+					lines = lines[len(lines)-n:]
+				}
+				return lines, nil
+			}
+
+			lines, err := readLastNLines(configs.ProjectAccessLogFile, maxReadSize, 10)
+			if err != nil {
+				ctx.AbortWithError(core.Error(http.StatusInternalServerError, code.ServerError, code.Text(code.ServerError)).WithError(err))
+				return
+			}
+
+			ctx.Payload(map[string]interface{}{
+				"file":  configs.ProjectAccessLogFile,
+				"count": len(lines),
+				"lines": lines,
+			})
+		})
 	}
 }

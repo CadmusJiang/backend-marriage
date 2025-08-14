@@ -22,9 +22,6 @@ const (
 
 	ProjectAccessLogFile = "./logs/" + ProjectName + "-access.log"
 
-	// ProjectCronLogFile 项目后台任务日志存放文件
-	ProjectCronLogFile = "./logs/" + ProjectName + "-cron.log"
-
 	// ProjectInstallMark 项目安装完成标识
 	ProjectInstallMark = "INSTALL.lock"
 

@@ -1,0 +1,6 @@
+# 说明：为整个仓库指定代码所有者，PR 变更会默认请求他们评审。
+# 请将下面的占位符替换为你们的 GitHub 团队或成员账号，例如：@your-org/backend-team 或 @your-username
+
+* @your-org/backend-team
+
+

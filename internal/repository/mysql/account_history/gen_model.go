@@ -7,16 +7,16 @@ type AccountHistory struct {
 	Id uint64 `gorm:"primaryKey"` // 主键
 
 	// 基本信息
-	AccountId        uint64 `gorm:"not null"`  // 账户ID
-	OperateType      string `gorm:"size:20"`   // 操作类型: created, modified
-	OperateTimestamp uint64 `gorm:"not null"`  // 操作时间戳
-	Content          string `gorm:"type:json"` // 操作内容 (JSON格式)
-	Operator         string `gorm:"size:60"`   // 操作人
-	OperatorRoleType string `gorm:"size:20"`   // 操作人角色
+	AccountId        uint64 `gorm:"column:account_id;not null"`        // 账户ID
+	OperateType      string `gorm:"column:operate_type;size:20"`       // 操作类型: created, modified
+	OccurredAt       uint64 `gorm:"column:occurred_at;not null"`       // 操作发生时间
+	Content          string `gorm:"column:content;type:json"`          // 操作内容 (JSON格式)
+	Operator         string `gorm:"column:operator;size:60"`           // 操作人
+	OperatorRoleType string `gorm:"column:operator_role_type;size:20"` // 操作人角色
 
 	// 审计字段
-	CreatedTimestamp  uint64 `gorm:"not null"` // 创建时间戳
-	ModifiedTimestamp uint64 `gorm:"not null"` // 修改时间戳
-	CreatedUser       string `gorm:"size:60"`  // 创建人
-	UpdatedUser       string `gorm:"size:60"`  // 更新人
+	CreatedAt   uint64 `gorm:"column:created_at;not null"`  // 创建时间
+	UpdatedAt   uint64 `gorm:"column:updated_at;not null"`  // 修改时间
+	CreatedUser string `gorm:"column:created_user;size:60"` // 创建人
+	UpdatedUser string `gorm:"column:updated_user;size:60"` // 更新人
 }

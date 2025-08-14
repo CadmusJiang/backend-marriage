@@ -9,6 +9,7 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
+	orgrepo "github.com/xinliangnote/go-gin-api/internal/repository/mysql/org"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +27,7 @@ type detailResponse struct {
 // GetAccountDetail 获取账户详情
 // @Summary 获取账户详情
 // @Description 根据账户ID获取详细信息
-// @Tags API.account
+// @Tags Account
 // @Accept application/x-www-form-urlencoded
 // @Produce json
 // @Param accountId path string true "账户ID"
@@ -107,6 +108,8 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 			LastLoginAt: int64(accountInfo.LastLoginTimestamp), // 改为lastLoginAt
 		}
 
+		// 账户接口不做脱敏
+
 		// 根据角色类型和includeGroup参数决定是否包含组信息
 		if strings.ToLower(req.IncludeGroup) != "false" {
 			switch accountInfo.RoleType {
@@ -156,6 +159,15 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 	}
 }
 
+// Me 返回当前用户信息（示例使用 sessionUserInfo 或简单查询）
+func (h *handler) Me() core.HandlerFunc {
+	return func(c core.Context) {
+		// 简化：从 accountId 查询或返回固定用户
+		// 这里可以结合登录态信息返回当前用户
+		c.Payload(map[string]interface{}{"success": true, "data": map[string]interface{}{"id": "u_1", "username": "admin", "name": "系统管理员", "roleType": "company_manager", "status": "enabled", "phone": "13800000000"}})
+	}
+}
+
 // isNumeric 检查字符串是否为数字
 func isNumeric(s string) bool {
 	for _, r := range s {
@@ -168,96 +180,34 @@ func isNumeric(s string) bool {
 
 // getGroupInfo 根据组ID获取组信息
 func (h *handler) getGroupInfo(groupID int) *org {
-	// 硬编码组信息，实际项目中应该从数据库查询
-	groupMap := map[int]*org{
-		1: {
-			ID:         1,
-			Username:   "admin_group",
-			Name:       "系统管理组",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 1,
-		},
-		2: {
-			ID:         2,
-			Username:   "nanjing_tianyuan",
-			Name:       "南京-天元大厦组",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 15,
-		},
-		3: {
-			ID:         3,
-			Username:   "beijing_office",
-			Name:       "北京办公室组",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 12,
-		},
-		4: {
-			ID:         4,
-			Username:   "shanghai_branch",
-			Name:       "上海分公司组",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 20,
-		},
-		5: {
-			ID:         5,
-			Username:   "guangzhou_office",
-			Name:       "广州办公室组",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 8,
-		},
+	rec := new(orgrepo.Org)
+	err := h.db.GetDbR().Where("id = ? AND org_type = ?", groupID, 1).First(rec).Error
+	if err != nil {
+		return nil
 	}
-	return groupMap[groupID]
+	return &org{
+		ID:         uint64(rec.Id),
+		Username:   rec.Username,
+		Name:       rec.Nickname,
+		CreatedAt:  rec.CreatedTimestamp,
+		UpdatedAt:  rec.ModifiedTimestamp,
+		CurrentCnt: 0,
+	}
 }
 
 // getTeamInfo 根据团队ID获取团队信息
 func (h *handler) getTeamInfo(teamID int) *org {
-	// 硬编码团队信息，实际项目中应该从数据库查询
-	teamMap := map[int]*org{
-		1: {
-			ID:         1,
-			Username:   "admin_team",
-			Name:       "系统管理团队",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 1,
-		},
-		2: {
-			ID:         2,
-			Username:   "marketing_team_a",
-			Name:       "营销团队A",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 8,
-		},
-		3: {
-			ID:         3,
-			Username:   "sales_team_b",
-			Name:       "销售团队B",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 6,
-		},
-		4: {
-			ID:         4,
-			Username:   "tech_team_c",
-			Name:       "技术团队C",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 10,
-		},
-		5: {
-			ID:         5,
-			Username:   "service_team_d",
-			Name:       "客服团队D",
-			CreatedAt:  1705123200,
-			UpdatedAt:  1705123200,
-			CurrentCnt: 4,
-		},
+	rec := new(orgrepo.Org)
+	err := h.db.GetDbR().Where("id = ? AND org_type = ?", teamID, 2).First(rec).Error
+	if err != nil {
+		return nil
 	}
-	return teamMap[teamID]
+	return &org{
+		ID:         uint64(rec.Id),
+		Username:   rec.Username,
+		Name:       rec.Nickname,
+		CreatedAt:  rec.CreatedTimestamp,
+		UpdatedAt:  rec.ModifiedTimestamp,
+		CurrentCnt: 0,
+	}
 }

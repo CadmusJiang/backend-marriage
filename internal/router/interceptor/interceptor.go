@@ -5,8 +5,6 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/proposal"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/redis"
-	"github.com/xinliangnote/go-gin-api/internal/services/admin"
-	"github.com/xinliangnote/go-gin-api/internal/services/authorized"
 
 	"go.uber.org/zap"
 )
@@ -28,20 +26,16 @@ type Interceptor interface {
 }
 
 type interceptor struct {
-	logger            *zap.Logger
-	cache             redis.Repo
-	db                mysql.Repo
-	authorizedService authorized.Service
-	adminService      admin.Service
+	logger *zap.Logger
+	cache  redis.Repo
+	db     mysql.Repo
 }
 
 func New(logger *zap.Logger, cache redis.Repo, db mysql.Repo) Interceptor {
 	return &interceptor{
-		logger:            logger,
-		cache:             cache,
-		db:                db,
-		authorizedService: authorized.New(db, cache),
-		adminService:      admin.New(db, cache),
+		logger: logger,
+		cache:  cache,
+		db:     db,
 	}
 }
 

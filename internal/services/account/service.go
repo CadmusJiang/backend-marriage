@@ -89,6 +89,9 @@ type Service interface {
 	CreateHistory(ctx core.Context, historyData *CreateHistoryData) (err error)
 	PageListHistory(ctx core.Context, searchData *SearchHistoryData) (listData []*account_history.AccountHistory, err error)
 	PageListHistoryCount(ctx core.Context, searchData *SearchHistoryData) (total int64, err error)
+
+	// 仅更新密码
+	UpdatePassword(ctx core.Context, accountId string, newPassword string) (err error)
 }
 
 type service struct {

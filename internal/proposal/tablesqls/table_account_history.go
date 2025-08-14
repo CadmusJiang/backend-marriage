@@ -4,13 +4,13 @@ package tablesqls
 //`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
 //`account_id` int unsigned NOT NULL COMMENT '账户ID',
 //`operate_type` varchar(20) NOT NULL COMMENT '操作类型',
-//`operate_timestamp` bigint NOT NULL COMMENT '操作时间戳',
+//`occurred_at` bigint NOT NULL COMMENT '操作发生时间戳',
 //`content` json DEFAULT NULL COMMENT '操作内容',
 //`operator_username` varchar(32) NOT NULL COMMENT '操作人用户名',
 //`operator_nickname` varchar(60) NOT NULL COMMENT '操作人姓名',
 //`operator_role_type` varchar(20) NOT NULL COMMENT '操作人角色',
-//`created_timestamp` bigint NOT NULL COMMENT '创建时间戳',
-//`modified_timestamp` bigint NOT NULL COMMENT '修改时间戳',
+//`created_at` bigint NOT NULL COMMENT '创建时间戳',
+//`updated_at` bigint NOT NULL COMMENT '修改时间戳',
 //`created_user` varchar(60) NOT NULL COMMENT '创建人',
 //`updated_user` varchar(60) NOT NULL COMMENT '更新人',
 //PRIMARY KEY (`id`),
@@ -22,13 +22,13 @@ func CreateAccountHistoryTableSql() (sql string) {
 	sql += "`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',"
 	sql += "`account_id` int unsigned NOT NULL COMMENT '账户ID',"
 	sql += "`operate_type` varchar(20) NOT NULL COMMENT '操作类型',"
-	sql += "`operate_timestamp` bigint NOT NULL COMMENT '操作时间戳',"
+	sql += "`occurred_at` bigint NOT NULL COMMENT '操作发生时间戳',"
 	sql += "`content` json DEFAULT NULL COMMENT '操作内容',"
 	sql += "`operator_username` varchar(32) NOT NULL COMMENT '操作人用户名',"
 	sql += "`operator_nickname` varchar(60) NOT NULL COMMENT '操作人姓名',"
 	sql += "`operator_role_type` varchar(20) NOT NULL COMMENT '操作人角色',"
-	sql += "`created_timestamp` bigint NOT NULL COMMENT '创建时间戳',"
-	sql += "`modified_timestamp` bigint NOT NULL COMMENT '修改时间戳',"
+	sql += "`created_at` bigint NOT NULL COMMENT '创建时间戳',"
+	sql += "`updated_at` bigint NOT NULL COMMENT '修改时间戳',"
 	sql += "`created_user` varchar(60) NOT NULL COMMENT '创建人',"
 	sql += "`updated_user` varchar(60) NOT NULL COMMENT '更新人',"
 	sql += "PRIMARY KEY (`id`),"

@@ -3,35 +3,37 @@ definitions:
   account.accountData:
     properties:
       belongGroup:
-        $ref: '#/definitions/account.orgInfo'
+        allOf:
+        - $ref: '#/definitions/account.org'
         description: 所属组
       belongTeam:
-        $ref: '#/definitions/account.orgInfo'
+        allOf:
+        - $ref: '#/definitions/account.org'
         description: 所属团队
-      createdTimestamp:
+      createdAt:
         description: 创建时间戳
         type: integer
       id:
         description: 账户ID
         type: string
-      lastLoginTimestamp:
+      lastLoginAt:
         description: 最后登录时间戳
         type: integer
-      modifiedTimestamp:
-        description: 修改时间戳
-        type: integer
-      nickname:
+      name:
         description: 姓名
         type: string
       phone:
         description: 手机号
         type: string
       roleType:
-        description: '角色类型: company_manager, group_manager, team_manager, employee'
+        description: 角色类型
         type: string
       status:
-        description: '状态: enabled, disabled'
+        description: 状态
         type: string
+      updatedAt:
+        description: 修改时间戳
+        type: integer
       username:
         description: 用户名
         type: string
@@ -48,7 +50,7 @@ definitions:
       id:
         description: 历史记录ID
         type: string
-      operateTimestamp:
+      occurredAt:
         description: 操作时间戳
         type: integer
       operateType:
@@ -69,7 +71,7 @@ definitions:
       belongGroup:
         description: 所属组
         type: string
-      nickname:
+      name:
         description: 姓名
         type: string
       password:
@@ -85,7 +87,7 @@ definitions:
         description: 用户名
         type: string
     required:
-    - nickname
+    - name
     - password
     - username
     type: object
@@ -149,14 +151,15 @@ definitions:
     type: object
   account.loginResponse:
     properties:
-      message:
+      data:
+        properties:
+          token:
+            type: string
+          username:
+            type: string
+        type: object
+      status:
         type: string
-      success:
-        type: boolean
-      token:
-        type: string
-      userInfo:
-        $ref: '#/definitions/account.accountData'
     type: object
   account.logoutResponse:
     properties:
@@ -165,9 +168,9 @@ definitions:
       success:
         type: boolean
     type: object
-  account.orgInfo:
+  account.org:
     properties:
-      createdTimestamp:
+      createdAt:
         description: 创建时间戳
         type: integer
       currentCnt:
@@ -176,12 +179,12 @@ definitions:
       id:
         description: 组织ID
         type: integer
-      modifiedTimestamp:
-        description: 修改时间戳
-        type: integer
-      nickname:
+      name:
         description: 组织名称
         type: string
+      updatedAt:
+        description: 修改时间戳
+        type: integer
       username:
         description: 组织用户名
         type: string
@@ -197,7 +200,7 @@ definitions:
       belongTeam:
         description: 所属团队
         type: string
-      nickname:
+      name:
         description: 姓名
         type: string
       phone:
@@ -216,280 +219,178 @@ definitions:
       success:
         type: boolean
     type: object
-  admin.ListMenuData:
+  analytics.accountRankingsResponse:
     properties:
-      id:
-        description: ID
-        type: integer
-      is_have:
-        description: 是否已拥有权限
-        type: integer
-      name:
-        description: 菜单名称
-        type: string
-      pid:
-        description: 父类ID
-        type: integer
+      data:
+        properties:
+          meta:
+            $ref: '#/definitions/analytics.analyticsMeta'
+          rankings:
+            items:
+              $ref: '#/definitions/analytics.rankingItem'
+            type: array
+        type: object
+      success:
+        type: boolean
     type: object
-  admin.ListMyMenuData:
+  analytics.accountTrendSeries:
     properties:
-      icon:
-        description: 图标
-        type: string
-      id:
-        description: ID
-        type: integer
-      link:
-        description: 链接地址
+      accountId:
         type: string
       name:
-        description: 菜单名称
         type: string
-      pid:
-        description: 父类ID
-        type: integer
-    type: object
-  admin.createResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  admin.deleteResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  admin.detailResponse:
-    properties:
-      menu:
-        description: 菜单栏
+      trends:
         items:
-          $ref: '#/definitions/admin.ListMyMenuData'
+          $ref: '#/definitions/analytics.trendPoint'
         type: array
-      mobile:
-        description: 手机号
-        type: string
-      nickname:
-        description: 昵称
-        type: string
-      username:
-        description: 用户名
-        type: string
     type: object
-  admin.listAdminMenuResponse:
+  analytics.accountTrendsResponse:
     properties:
-      list:
-        items:
-          $ref: '#/definitions/admin.ListMenuData'
-        type: array
-      username:
-        type: string
-    type: object
-  admin.listData:
-    properties:
-      created_at:
-        description: 创建时间
-        type: string
-      created_user:
-        description: 创建人
-        type: string
-      hashid:
-        description: hashid
-        type: string
-      id:
-        description: ID
-        type: integer
-      is_online:
-        description: 是否在线 1:是 -1:否
-        type: integer
-      is_used:
-        description: 是否启用 1:是 -1:否
-        type: integer
-      mobile:
-        description: 手机号
-        type: string
-      nickname:
-        description: 昵称
-        type: string
-      updated_at:
-        description: 更新时间
-        type: string
-      updated_user:
-        description: 更新人
-        type: string
-      username:
-        description: 用户名
-        type: string
-    type: object
-  admin.listResponse:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/admin.listData'
-        type: array
-      pagination:
+      data:
         properties:
-          current_page:
-            type: integer
-          per_page_count:
-            type: integer
-          total:
-            type: integer
+          meta:
+            $ref: '#/definitions/analytics.analyticsMeta'
+          trends:
+            items:
+              $ref: '#/definitions/analytics.accountTrendSeries'
+            type: array
         type: object
+      success:
+        type: boolean
     type: object
-  admin.loginResponse:
+  analytics.analyticsMeta:
     properties:
-      token:
-        description: 用户身份标识
+      averageValue:
+        type: number
+      belongGroupId:
         type: string
-      username:
-        description: 用户名
+      dateRange:
+        $ref: '#/definitions/analytics.dateSpan'
+      metric:
         type: string
-    type: object
-  admin.logoutResponse:
-    properties:
-      username:
-        description: 用户账号
+      time:
         type: string
-    type: object
-  admin.modifyPasswordResponse:
-    properties:
-      username:
-        description: 用户账号
-        type: string
-    type: object
-  admin.modifyPersonalInfoResponse:
-    properties:
-      username:
-        description: 用户账号
-        type: string
-    type: object
-  admin.offlineResponse:
-    properties:
-      id:
-        description: 主键ID
+      totalTeams:
+        type: integer
+      totalUsers:
         type: integer
     type: object
-  admin.resetPasswordResponse:
+  analytics.customerComposition:
     properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  admin.updateUsedResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  authorized.createAPIResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  authorized.createResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  authorized.deleteAPIResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  authorized.deleteResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  authorized.listAPIData:
-    properties:
-      api:
-        description: 调用方对接人
-        type: string
-      business_key:
-        description: 调用方key
-        type: string
-      hash_id:
-        description: hashID
-        type: string
-      method:
-        description: 调用方secret
-        type: string
-    type: object
-  authorized.listAPIResponse:
-    properties:
-      business_key:
-        description: 调用方key
-        type: string
-      list:
+      birthYear:
         items:
-          $ref: '#/definitions/authorized.listAPIData'
+          $ref: '#/definitions/analytics.distributionItem'
+        type: array
+      city:
+        items:
+          $ref: '#/definitions/analytics.distributionItem'
+        type: array
+      education:
+        items:
+          $ref: '#/definitions/analytics.distributionItem'
+        type: array
+      gender:
+        items:
+          $ref: '#/definitions/analytics.distributionItem'
+        type: array
+      income:
+        items:
+          $ref: '#/definitions/analytics.distributionItem'
+        type: array
+      store:
+        items:
+          $ref: '#/definitions/analytics.distributionItem'
         type: array
     type: object
-  authorized.listData:
+  analytics.customerCompositionResponse:
     properties:
-      business_developer:
-        description: 调用方对接人
-        type: string
-      business_key:
-        description: 调用方key
-        type: string
-      business_secret:
-        description: 调用方secret
-        type: string
-      created_at:
-        description: 创建时间
-        type: string
-      created_user:
-        description: 创建人
-        type: string
-      hashid:
-        description: hashid
-        type: string
-      id:
-        description: ID
-        type: integer
-      is_used:
-        description: 是否启用 1:是 -1:否
-        type: integer
-      remark:
-        description: 备注
-        type: string
-      updated_at:
-        description: 更新时间
-        type: string
-      updated_user:
-        description: 更新人
-        type: string
-    type: object
-  authorized.listResponse:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/authorized.listData'
-        type: array
-      pagination:
+      data:
         properties:
-          current_page:
-            type: integer
-          per_page_count:
-            type: integer
-          total:
-            type: integer
+          compositions:
+            $ref: '#/definitions/analytics.customerComposition'
+          meta:
+            properties:
+              belongGroupId:
+                type: string
+              total:
+                type: number
+            type: object
         type: object
+      success:
+        type: boolean
     type: object
-  authorized.updateUsedResponse:
+  analytics.dateSpan:
     properties:
-      id:
-        description: 主键ID
+      end:
+        type: string
+      start:
+        type: string
+    type: object
+  analytics.distributionItem:
+    properties:
+      type:
+        type: string
+      value:
+        type: number
+    type: object
+  analytics.rankingItem:
+    properties:
+      avatar:
+        type: string
+      name:
+        type: string
+      rank:
         type: integer
+      rankChange:
+        type: integer
+      value:
+        type: number
+    type: object
+  analytics.teamRankingsResponse:
+    properties:
+      data:
+        properties:
+          meta:
+            $ref: '#/definitions/analytics.analyticsMeta'
+          rankings:
+            items:
+              $ref: '#/definitions/analytics.rankingItem'
+            type: array
+        type: object
+      success:
+        type: boolean
+    type: object
+  analytics.teamTrendSeries:
+    properties:
+      name:
+        type: string
+      teamId:
+        type: string
+      trends:
+        items:
+          $ref: '#/definitions/analytics.trendPoint'
+        type: array
+    type: object
+  analytics.teamsTrendsResponse:
+    properties:
+      data:
+        properties:
+          meta:
+            $ref: '#/definitions/analytics.analyticsMeta'
+          trends:
+            items:
+              $ref: '#/definitions/analytics.teamTrendSeries'
+            type: array
+        type: object
+      success:
+        type: boolean
+    type: object
+  analytics.trendPoint:
+    properties:
+      count:
+        type: number
+      date:
+        type: string
     type: object
   code.Failure:
     properties:
@@ -500,531 +401,278 @@ definitions:
         description: 描述信息
         type: string
     type: object
-  config.emailResponse:
-    properties:
-      email:
-        description: 邮箱地址
-        type: string
-    type: object
-  cron.createResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  cron.detailResponse:
-    properties:
-      command:
-        description: 执行命令
-        type: string
-      http_method:
-        description: http 请求方式 1:get 2:post
-        type: integer
-      is_used:
-        description: 是否启用 1:是  -1:否
-        type: integer
-      name:
-        description: 任务名称
-        type: string
-      notify_keyword:
-        description: 通知匹配关键字(多个用,分割)
-        type: string
-      notify_receiver_email:
-        description: 通知者邮箱地址(多个用,分割)
-        type: string
-      notify_status:
-        description: 执行结束是否通知 1:不通知 2:失败通知 3:结束通知 4:结果关键字匹配通知
-        type: integer
-      notify_type:
-        description: 通知类型 1:邮件 2:webhook
-        type: integer
-      protocol:
-        description: 执行方式 1:shell 2:http
-        type: integer
-      remark:
-        description: 备注
-        type: string
-      retry_interval:
-        description: 重试间隔(单位:秒)
-        type: integer
-      retry_times:
-        description: 重试次数
-        type: integer
-      spec:
-        description: crontab 表达式
-        type: string
-      timeout:
-        description: 超时时间(单位:秒)
-        type: integer
-    type: object
-  cron.listData:
-    properties:
-      command:
-        description: 执行命令
-        type: string
-      created_at:
-        description: 创建时间
-        type: string
-      created_user:
-        description: 创建人
-        type: string
-      hashid:
-        description: hashid
-        type: string
-      http_method:
-        description: http 请求方式 1:get 2:post
-        type: integer
-      http_method_text:
-        description: http 请求方式
-        type: string
-      id:
-        description: ID
-        type: integer
-      is_used:
-        description: 是否启用 1=启用 2=禁用
-        type: integer
-      is_used_text:
-        description: 是否启用
-        type: string
-      name:
-        description: 任务名称
-        type: string
-      notify_status:
-        description: 执行结束是否通知 1:不通知 2:失败通知 3:结束通知 4:结果关键字匹配通知
-        type: integer
-      notify_status_text:
-        description: 执行结束是否通知
-        type: string
-      protocol:
-        description: 执行方式 1:shell 2:http
-        type: integer
-      protocol_text:
-        description: 执行方式
-        type: string
-      retry_interval:
-        description: 重试间隔(单位:秒)
-        type: integer
-      retry_times:
-        description: 重试次数
-        type: integer
-      spec:
-        description: crontab 表达式
-        type: string
-      timeout:
-        description: 超时时间(单位:秒)
-        type: integer
-      updated_at:
-        description: 更新时间
-        type: string
-      updated_user:
-        description: 更新人
-        type: string
-    type: object
-  cron.listResponse:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/cron.listData'
-        type: array
-      pagination:
-        properties:
-          current_page:
-            type: integer
-          per_page_count:
-            type: integer
-          total:
-            type: integer
-        type: object
-    type: object
-  cron.modifyResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  cron.updateUsedResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  helper.md5Response:
-    properties:
-      md5_str:
-        description: MD5后的字符串
-        type: string
-    type: object
-  helper.signResponse:
-    properties:
-      authorization:
-        description: 签名信息-Authorization
-        type: string
-      authorization_date:
-        description: 签名信息-Authorization-Date
-        type: string
-    type: object
-  menu.createActionResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  menu.createRequest:
-    properties:
-      icon:
-        description: 图标
-        type: string
-      id:
-        description: ID
-        type: string
-      level:
-        description: 菜单类型 1:一级菜单 2:二级菜单
-        type: integer
-      link:
-        description: 链接地址
-        type: string
-      name:
-        description: 菜单名称
-        type: string
-      pid:
-        description: 父类ID
-        type: integer
-    type: object
-  menu.createResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  menu.deleteActionResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  menu.deleteResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  menu.detailResponse:
-    properties:
-      icon:
-        description: 图标
-        type: string
-      id:
-        description: 主键ID
-        type: integer
-      link:
-        description: 链接地址
-        type: string
-      name:
-        description: 菜单名称
-        type: string
-      pid:
-        description: 父类ID
-        type: integer
-    type: object
-  menu.listActionData:
-    properties:
-      api:
-        description: 调用方对接人
-        type: string
-      hash_id:
-        description: hashID
-        type: string
-      menu_id:
-        description: 菜单栏ID
-        type: integer
-      method:
-        description: 调用方secret
-        type: string
-    type: object
-  menu.listActionResponse:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/menu.listActionData'
-        type: array
-      menu_name:
-        type: string
-    type: object
-  menu.listData:
-    properties:
-      hashid:
-        description: hashid
-        type: string
-      icon:
-        description: 图标
-        type: string
-      id:
-        description: ID
-        type: integer
-      is_used:
-        description: 是否启用 1=启用 -1=禁用
-        type: integer
-      link:
-        description: 链接地址
-        type: string
-      name:
-        description: 菜单名称
-        type: string
-      pid:
-        description: 父类ID
-        type: integer
-      sort:
-        description: 排序
-        type: integer
-    type: object
-  menu.listResponse:
-    properties:
-      list:
-        items:
-          $ref: '#/definitions/menu.listData'
-        type: array
-    type: object
-  menu.updateSortResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  menu.updateUsedResponse:
-    properties:
-      id:
-        description: 主键ID
-        type: integer
-    type: object
-  org_info.childrenResponse:
+  customer_authorization_record.checkPhoneResponse:
     properties:
       data:
-        items:
-          $ref: '#/definitions/org_info.orgInfoData'
-        type: array
+        $ref: '#/definitions/customer_authorization_record.customerData'
+      exists:
+        type: boolean
       success:
         type: boolean
     type: object
-  org_info.createRequest:
+  customer_authorization_record.createRequest:
     properties:
-      maxCnt:
-        description: 最大成员数量
-        type: integer
-      orgDescription:
-        description: 组织描述
+      assignmentStatus:
+        description: assigned/unassigned
         type: string
-      orgLevel:
-        description: '组织层级: 1-组, 2-团队'
-        type: integer
-      orgName:
-        description: 组织名称
-        type: string
-      orgType:
-        description: '组织类型: group, team'
-        type: string
-      parentOrgId:
-        description: 父组织ID
-        type: string
-    required:
-    - orgName
-    - orgType
-    type: object
-  org_info.createResponse:
-    properties:
-      id:
-        type: integer
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  org_info.deleteResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  org_info.detailResponse:
-    properties:
-      data:
-        $ref: '#/definitions/org_info.orgInfoData'
-      success:
-        type: boolean
-    type: object
-  org_info.listResponse:
-    properties:
-      current:
-        type: integer
-      data:
-        items:
-          $ref: '#/definitions/org_info.orgInfoData'
-        type: array
-      pageSize:
-        type: integer
-      success:
-        type: boolean
-      total:
-        type: integer
-    type: object
-  org_info.orgInfoData:
-    properties:
-      createdTimestamp:
-        description: 创建时间戳
-        type: integer
-      currentCnt:
-        description: 当前成员数量
-        type: integer
-      id:
-        description: 组织ID
-        type: string
-      maxCnt:
-        description: 最大成员数量
-        type: integer
-      modifiedTimestamp:
-        description: 修改时间戳
-        type: integer
-      orgDescription:
-        description: 组织描述
-        type: string
-      orgLevel:
-        description: 组织层级
-        type: integer
-      orgName:
-        description: 组织名称
-        type: string
-      orgType:
-        description: 组织类型
-        type: string
-      parentOrgId:
-        description: 父组织ID
-        type: string
-    type: object
-  org_info.parentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/org_info.orgInfoData'
-      success:
-        type: boolean
-    type: object
-  org_info.updateRequest:
-    properties:
-      maxCnt:
-        description: 最大成员数量
-        type: integer
-      orgDescription:
-        description: 组织描述
-        type: string
-      orgId:
-        description: 组织ID
-        type: string
-      orgLevel:
-        description: 组织层级
-        type: integer
-      orgName:
-        description: 组织名称
-        type: string
-      orgType:
-        description: 组织类型
-        type: string
-      parentOrgId:
-        description: 父组织ID
-        type: string
-    required:
-    - orgId
-    type: object
-  org_info.updateResponse:
-    properties:
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  tool.dbData:
-    properties:
-      db_name:
-        description: 数据库名称
-        type: string
-    type: object
-  tool.dbsResponse:
-    properties:
-      list:
-        description: 数据库列表
-        items:
-          $ref: '#/definitions/tool.dbData'
-        type: array
-    type: object
-  tool.hashIdsDecodeResponse:
-    properties:
-      val:
-        description: 解密后的值
-        type: integer
-    type: object
-  tool.hashIdsEncodeResponse:
-    properties:
-      val:
-        description: 加密后的值
-        type: string
-    type: object
-  tool.searchCacheResponse:
-    properties:
-      ttl:
-        description: 过期时间
-        type: string
-      val:
-        description: 查询后的值
-        type: string
-    type: object
-  tool.searchMySQLResponse:
-    properties:
-      cols:
-        description: 查询后的行
+      authorizationPhotos:
+        description: 授权照片
         items:
           type: string
         type: array
-      cols_info:
-        description: 行信息
+      authorizationStatus:
+        description: authorized/unauthorized
+        type: string
+      authorizedStoreId:
+        description: 授权门店ID
+        type: string
+      belongAccountId:
+        description: 归属账户ID
+        type: string
+      belongTeamId:
+        description: 归属小队ID
+        type: string
+      birthYear:
+        description: 出生年份
+        type: integer
+      city:
+        description: 城市ID
+        type: string
+      completionStatus:
+        description: complete/incomplete
+        type: string
+      drainageAccount:
+        description: 引流账户
+        type: string
+      drainageChannel:
+        description: 引流渠道
+        type: string
+      drainageId:
+        description: 引流ID
+        type: string
+      education:
+        description: 学历
+        type: string
+      gender:
+        description: male/female
+        type: string
+      height:
+        description: 身高
+        type: integer
+      income:
+        description: 收入（万）
+        type: integer
+      name:
+        description: 用户称呼/姓名
+        type: string
+      paymentAmount:
+        description: 支付金额
+        type: number
+      paymentStatus:
+        description: paid/unpaid
+        type: string
+      phone:
+        description: 11位手机号
+        type: string
+      profession:
+        description: 职业
+        type: string
+      refundAmount:
+        description: 退款金额
+        type: number
+      remark:
+        description: 备注
+        type: string
+      wechat:
+        description: 微信
+        type: string
+    type: object
+  customer_authorization_record.createResponse:
+    properties:
+      data:
+        $ref: '#/definitions/customer_authorization_record.customerData'
+      success:
+        type: boolean
+    type: object
+  customer_authorization_record.customerData:
+    properties:
+      assignmentStatus:
+        description: 分配状态
+        type: string
+      authStore:
+        description: 授权门店名称（展示用）
+        type: string
+      authorizationPhotos:
+        description: 授权照片
         items:
-          $ref: '#/definitions/tool.tableColumn'
+          type: string
         type: array
-      list:
-        description: 查询后的数据
+      authorizationStatus:
+        description: 授权状态
+        type: string
+      belongAccount:
+        allOf:
+        - $ref: '#/definitions/customer_authorization_record.refObject'
+        description: 归属账户
+      belongGroup:
+        allOf:
+        - $ref: '#/definitions/customer_authorization_record.refObject'
+        description: 归属组
+      belongTeam:
+        allOf:
+        - $ref: '#/definitions/customer_authorization_record.refObject'
+        description: 归属小队
+      birthYear:
+        description: 出生年份
+        type: integer
+      city:
+        description: 城市ID
+        type: string
+      completionStatus:
+        description: 完善状态
+        type: string
+      createdAt:
+        description: 创建时间
+        type: string
+      drainageAccount:
+        description: 引流账户
+        type: string
+      drainageChannel:
+        description: 引流渠道
+        type: string
+      drainageId:
+        description: 引流ID
+        type: string
+      education:
+        description: 学历
+        type: string
+      gender:
+        description: 性别
+        type: string
+      height:
+        description: 身高(cm)
+        type: integer
+      income:
+        description: 收入（万）
+        type: integer
+      key:
+        description: 记录ID
+        type: integer
+      name:
+        description: 客户姓名
+        type: string
+      paymentAmount:
+        description: 支付金额
+        type: number
+      paymentStatus:
+        description: 付费状态
+        type: string
+      phone:
+        description: 手机号（可脱敏）
+        type: string
+      profession:
+        description: 职业
+        type: string
+      refundAmount:
+        description: 退款金额
+        type: number
+      remark:
+        description: 备注
+        type: string
+      updatedAt:
+        description: 修改时间
+        type: string
+      wechat:
+        description: 微信号
+        type: string
+    type: object
+  customer_authorization_record.detailResponse:
+    properties:
+      data:
+        $ref: '#/definitions/customer_authorization_record.customerData'
+      success:
+        type: boolean
+    type: object
+  customer_authorization_record.listMeta:
+    properties:
+      current:
+        type: integer
+      pageSize:
+        type: integer
+      total:
+        type: integer
+    type: object
+  customer_authorization_record.listResponse:
+    properties:
+      data:
         items:
-          additionalProperties: true
-          type: object
+          $ref: '#/definitions/customer_authorization_record.customerData'
         type: array
+      meta:
+        $ref: '#/definitions/customer_authorization_record.listMeta'
+      success:
+        type: boolean
     type: object
-  tool.sendMessageResponse:
+  customer_authorization_record.refObject:
     properties:
-      status:
-        description: 状态
+      id:
         type: string
-    type: object
-  tool.tableColumn:
-    properties:
-      column_comment:
-        description: 字段注释
-        type: string
-      column_name:
-        description: 字段名称
+      name:
         type: string
     type: object
-  tool.tableData:
+  customer_authorization_record.updateRequest:
     properties:
-      table_comment:
-        description: 数据表备注
+      assignmentStatus:
         type: string
-      table_name:
-        description: 数据表名称
-        type: string
-    type: object
-  tool.tablesResponse:
-    properties:
-      list:
-        description: 数据表列表
+      authorizationPhotos:
         items:
-          $ref: '#/definitions/tool.tableData'
+          type: string
         type: array
+      authorizationStatus:
+        type: string
+      birthYear:
+        type: integer
+      city:
+        type: string
+      completionStatus:
+        type: string
+      drainageAccount:
+        type: string
+      drainageChannel:
+        type: string
+      drainageId:
+        type: string
+      education:
+        type: string
+      gender:
+        type: string
+      height:
+        type: integer
+      income:
+        type: integer
+      name:
+        type: string
+      paymentAmount:
+        type: number
+      paymentStatus:
+        type: string
+      phone:
+        type: string
+      profession:
+        type: string
+      refundAmount:
+        type: number
+      remark:
+        type: string
+      wechat:
+        type: string
+    type: object
+  customer_authorization_record.updateResponse:
+    properties:
+      data:
+        $ref: '#/definitions/customer_authorization_record.customerData'
+      success:
+        type: boolean
     type: object
 info:
   contact: {}
@@ -1034,1496 +682,6 @@ info:
   title: swagger 接口文档
   version: "2.0"
 paths:
-  /api/admin:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 管理员列表
-      parameters:
-      - default: 1
-        description: 第几页
-        in: query
-        name: page
-        required: true
-        type: integer
-      - default: 10
-        description: 每页显示条数
-        in: query
-        name: page_size
-        required: true
-        type: integer
-      - description: 用户名
-        in: query
-        name: username
-        type: string
-      - description: 昵称
-        in: query
-        name: nickname
-        type: string
-      - description: 手机号
-        in: query
-        name: mobile
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.listResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 管理员列表
-      tags:
-      - API.admin
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 新增管理员
-      parameters:
-      - description: 用户名
-        in: formData
-        name: username
-        required: true
-        type: string
-      - description: 昵称
-        in: formData
-        name: nickname
-        required: true
-        type: string
-      - description: 手机号
-        in: formData
-        name: mobile
-        required: true
-        type: string
-      - description: MD5后的密码
-        in: formData
-        name: password
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.createResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 新增管理员
-      tags:
-      - API.admin
-  /api/admin/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除管理员
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.deleteResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 删除管理员
-      tags:
-      - API.admin
-  /api/admin/info:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 管理员详情
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.detailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 管理员详情
-      tags:
-      - API.admin
-  /api/admin/logout:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 管理员登出
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.logoutResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 管理员登出
-      tags:
-      - API.admin
-  /api/admin/menu:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 提交菜单授权
-      parameters:
-      - description: Hashid
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 功能权限ID,多个用,分割
-        in: formData
-        name: actions
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.createResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 提交菜单授权
-      tags:
-      - API.admin
-  /api/admin/menu/{id}:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 菜单授权列表
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.listAdminMenuResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 菜单授权列表
-      tags:
-      - API.admin
-  /api/admin/modify_password:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 修改密码
-      parameters:
-      - description: 旧密码
-        in: formData
-        name: old_password
-        required: true
-        type: string
-      - description: 新密码
-        in: formData
-        name: new_password
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.modifyPasswordResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 修改密码
-      tags:
-      - API.admin
-  /api/admin/modify_personal_info:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 修改个人信息
-      parameters:
-      - description: 昵称
-        in: formData
-        name: nickname
-        required: true
-        type: string
-      - description: 手机号
-        in: formData
-        name: mobile
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.modifyPersonalInfoResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 修改个人信息
-      tags:
-      - API.admin
-  /api/admin/offline:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 下线管理员
-      parameters:
-      - description: Hashid
-        in: formData
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.offlineResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 下线管理员
-      tags:
-      - API.admin
-  /api/admin/reset_password/{id}:
-    patch:
-      consumes:
-      - application/json
-      description: 重置密码
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.resetPasswordResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 重置密码
-      tags:
-      - API.admin
-  /api/admin/used:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 更新管理员为启用/禁用
-      parameters:
-      - description: Hashid
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 是否启用 1:是 -1:否
-        in: formData
-        name: used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.updateUsedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 更新管理员为启用/禁用
-      tags:
-      - API.admin
-  /api/authorized:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 调用方列表
-      parameters:
-      - default: 1
-        description: 第几页
-        in: query
-        name: page
-        required: true
-        type: integer
-      - default: 10
-        description: 每页显示条数
-        in: query
-        name: page_size
-        required: true
-        type: integer
-      - description: 调用方key
-        in: query
-        name: business_key
-        type: string
-      - description: 调用方secret
-        in: query
-        name: business_secret
-        type: string
-      - description: 调用方对接人
-        in: query
-        name: business_developer
-        type: string
-      - description: 备注
-        in: path
-        name: remark
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.listResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 调用方列表
-      tags:
-      - API.authorized
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 新增调用方
-      parameters:
-      - description: 调用方key
-        in: formData
-        name: business_key
-        required: true
-        type: string
-      - description: 调用方对接人
-        in: formData
-        name: business_developer
-        required: true
-        type: string
-      - description: 备注
-        in: formData
-        name: remark
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.createResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 新增调用方
-      tags:
-      - API.authorized
-  /api/authorized/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除调用方
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.deleteResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 删除调用方
-      tags:
-      - API.authorized
-  /api/authorized/used:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 更新调用方为启用/禁用
-      parameters:
-      - description: hashID
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 是否启用 1:是 -1:否
-        in: formData
-        name: used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.updateUsedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 更新调用方为启用/禁用
-      tags:
-      - API.authorized
-  /api/authorized_api:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 调用方接口地址列表
-      parameters:
-      - description: hashID
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.listAPIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 调用方接口地址列表
-      tags:
-      - API.authorized
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 授权调用方接口地址
-      parameters:
-      - description: HashID
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 请求方法
-        in: formData
-        name: method
-        required: true
-        type: string
-      - description: 请求地址
-        in: formData
-        name: api
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.createAPIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 授权调用方接口地址
-      tags:
-      - API.authorized
-  /api/authorized_api/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除调用方接口地址
-      parameters:
-      - description: 主键ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/authorized.deleteAPIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 删除调用方接口地址
-      tags:
-      - API.authorized
-  /api/config/email:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 修改邮件配置
-      parameters:
-      - description: 邮箱服务器
-        in: formData
-        name: host
-        required: true
-        type: string
-      - description: 端口
-        in: formData
-        name: port
-        required: true
-        type: string
-      - description: 发件人邮箱
-        in: formData
-        name: user
-        required: true
-        type: string
-      - description: 发件人密码
-        in: formData
-        name: pass
-        required: true
-        type: string
-      - description: 收件人邮箱地址，多个用,分割
-        in: formData
-        name: to
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/config.emailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 修改邮件配置
-      tags:
-      - API.config
-  /api/cron:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 任务列表
-      parameters:
-      - default: 1
-        description: 第几页
-        in: query
-        name: page
-        required: true
-        type: integer
-      - default: 10
-        description: 每页显示条数
-        in: query
-        name: page_size
-        required: true
-        type: integer
-      - description: 任务名称
-        in: query
-        name: name
-        type: string
-      - description: 执行方式 1:shell 2:http
-        in: query
-        name: protocol
-        type: integer
-      - description: 是否启用 1:是  -1:否
-        in: query
-        name: is_used
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.listResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 任务列表
-      tags:
-      - API.cron
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 创建任务
-      parameters:
-      - description: 任务名称
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: crontab 表达式
-        in: formData
-        name: spec
-        required: true
-        type: string
-      - description: 执行命令
-        in: formData
-        name: command
-        required: true
-        type: string
-      - description: 执行方式 1:shell 2:http
-        in: formData
-        name: protocol
-        required: true
-        type: integer
-      - description: http 请求方式 1:get 2:post
-        in: formData
-        name: http_method
-        type: integer
-      - description: 超时时间(单位:秒)
-        in: formData
-        name: timeout
-        required: true
-        type: integer
-      - description: 重试次数
-        in: formData
-        name: retry_times
-        required: true
-        type: integer
-      - description: 重试间隔(单位:秒)
-        in: formData
-        name: retry_interval
-        required: true
-        type: integer
-      - description: 执行结束是否通知 1:不通知 2:失败通知 3:结束通知 4:结果关键字匹配通知
-        in: formData
-        name: notify_status
-        required: true
-        type: integer
-      - description: 通知类型 1:邮件 2:webhook
-        in: formData
-        name: notify_type
-        type: integer
-      - description: 通知者邮箱地址(多个用,分割)
-        in: formData
-        name: notify_receiver_email
-        type: string
-      - description: 通知匹配关键字(多个用,分割)
-        in: formData
-        name: notify_keyword
-        type: string
-      - description: 备注
-        in: formData
-        name: remark
-        type: string
-      - description: 是否启用 1:是  -1:否
-        in: formData
-        name: is_used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.createResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 创建任务
-      tags:
-      - API.cron
-  /api/cron/{id}:
-    get:
-      consumes:
-      - application/json
-      description: 获取单条任务详情
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.detailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 获取单条任务详情
-      tags:
-      - API.cron
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 编辑任务
-      parameters:
-      - description: hashID
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 任务名称
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: crontab 表达式
-        in: formData
-        name: spec
-        required: true
-        type: string
-      - description: 执行命令
-        in: formData
-        name: command
-        required: true
-        type: string
-      - description: 执行方式 1:shell 2:http
-        in: formData
-        name: protocol
-        required: true
-        type: integer
-      - description: http 请求方式 1:get 2:post
-        in: formData
-        name: http_method
-        type: integer
-      - description: 超时时间(单位:秒)
-        in: formData
-        name: timeout
-        required: true
-        type: integer
-      - description: 重试次数
-        in: formData
-        name: retry_times
-        required: true
-        type: integer
-      - description: 重试间隔(单位:秒)
-        in: formData
-        name: retry_interval
-        required: true
-        type: integer
-      - description: 执行结束是否通知 1:不通知 2:失败通知 3:结束通知 4:结果关键字匹配通知
-        in: formData
-        name: notify_status
-        required: true
-        type: integer
-      - description: 通知类型 1:邮件 2:webhook
-        in: formData
-        name: notify_type
-        type: integer
-      - description: 通知者邮箱地址(多个用,分割)
-        in: formData
-        name: notify_receiver_email
-        type: string
-      - description: 通知匹配关键字(多个用,分割)
-        in: formData
-        name: notify_keyword
-        type: string
-      - description: 备注
-        in: formData
-        name: remark
-        type: string
-      - description: 是否启用 1:是  -1:否
-        in: formData
-        name: is_used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.modifyResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 编辑任务
-      tags:
-      - API.cron
-  /api/cron/exec/{id}:
-    patch:
-      consumes:
-      - application/json
-      description: 手动执行单条任务
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.detailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 手动执行单条任务
-      tags:
-      - API.cron
-  /api/cron/used:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 更新任务为启用/禁用
-      parameters:
-      - description: hashID
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 是否启用 1:是 -1:否
-        in: formData
-        name: used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/cron.updateUsedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 更新任务为启用/禁用
-      tags:
-      - API.cron
-  /api/login:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 管理员登录
-      parameters:
-      - description: 用户名
-        in: formData
-        name: username
-        required: true
-        type: string
-      - description: MD5后的密码
-        in: formData
-        name: password
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 返回token和用户名
-          schema:
-            $ref: '#/definitions/admin.loginResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 管理员登录
-      tags:
-      - API.admin
-  /api/menu:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 菜单列表
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.listResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 菜单列表
-      tags:
-      - API.menu
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 创建/编辑菜单
-      parameters:
-      - description: 请求信息
-        in: body
-        name: Request
-        required: true
-        schema:
-          $ref: '#/definitions/menu.createRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.createResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 创建/编辑菜单
-      tags:
-      - API.menu
-  /api/menu/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除菜单
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.deleteResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 删除菜单
-      tags:
-      - API.menu
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 菜单详情
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.detailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 菜单详情
-      tags:
-      - API.menu
-  /api/menu/sort:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 更新菜单排序
-      parameters:
-      - description: hashId
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 排序
-        in: formData
-        name: sort
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.updateSortResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 更新菜单排序
-      tags:
-      - API.menu
-  /api/menu/used:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 更新菜单为启用/禁用
-      parameters:
-      - description: hashId
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 是否启用 1:是 -1:否
-        in: formData
-        name: used
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.updateUsedResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 更新菜单为启用/禁用
-      tags:
-      - API.menu
-  /api/menu_action:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 功能权限列表
-      parameters:
-      - description: hashID
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.listActionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 功能权限列表
-      tags:
-      - API.menu
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 创建功能权限
-      parameters:
-      - description: HashID
-        in: formData
-        name: id
-        required: true
-        type: string
-      - description: 请求方法
-        in: formData
-        name: method
-        required: true
-        type: string
-      - description: 请求地址
-        in: formData
-        name: api
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.createActionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 创建功能权限
-      tags:
-      - API.menu
-  /api/menu_action/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 删除功能权限
-      parameters:
-      - description: hashId
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/menu.deleteActionResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 删除功能权限
-      tags:
-      - API.menu
-  /api/tool/cache/clear:
-    patch:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 清空缓存
-      parameters:
-      - description: Redis Key
-        in: formData
-        name: redis_key
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.searchCacheResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 清空缓存
-      tags:
-      - API.tool
-  /api/tool/cache/search:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 查询缓存
-      parameters:
-      - description: Redis Key
-        in: formData
-        name: redis_key
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.searchCacheResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 查询缓存
-      tags:
-      - API.tool
-  /api/tool/data/dbs:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 查询 DB
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.dbsResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 查询 DB
-      tags:
-      - API.tool
-  /api/tool/data/mysql:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 执行 SQL 语句
-      parameters:
-      - description: 数据库名称
-        in: formData
-        name: db_name
-        required: true
-        type: string
-      - description: 数据表名称
-        in: formData
-        name: table_name
-        required: true
-        type: string
-      - description: SQL 语句
-        in: formData
-        name: sql
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.searchMySQLResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 执行 SQL 语句
-      tags:
-      - API.tool
-  /api/tool/data/tables:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 查询 Table
-      parameters:
-      - description: 数据库名称
-        in: formData
-        name: db_name
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.tablesResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 查询 Table
-      tags:
-      - API.tool
-  /api/tool/hashids/decode/{id}:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: HashIds 解密
-      parameters:
-      - description: 需解密的密文
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.hashIdsDecodeResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: HashIds 解密
-      tags:
-      - API.tool
-  /api/tool/hashids/encode/{id}:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: HashIds 加密
-      parameters:
-      - description: 需加密的数字
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.hashIdsEncodeResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: HashIds 加密
-      tags:
-      - API.tool
-  /api/tool/send_message:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 发送消息
-      parameters:
-      - description: 消息内容
-        in: formData
-        name: message
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/tool.sendMessageResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 发送消息
-      tags:
-      - API.tool
-  /api/user/{username}:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 通过用户名或用户ID获取管理员详情
-      parameters:
-      - description: 用户名或用户ID
-        in: path
-        name: username
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/admin.detailResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      security:
-      - LoginToken: []
-      summary: 通过用户名或用户ID获取管理员详情
-      tags:
-      - API.admin
   /api/v1/account-histories:
     get:
       consumes:
@@ -2561,7 +719,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 获取账户历史记录
       tags:
-      - API.account
+      - Account
   /api/v1/accounts:
     get:
       consumes:
@@ -2629,7 +787,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 获取账户列表
       tags:
-      - API.account
+      - Account
     post:
       consumes:
       - application/json
@@ -2654,7 +812,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 创建账户
       tags:
-      - API.account
+      - Account
   /api/v1/accounts/{accountId}:
     get:
       consumes:
@@ -2693,7 +851,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 获取账户详情
       tags:
-      - API.account
+      - Account
     put:
       consumes:
       - application/json
@@ -2727,7 +885,232 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 更新账户
       tags:
-      - API.account
+      - Account
+  /api/v1/analytics/account/rankings:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 按开单或留资获取个人排名
+      parameters:
+      - description: 指标类型
+        enum:
+        - paid_count
+        - lead_count
+        in: query
+        name: metric
+        required: true
+        type: string
+      - default: month
+        description: 时间范围
+        enum:
+        - today
+        - week
+        - last7days
+        - month
+        in: query
+        name: time
+        type: string
+      - description: 返回前N名
+        in: query
+        name: top
+        type: integer
+      - description: 归属组ID
+        in: query
+        name: belongGroupId
+        type: string
+      - description: 排序字段
+        enum:
+        - total
+        - name
+        in: query
+        name: sortBy
+        type: string
+      - default: desc
+        description: 排序方向
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sortOrder
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analytics.accountRankingsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取个人排名数据
+      tags:
+      - Analytics
+  /api/v1/analytics/account/trends:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 返回个人在开单或留资方面的趋势数据
+      parameters:
+      - description: 指标类型
+        enum:
+        - paid_count
+        - lead_count
+        in: query
+        name: metric
+        required: true
+        type: string
+      - default: month
+        description: 时间范围
+        enum:
+        - today
+        - week
+        - last7days
+        - month
+        in: query
+        name: time
+        type: string
+      - description: 返回前N名
+        in: query
+        name: top
+        type: integer
+      - description: 归属组ID
+        in: query
+        name: belongGroupId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analytics.accountTrendsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取个人趋势数据
+      tags:
+      - Analytics
+  /api/v1/analytics/customer-authorization-record/composition:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 返回按多个维度的客资构成占比
+      parameters:
+      - default: month
+        description: 统计时间范围
+        enum:
+        - today
+        - week
+        - last7days
+        - month
+        in: query
+        name: time
+        type: string
+      - description: 归属组ID
+        in: query
+        name: belongGroupId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analytics.customerCompositionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取客资授权记录构成（包含城市分布）
+      tags:
+      - Analytics
+  /api/v1/analytics/teams/rankings:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 按开单或留资对团队进行排名
+      parameters:
+      - default: paid_count
+        description: 指标
+        enum:
+        - paid_count
+        - lead_count
+        in: query
+        name: metric
+        type: string
+      - default: month
+        description: 时间范围
+        enum:
+        - today
+        - week
+        - last7days
+        - month
+        in: query
+        name: time
+        type: string
+      - description: 返回前N名
+        in: query
+        name: top
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analytics.teamRankingsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取团队排名（全体团队维度）
+      tags:
+      - Analytics
+  /api/v1/analytics/teams/trends:
+    get:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: 返回多支团队在时间范围内的趋势
+      parameters:
+      - default: paid_count
+        description: 指标
+        enum:
+        - paid_count
+        - lead_count
+        in: query
+        name: metric
+        type: string
+      - default: month
+        description: 时间范围
+        enum:
+        - today
+        - week
+        - last7days
+        - month
+        in: query
+        name: time
+        type: string
+      - description: 返回前N条折线
+        in: query
+        name: top
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/analytics.teamsTrendsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取团队多序列趋势（多队折线）
+      tags:
+      - Analytics
   /api/v1/auth/login:
     post:
       consumes:
@@ -2753,7 +1136,7 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 用户登录
       tags:
-      - API.account
+      - CoreAuth
   /api/v1/auth/logout:
     post:
       consumes:
@@ -2772,12 +1155,12 @@ paths:
             $ref: '#/definitions/code.Failure'
       summary: 退出登录
       tags:
-      - API.account
-  /api/v1/org-infos:
+      - CoreAuth
+  /api/v1/customer-authorization-records:
     get:
       consumes:
       - application/x-www-form-urlencoded
-      description: 分页获取组织信息列表，支持搜索和筛选
+      description: 分页获取客户授权记录列表，支持搜索和筛选
       parameters:
       - default: 1
         description: 当前页码
@@ -2789,107 +1172,111 @@ paths:
         in: query
         name: pageSize
         type: integer
-      - description: 组织名称搜索
+      - description: 姓名搜索
         in: query
-        name: orgName
+        name: name
         type: string
-      - description: 组织类型筛选
+      - description: 城市搜索
         in: query
-        name: orgType
+        name: city
         type: string
-      - description: 组织层级筛选
+      - description: 手机号搜索
         in: query
-        name: orgLevel
+        name: phone
+        type: string
+      - description: 归属组搜索
+        in: query
+        name: group
+        type: string
+      - description: 归属团队搜索
+        in: query
+        name: team
+        type: string
+      - description: 归属账户搜索
+        in: query
+        name: account
+        type: string
+      - description: 是否已授权筛选
+        in: query
+        name: isAuthorized
+        type: string
+      - description: 是否已买单筛选
+        in: query
+        name: isPaid
+        type: string
+      - description: 出生年份最小值
+        in: query
+        name: birthYearMin
         type: integer
-      - description: 父组织ID筛选
+      - description: 出生年份最大值
         in: query
-        name: parentOrgId
-        type: string
+        name: birthYearMax
+        type: integer
+      - description: 收入最小值
+        in: query
+        name: incomeMin
+        type: integer
+      - description: 收入最大值
+        in: query
+        name: incomeMax
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/org_info.listResponse'
+            $ref: '#/definitions/customer_authorization_record.listResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/code.Failure'
-      summary: 获取组织信息列表
+      summary: 获取客户授权记录列表
       tags:
-      - API.org_info
+      - Customer
     post:
       consumes:
       - application/json
-      description: 创建新的组织信息
+      description: 创建新的客户授权记录
       parameters:
-      - description: 创建组织请求
+      - description: 客户授权记录信息
         in: body
-        name: request
+        name: customer
         required: true
         schema:
-          $ref: '#/definitions/org_info.createRequest'
+          $ref: '#/definitions/customer_authorization_record.createRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/org_info.createResponse'
+            $ref: '#/definitions/customer_authorization_record.createResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/code.Failure'
-      summary: 创建组织信息
+      summary: 创建客户授权记录
       tags:
-      - API.org_info
-  /api/v1/org-infos/{orgId}:
-    delete:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 根据组织ID删除组织信息
-      parameters:
-      - description: 组织ID
-        in: path
-        name: orgId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/org_info.deleteResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 删除组织信息
-      tags:
-      - API.org_info
+      - Customer
+  /api/v1/customer-authorization-records/{id}:
     get:
       consumes:
       - application/x-www-form-urlencoded
-      description: 根据组织ID获取组织信息详情
+      description: 根据ID获取客户授权记录详情
       parameters:
-      - description: 组织ID
+      - description: 客户授权记录ID
         in: path
-        name: orgId
+        name: id
         required: true
-        type: string
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/org_info.detailResponse'
+            $ref: '#/definitions/customer_authorization_record.detailResponse'
         "400":
           description: Bad Request
           schema:
@@ -2898,32 +1285,32 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/code.Failure'
-      summary: 获取组织信息详情
+      summary: 获取客户授权记录详情
       tags:
-      - API.org_info
+      - Customer
     put:
       consumes:
       - application/json
-      description: 根据组织ID更新组织信息
+      description: 根据ID更新客户授权记录
       parameters:
-      - description: 组织ID
+      - description: 客户授权记录ID
         in: path
-        name: orgId
+        name: id
         required: true
-        type: string
-      - description: 更新组织请求
+        type: integer
+      - description: 客户授权记录更新信息
         in: body
-        name: request
+        name: customer
         required: true
         schema:
-          $ref: '#/definitions/org_info.updateRequest'
+          $ref: '#/definitions/customer_authorization_record.updateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/org_info.updateResponse'
+            $ref: '#/definitions/customer_authorization_record.updateResponse'
         "400":
           description: Bad Request
           schema:
@@ -2932,18 +1319,17 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/code.Failure'
-      summary: 更新组织信息
+      summary: 更新客户授权记录
       tags:
-      - API.org_info
-  /api/v1/org-infos/{orgId}/children:
+      - Customer
+  /api/v1/customer-authorization-records/check-phone:
     get:
       consumes:
       - application/x-www-form-urlencoded
-      description: 根据组织ID获取子组织列表
       parameters:
-      - description: 组织ID
-        in: path
-        name: orgId
+      - description: 手机号
+        in: query
+        name: phone
         required: true
         type: string
       produces:
@@ -2952,104 +1338,10 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/org_info.childrenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 获取子组织
+            $ref: '#/definitions/customer_authorization_record.checkPhoneResponse'
+      summary: 检查手机号是否已存在
       tags:
-      - API.org_info
-  /api/v1/org-infos/{orgId}/parent:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 根据组织ID获取父组织信息
-      parameters:
-      - description: 组织ID
-        in: path
-        name: orgId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/org_info.parentResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 获取父组织
-      tags:
-      - API.org_info
-  /helper/md5/{str}:
-    get:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 加密
-      parameters:
-      - description: 需要加密的字符串
-        in: path
-        name: str
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.md5Response'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 加密
-      tags:
-      - Helper
-  /helper/sign:
-    post:
-      consumes:
-      - application/x-www-form-urlencoded
-      description: 签名
-      parameters:
-      - description: 调用方 KEY
-        in: formData
-        name: key
-        required: true
-        type: string
-      - description: 请求路径 (不附带 querystring)，例如：/api/login
-        in: formData
-        name: path
-        required: true
-        type: string
-      - description: 请求方式，例如：POST
-        in: formData
-        name: method
-        required: true
-        type: string
-      - description: 请求参数，例如：username=tom&password=123456
-        in: formData
-        name: params
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.signResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/code.Failure'
-      summary: 签名
-      tags:
-      - Helper
+      - Customer
 securityDefinitions:
   LoginToken:
     in: header

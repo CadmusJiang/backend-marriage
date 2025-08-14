@@ -8,6 +8,7 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
+	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account_org_relation"
 	"go.uber.org/zap"
 )
 
@@ -39,16 +40,16 @@ func (s *service) Create(ctx core.Context, accountData *CreateAccountData) (id i
 	// 创建账户记录
 	now := int64(time.Now().Unix())
 	newAccount := &account.Account{
-		Username:          accountData.Username,
-		Nickname:          accountData.Nickname,
-		Password:          hashedPassword,
-		Phone:             accountData.Phone,
-		RoleType:          accountData.RoleType,
-		Status:            accountData.Status,
-		CreatedTimestamp:  now,
-		ModifiedTimestamp: now,
-		CreatedUser:       ctx.SessionUserInfo().UserName,
-		UpdatedUser:       ctx.SessionUserInfo().UserName,
+		Username:    accountData.Username,
+		Nickname:    accountData.Nickname,
+		Password:    hashedPassword,
+		Phone:       accountData.Phone,
+		RoleType:    accountData.RoleType,
+		Status:      accountData.Status,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		CreatedUser: ctx.SessionUserInfo().UserName,
+		UpdatedUser: ctx.SessionUserInfo().UserName,
 	}
 
 	// 设置组织信息
@@ -64,6 +65,40 @@ func (s *service) Create(ctx core.Context, accountData *CreateAccountData) (id i
 	id, err = newAccount.Create(s.db.GetDbW())
 	if err != nil {
 		return 0, fmt.Errorf("创建账户失败: %v", err)
+	}
+
+	// 写入账户与组织的关联关系（belong）
+	// 关联类型: 1 belong, 2 manage；状态: 1 active
+	if accountData.BelongGroup != nil && accountData.BelongGroup.ID > 0 {
+		rel := &account_org_relation.AccountOrgRelation{
+			AccountId:         uint32(id),
+			OrgId:             uint32(accountData.BelongGroup.ID),
+			RelationType:      1,
+			Status:            1,
+			CreatedTimestamp:  now,
+			ModifiedTimestamp: now,
+			CreatedUser:       ctx.SessionUserInfo().UserName,
+			UpdatedUser:       ctx.SessionUserInfo().UserName,
+		}
+		if _, err := rel.Create(s.db.GetDbW()); err != nil {
+			ctx.Logger().Error("创建账户-组关联失败", zap.Error(err))
+		}
+	}
+
+	if accountData.BelongTeam != nil && accountData.BelongTeam.ID > 0 {
+		rel := &account_org_relation.AccountOrgRelation{
+			AccountId:         uint32(id),
+			OrgId:             uint32(accountData.BelongTeam.ID),
+			RelationType:      1,
+			Status:            1,
+			CreatedTimestamp:  now,
+			ModifiedTimestamp: now,
+			CreatedUser:       ctx.SessionUserInfo().UserName,
+			UpdatedUser:       ctx.SessionUserInfo().UserName,
+		}
+		if _, err := rel.Create(s.db.GetDbW()); err != nil {
+			ctx.Logger().Error("创建账户-团队关联失败", zap.Error(err))
+		}
 	}
 
 	// 创建历史记录

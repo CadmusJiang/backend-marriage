@@ -505,132 +505,132 @@ func (qb *accountQueryBuilder) OrderByBelongTeamId(asc bool) *accountQueryBuilde
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereLastLoginTimestamp(p mysql.Predicate, value int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereLastLoginAt(p mysql.Predicate, value int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "last_login_timestamp", p),
+		fmt.Sprintf("%v %v ?", "last_login_at", p),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereLastLoginTimestampIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereLastLoginAtIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "last_login_timestamp", "IN"),
+		fmt.Sprintf("%v %v ?", "last_login_at", "IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereLastLoginTimestampNotIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereLastLoginAtNotIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "last_login_timestamp", "NOT IN"),
+		fmt.Sprintf("%v %v ?", "last_login_at", "NOT IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) OrderByLastLoginTimestamp(asc bool) *accountQueryBuilder {
+func (qb *accountQueryBuilder) OrderByLastLoginAt(asc bool) *accountQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "last_login_timestamp "+order)
+	qb.order = append(qb.order, "last_login_at "+order)
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereCreatedTimestamp(p mysql.Predicate, value int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereCreatedAt(p mysql.Predicate, value int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "created_timestamp", p),
+		fmt.Sprintf("%v %v ?", "created_at", p),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereCreatedTimestampIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereCreatedAtIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "created_timestamp", "IN"),
+		fmt.Sprintf("%v %v ?", "created_at", "IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereCreatedTimestampNotIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereCreatedAtNotIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "created_timestamp", "NOT IN"),
+		fmt.Sprintf("%v %v ?", "created_at", "NOT IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) OrderByCreatedTimestamp(asc bool) *accountQueryBuilder {
+func (qb *accountQueryBuilder) OrderByCreatedAt(asc bool) *accountQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "created_timestamp "+order)
+	qb.order = append(qb.order, "created_at "+order)
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereModifiedTimestamp(p mysql.Predicate, value int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereUpdatedAt(p mysql.Predicate, value int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "modified_timestamp", p),
+		fmt.Sprintf("%v %v ?", "updated_at", p),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereModifiedTimestampIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereUpdatedAtIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "modified_timestamp", "IN"),
+		fmt.Sprintf("%v %v ?", "updated_at", "IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereModifiedTimestampNotIn(value []int64) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereUpdatedAtNotIn(value []int64) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "modified_timestamp", "NOT IN"),
+		fmt.Sprintf("%v %v ?", "updated_at", "NOT IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) OrderByModifiedTimestamp(asc bool) *accountQueryBuilder {
+func (qb *accountQueryBuilder) OrderByUpdatedAt(asc bool) *accountQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "modified_timestamp "+order)
+	qb.order = append(qb.order, "updated_at "+order)
 	return qb
 }
 

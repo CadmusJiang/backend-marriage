@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main", "master" ]
+  push:
+    branches: [ "main", "master" ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  COVERAGE_THRESHOLD: "55.0" # 可按需调整覆盖率门槛
+
+jobs:
+  lint:
+    name: Lint (golangci-lint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.58.2
+          args: --timeout=5m
+
+  test:
+    name: Test (race + coverage)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Download deps
+        run: go mod download
+
+      - name: Run tests
+        run: go test -race -covermode=atomic -coverprofile=coverage.out ./...
+
+      - name: Compute coverage and enforce threshold
+        shell: bash
+        run: |
+          pct=$(go tool cover -func=coverage.out | awk '/total:/ {print substr($3, 1, length($3)-1)}')
+          echo "coverage=${pct}" >> $GITHUB_OUTPUT
+          awk -v p="$pct" -v t="$COVERAGE_THRESHOLD" 'BEGIN { if (p+0 < t+0) { printf("Coverage %.1f%% < threshold %.1f%%\n", p, t); exit 1 } else { printf("Coverage %.1f%% >= threshold %.1f%%\n", p, t) } }'
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            coverage.out
+            $(go env GOPATH)/pkg/mod/cache/download
+
+  security:
+    name: Security (gosec)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run gosec
+        uses: securego/gosec@v2
+        with:
+          args: -severity medium -confidence medium ./...
+
+  build:
+    name: Build (go + docker)
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Go build
+        run: go build ./...
+
+      - name: Docker build
+        run: |
+          if [ -f Dockerfile ]; then docker build -t backend-marriage:ci .; else echo "No Dockerfile, skip"; fi
+
+

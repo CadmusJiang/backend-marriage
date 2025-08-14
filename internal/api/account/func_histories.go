@@ -3,6 +3,7 @@ package account
 import (
 	"net/http"
 
+	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 )
@@ -18,7 +19,7 @@ type accountHistoryData struct {
 	ID               string                 `json:"id"`                // 历史记录ID
 	AccountID        string                 `json:"accountId"`         // 账户ID
 	OperateType      string                 `json:"operateType"`       // 操作类型
-	OperateTimestamp int64                  `json:"operateTimestamp"`  // 操作时间戳
+	OccurredAt       int64                  `json:"occurredAt"`        // 操作时间戳
 	Content          map[string]interface{} `json:"content"`           // 操作内容
 	OperatorUsername string                 `json:"operator_username"` // 操作人用户名
 	OperatorNickname string                 `json:"operator_nickname"` // 操作人姓名
@@ -36,7 +37,7 @@ type historiesResponse struct {
 // GetAccountHistories 获取账户历史记录
 // @Summary 获取账户历史记录
 // @Description 分页获取账户操作历史记录
-// @Tags API.account
+// @Tags Account
 // @Accept application/x-www-form-urlencoded
 // @Produce json
 // @Param accountId query string false "账户ID"
@@ -78,14 +79,31 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 			return
 		}
 
+		// 范围校验：仅允许在可见范围内查看该账户的历史
+		// 使用 service.Detail 获取账户信息，再进行范围判定
+		if h.accountService != nil {
+			info, _ := h.accountService.Detail(c, req.AccountID)
+			if info != nil {
+				scope, _ := authz.ComputeScope(c, h.db)
+				if !authz.CanAccessAccount(scope, info) {
+					c.AbortWithError(core.Error(
+						http.StatusForbidden,
+						code.RBACError,
+						code.Text(code.RBACError)),
+					)
+					return
+				}
+			}
+		}
+
 		// Mock数据 - 与前端数据结构保持一致
 		mockHistories := []accountHistoryData{
 			// accountId=1 的历史记录
 			{
-				ID:               "101",
-				AccountID:        "1",
-				OperateType:      "created",
-				OperateTimestamp: 1705123200, // 2024-01-13 10:00:00
+				ID:          "101",
+				AccountID:   "1",
+				OperateType: "created",
+				OccurredAt:  1705123200, // 2024-01-13 10:00:00
 				Content: map[string]interface{}{
 					"username": map[string]string{
 						"old": "",
@@ -113,10 +131,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "system",
 			},
 			{
-				ID:               "102",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705209600, // 2024-01-14 10:00:00
+				ID:          "102",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705209600, // 2024-01-14 10:00:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138000",
@@ -128,10 +146,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "103",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705296000, // 2024-01-15 10:00:00
+				ID:          "103",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705296000, // 2024-01-15 10:00:00
 				Content: map[string]interface{}{
 					"nickname": map[string]string{
 						"old": "系统管理员",
@@ -143,10 +161,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "104",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705382400, // 2024-01-16 10:00:00
+				ID:          "104",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705382400, // 2024-01-16 10:00:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "enabled",
@@ -162,10 +180,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "105",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705468800, // 2024-01-17 10:00:00
+				ID:          "105",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705468800, // 2024-01-17 10:00:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "disabled",
@@ -196,10 +214,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "107",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705641600, // 2024-01-19 10:00:00
+				ID:          "107",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705641600, // 2024-01-19 10:00:00
 				Content: map[string]interface{}{
 					"nickname": map[string]string{
 						"old": "超级管理员",
@@ -211,10 +229,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "108",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705728000, // 2024-01-20 10:00:00
+				ID:          "108",
+				AccountID:   "1",
+				OperateType: "modified",
+				OccurredAt:  1705728000, // 2024-01-20 10:00:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138001",
@@ -227,10 +245,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 			},
 			// accountId=6 的原有历史记录
 			{
-				ID:               "1",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1705923000, // 2024-01-22 14:30:00
+				ID:          "1",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1705923000, // 2024-01-22 14:30:00
 				Content: map[string]interface{}{
 					"roleType": map[string]string{
 						"old": "员工",
@@ -250,10 +268,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "2",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1705754700, // 2024-01-20 16:45:00
+				ID:          "2",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1705754700, // 2024-01-20 16:45:00
 				Content: map[string]interface{}{
 					"belongGroup": map[string]string{
 						"old": "南京-天元大厦组",
@@ -269,10 +287,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "3",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1705565700, // 2024-01-18 09:15:00
+				ID:          "3",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1705565700, // 2024-01-18 09:15:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "enabled",
@@ -284,10 +302,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "4",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1705303200, // 2024-01-15 11:20:00
+				ID:          "4",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1705303200, // 2024-01-15 11:20:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138000",
@@ -303,10 +321,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "5",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1705032000, // 2024-01-12 10:00:00
+				ID:          "5",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1705032000, // 2024-01-12 10:00:00
 				Content: map[string]interface{}{
 					"nickname": map[string]string{
 						"old": "张三",
@@ -322,10 +340,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "6",
-				AccountID:        "6",
-				OperateType:      "created",
-				OperateTimestamp: 1704877800, // 2024-01-10 14:30:00
+				ID:          "6",
+				AccountID:   "6",
+				OperateType: "created",
+				OccurredAt:  1704877800, // 2024-01-10 14:30:00
 				Content: map[string]interface{}{
 					"username": map[string]string{
 						"old": "",
@@ -357,10 +375,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "7",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1704709200, // 2024-01-08 16:20:00
+				ID:          "7",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1704709200, // 2024-01-08 16:20:00
 				Content: map[string]interface{}{
 					"belongGroup": map[string]string{
 						"old": "南京-天元大厦组",
@@ -376,10 +394,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "8",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1704457500, // 2024-01-05 13:45:00
+				ID:          "8",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1704457500, // 2024-01-05 13:45:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "disabled",
@@ -395,10 +413,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "team_manager",
 			},
 			{
-				ID:               "9",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1704265800, // 2024-01-03 10:30:00
+				ID:          "9",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1704265800, // 2024-01-03 10:30:00
 				Content: map[string]interface{}{
 					"password": map[string]string{
 						"old": "****",
@@ -410,10 +428,10 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "10",
-				AccountID:        "6",
-				OperateType:      "modified",
-				OperateTimestamp: 1704081600, // 2024-01-01 09:00:00
+				ID:          "10",
+				AccountID:   "6",
+				OperateType: "modified",
+				OccurredAt:  1704081600, // 2024-01-01 09:00:00
 				Content: map[string]interface{}{
 					"password": map[string]string{
 						"old": "****",

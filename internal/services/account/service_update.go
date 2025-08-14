@@ -5,10 +5,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
+	"github.com/xinliangnote/go-gin-api/internal/pkg/password"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
+	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account_history"
+	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account_org_relation"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // Update 更新账户
@@ -29,9 +34,15 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 		return fmt.Errorf("账户不存在")
 	}
 
+	// 范围校验：无权限则拒绝
+	scope, scopeErr := authz.ComputeScope(ctx, s.db)
+	if scopeErr == nil && !authz.CanAccessAccount(scope, existingAccount) {
+		return fmt.Errorf("无权限更新该账户")
+	}
+
 	// 准备更新数据
 	updateFields := make(map[string]interface{})
-	updateFields["modified_timestamp"] = uint64(time.Now().Unix())
+	updateFields["updated_at"] = uint64(time.Now().Unix())
 	updateFields["updated_user"] = ctx.SessionUserInfo().UserName
 
 	// 记录变更内容用于历史记录
@@ -64,38 +75,96 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 	// 更新组织信息
 	if updateData.BelongGroup != nil {
 		updateFields["belong_group_id"] = updateData.BelongGroup.ID
+
+		// 更新账户-组关联：先删除原 belong 关联，再插入新的
+		qbRel := account_org_relation.NewQueryBuilder()
+		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
+		qbRel.WhereRelationType(mysql.EqualPredicate, 1)
+		_ = qbRel.Delete(s.db.GetDbW())
+
+		rel := &account_org_relation.AccountOrgRelation{
+			AccountId:         uint32(id),
+			OrgId:             uint32(updateData.BelongGroup.ID),
+			RelationType:      1,
+			Status:            1,
+			CreatedTimestamp:  time.Now().Unix(),
+			ModifiedTimestamp: time.Now().Unix(),
+			CreatedUser:       ctx.SessionUserInfo().UserName,
+			UpdatedUser:       ctx.SessionUserInfo().UserName,
+		}
+		if _, err := rel.Create(s.db.GetDbW()); err != nil {
+			ctx.Logger().Error("更新账户-组关联失败", zap.Error(err))
+		}
 	}
 
 	if updateData.BelongTeam != nil {
 		updateFields["belong_team_id"] = updateData.BelongTeam.ID
+
+		// 更新账户-团队关联：先删除原 belong 关联，再插入新的
+		qbRel := account_org_relation.NewQueryBuilder()
+		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
+		qbRel.WhereRelationType(mysql.EqualPredicate, 1)
+		_ = qbRel.Delete(s.db.GetDbW())
+
+		rel := &account_org_relation.AccountOrgRelation{
+			AccountId:         uint32(id),
+			OrgId:             uint32(updateData.BelongTeam.ID),
+			RelationType:      1,
+			Status:            1,
+			CreatedTimestamp:  time.Now().Unix(),
+			ModifiedTimestamp: time.Now().Unix(),
+			CreatedUser:       ctx.SessionUserInfo().UserName,
+			UpdatedUser:       ctx.SessionUserInfo().UserName,
+		}
+		if _, err := rel.Create(s.db.GetDbW()); err != nil {
+			ctx.Logger().Error("更新账户-团队关联失败", zap.Error(err))
+		}
 	}
 
-	// 执行更新
-	err = accountQueryBuilder.Updates(s.db.GetDbW(), updateFields)
+	// 在一个事务中执行：更新账户 + 写入历史
+	err = s.db.GetDbW().WithContext(ctx.RequestContext()).Transaction(func(tx *gorm.DB) error {
+		// 乐观锁：如果表有 version，可在 updateFields 中自增并带 where version
+		// 这里先直接更新
+		if err := accountQueryBuilder.Updates(tx, updateFields); err != nil {
+			return fmt.Errorf("更新账户失败: %v", err)
+		}
+
+		if len(changes) > 0 {
+			contentBytes, _ := json.Marshal(changes)
+			now := uint64(time.Now().Unix())
+			accIdUint, _ := fmt.Sscanf(accountId, "%d", &id)
+			_ = accIdUint
+			hist := &account_history.AccountHistory{
+				AccountId:         uint64(id),
+				OperateType:       "modified",
+				OperateTimestamp:  now,
+				Content:           string(contentBytes),
+				Operator:          ctx.SessionUserInfo().UserName,
+				OperatorRoleType:  scope.RoleType,
+				CreatedTimestamp:  now,
+				ModifiedTimestamp: now,
+				CreatedUser:       ctx.SessionUserInfo().UserName,
+				UpdatedUser:       ctx.SessionUserInfo().UserName,
+			}
+			if _, err := hist.Create(tx); err != nil {
+				return fmt.Errorf("写入账户历史失败: %v", err)
+			}
+		}
+		return nil
+	})
 	if err != nil {
-		return fmt.Errorf("更新账户失败: %v", err)
+		return err
 	}
-
-	// 如果有变更，创建历史记录
-	if len(changes) > 0 {
-		contentBytes, _ := json.Marshal(changes)
-
-		historyData := &CreateHistoryData{
-			AccountId:        accountId,
-			OperateType:      "modified",
-			Content:          string(contentBytes),
-			Operator:         ctx.SessionUserInfo().UserName,
-			OperatorRoleType: "admin", // 暂时硬编码
-		}
-
-		err = s.CreateHistory(ctx, historyData)
-		if err != nil {
-			// 记录日志但不影响主流程
-			ctx.Logger().Error("创建历史记录失败", zap.Error(err))
-		}
-	}
-
 	return nil
+}
+
+func (s *service) UpdatePassword(ctx core.Context, accountId string, newPassword string) (err error) {
+	var id int32
+	fmt.Sscanf(accountId, "%d", &id)
+	qb := account.NewQueryBuilder()
+	qb.WhereId(mysql.EqualPredicate, id)
+	hashed := password.GeneratePassword(newPassword)
+	return qb.Updates(s.db.GetDbW().WithContext(ctx.RequestContext()), map[string]interface{}{"password": hashed})
 }
 
 // Delete 删除账户
@@ -114,6 +183,12 @@ func (s *service) Delete(ctx core.Context, accountId string) (err error) {
 	}
 	if existingAccount == nil {
 		return fmt.Errorf("账户不存在")
+	}
+
+	// 范围校验
+	scope, scopeErr := authz.ComputeScope(ctx, s.db)
+	if scopeErr == nil && !authz.CanAccessAccount(scope, existingAccount) {
+		return fmt.Errorf("无权限删除该账户")
 	}
 
 	// 软删除账户

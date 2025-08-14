@@ -1,0 +1,116 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options: [staging, production]
+      image_tag:
+        description: "Image tag (default: Git SHA)"
+        required: false
+        type: string
+
+env:
+  REGISTRY: ${{ secrets.REGISTRY }}
+  IMAGE_NAME: ${{ secrets.IMAGE_NAME }}
+
+concurrency:
+  group: deploy-${{ github.ref }}-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-push:
+    name: Build & Push Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Set image tag
+        id: vars
+        run: |
+          TAG=${{ github.event.inputs.image_tag }}
+          if [ -z "$TAG" ]; then TAG=${GITHUB_SHA::7}; fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.tag }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
+    outputs:
+      tag: ${{ steps.vars.outputs.tag }}
+
+  deploy:
+    name: Remote Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Prepare SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          printf "Host *\n  StrictHostKeyChecking no\n" > ~/.ssh/config
+
+      - name: Deploy via SSH
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          REGISTRY: ${{ env.REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          TAG: ${{ needs.build-and-push.outputs.tag }}
+        run: |
+          ssh ${SSH_USER}@${SSH_HOST} "bash -s" << 'EOSSH'
+          set -euo pipefail
+          mkdir -p ${DEPLOY_PATH}
+          cd ${DEPLOY_PATH}
+          # 登录镜像仓库（如需要）
+          if [ -n "${REGISTRY}" ] && [ -n "${REGISTRY_USERNAME}" ] && [ -n "${REGISTRY_PASSWORD}" ]; then
+            echo "${REGISTRY_PASSWORD}" | docker login ${REGISTRY} -u "${REGISTRY_USERNAME}" --password-stdin || true
+          fi
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
+          docker pull "$IMAGE"
+          # 以 docker compose 为例，如无 compose 可替换为 docker run/stop
+          cat > docker-compose.yml <<YAML
+          version: '3.8'
+          services:
+            app:
+              image: ${REGISTRY}/${IMAGE_NAME}:${TAG}
+              container_name: backend-marriage
+              restart: always
+              env_file:
+                - .env
+              ports:
+                - "8080:8080"
+          YAML
+          docker compose up -d
+          EOSSH
+
+

@@ -1,3 +1,44 @@
+mysql = {}
+
+[mysql.read]
+addr = "<tencent-cloud-mysql-host>:<port>"   # e.g. cdb-xxxx.tencentcdb.com:3306
+user = "<username>"
+pass = "<password>"
+name = "<database>"
+
+[mysql.write]
+addr = "<tencent-cloud-mysql-host>:<port>"
+user = "<username>"
+pass = "<password>"
+name = "<database>"
+
+[mysql.base]
+maxOpenConn = 50
+maxIdleConn = 10
+connMaxLifeTime = 30
+
+[redis]
+addr = "127.0.0.1:6379"
+pass = ""
+db = 0
+maxRetries = 3
+poolSize = 20
+minIdleConns = 5
+
+[mail]
+host = "smtp.example.com"
+port = 465
+user = "no-reply@example.com"
+pass = "******"
+to   = "admin@example.com"
+
+[hashids]
+secret = "replace-with-your-secret"
+length = 8
+
+[language]
+local = "zh-cn"
+
 [hashids]
   length = 12
   secret = "6ab6122836cfef95f8db"

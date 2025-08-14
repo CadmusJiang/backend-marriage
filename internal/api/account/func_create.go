@@ -26,7 +26,7 @@ type createResponse struct {
 // CreateAccount 创建账户
 // @Summary 创建账户
 // @Description 创建新账户
-// @Tags API.account
+// @Tags Account
 // @Accept application/json
 // @Produce json
 // @Param request body createRequest true "创建账户请求"

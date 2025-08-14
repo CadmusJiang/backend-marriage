@@ -2,13 +2,11 @@ package core
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"net/url"
 	"runtime/debug"
 	"time"
 
-	"github.com/xinliangnote/go-gin-api/assets"
 	"github.com/xinliangnote/go-gin-api/configs"
 	_ "github.com/xinliangnote/go-gin-api/docs"
 	"github.com/xinliangnote/go-gin-api/internal/code"
@@ -249,9 +247,7 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 	}
 
 	fmt.Println(color.Blue(_UI))
-
-	mux.engine.StaticFS("assets", http.FS(assets.Bootstrap))
-	mux.engine.SetHTMLTemplate(template.Must(template.New("").ParseFS(assets.Templates, "templates/**/*")))
+	// 页面渲染与静态资源已移除，不再挂载模板与静态目录
 
 	// withoutTracePaths 这些请求，默认不记录日志
 	withoutTracePaths := map[string]bool{

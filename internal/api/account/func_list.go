@@ -58,7 +58,7 @@ type listResponse struct {
 // GetAccountList 获取账户列表
 // @Summary 获取账户列表
 // @Description 分页获取账户列表，支持搜索和筛选
-// @Tags API.account
+// @Tags Account
 // @Accept application/x-www-form-urlencoded
 // @Produce json
 // @Param current query int false "当前页码" default(1)
@@ -150,6 +150,8 @@ func (h *handler) GetAccountList() core.HandlerFunc {
 				UpdatedAt:   int64(acc.ModifiedTimestamp),
 				LastLoginAt: int64(acc.LastLoginTimestamp),
 			}
+
+			// 账户接口不做脱敏
 
 			// 根据includeGroup参数决定是否包含组信息
 			if req.IncludeGroup != "false" {

@@ -15,39 +15,49 @@ type Handler interface {
 	i()
 
 	// GetAccountList 获取账户列表
-	// @Tags API.account
+	// @Tags Account
 	// @Router /api/v1/accounts [get]
 	GetAccountList() core.HandlerFunc
 
 	// CreateAccount 创建账户
-	// @Tags API.account
+	// @Tags Account
 	// @Router /api/v1/accounts [post]
 	CreateAccount() core.HandlerFunc
 
 	// GetAccountDetail 获取账户详情
-	// @Tags API.account
+	// @Tags Account
 	// @Router /api/v1/accounts/{accountId} [get]
 	GetAccountDetail() core.HandlerFunc
 
 	// UpdateAccount 更新账户
-	// @Tags API.account
+	// @Tags Account
 	// @Router /api/v1/accounts/{accountId} [put]
 	UpdateAccount() core.HandlerFunc
 
 	// GetAccountHistories 获取账户历史记录
-	// @Tags API.account
+	// @Tags Account
 	// @Router /api/v1/account-histories [get]
 	GetAccountHistories() core.HandlerFunc
 
 	// Login 用户登录
-	// @Tags API.account
+	// @Tags CoreAuth
 	// @Router /api/v1/auth/login [post]
 	Login() core.HandlerFunc
 
 	// Logout 退出登录
-	// @Tags API.account
+	// @Tags CoreAuth
 	// @Router /api/v1/auth/logout [post]
 	Logout() core.HandlerFunc
+
+	// UpdateAccountPassword 更新账户密码
+	// @Tags Account
+	// @Router /api/v1/accounts/{accountId}/password [put]
+	UpdateAccountPassword() core.HandlerFunc
+
+	// Me 获取当前用户信息
+	// @Tags Account
+	// @Router /api/v1/me [get]
+	Me() core.HandlerFunc
 }
 
 type handler struct {

@@ -25,7 +25,7 @@ type updateResponse struct {
 // UpdateAccount 更新账户
 // @Summary 更新账户
 // @Description 更新账户信息
-// @Tags API.account
+// @Tags Account
 // @Accept application/json
 // @Produce json
 // @Param accountId path string true "账户ID"
@@ -101,5 +101,33 @@ func (h *handler) UpdateAccount() core.HandlerFunc {
 		res.Message = "账户更新成功"
 
 		c.Payload(res)
+	}
+}
+
+// UpdateAccountPassword 仅更新密码
+func (h *handler) UpdateAccountPassword() core.HandlerFunc {
+	type response struct {
+		Success bool `json:"success"`
+	}
+	return func(c core.Context) {
+		var uri struct {
+			AccountId string `uri:"accountId"`
+		}
+		if err := c.ShouldBindURI(&uri); err != nil {
+			c.Payload(response{Success: false})
+			return
+		}
+		var body struct {
+			Password string `json:"password" binding:"required,min=6,max=64"`
+		}
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.Payload(response{Success: false})
+			return
+		}
+		if err := h.accountService.UpdatePassword(c, uri.AccountId, body.Password); err != nil {
+			c.Payload(response{Success: false})
+			return
+		}
+		c.Payload(response{Success: true})
 	}
 }

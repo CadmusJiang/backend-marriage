@@ -247,7 +247,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByOrgId(asc bool) *accountOrgRela
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, value string) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, value int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -258,7 +258,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, v
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []string) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -269,7 +269,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []string) *a
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeNotIn(value []string) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeNotIn(value []int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -290,7 +290,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByRelationType(asc bool) *account
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value uint32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -301,7 +301,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value u
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []uint32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -312,7 +312,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []uint32) *account
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatusNotIn(value []uint32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatusNotIn(value []int32) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -333,7 +333,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByStatus(asc bool) *accountOrgRel
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestamp(p mysql.Predicate, value uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestamp(p mysql.Predicate, value int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -344,7 +344,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestamp(p mysql.Predicat
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestampIn(value []uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestampIn(value []int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -355,7 +355,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestampIn(value []uint64
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestampNotIn(value []uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereCreatedTimestampNotIn(value []int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -376,7 +376,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByCreatedTimestamp(asc bool) *acc
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestamp(p mysql.Predicate, value uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestamp(p mysql.Predicate, value int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -387,7 +387,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestamp(p mysql.Predica
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestampIn(value []uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestampIn(value []int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -398,7 +398,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestampIn(value []uint6
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestampNotIn(value []uint64) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereModifiedTimestampNotIn(value []int64) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}

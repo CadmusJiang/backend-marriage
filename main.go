@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
 	"net/http"
 	"time"
@@ -33,6 +34,9 @@ import (
 
 // @BasePath /
 func main() {
+	// startup flags
+	forceReseed := flag.Bool("force-reseed", false, "If true, truncate and reseed core tables on startup")
+	flag.Parse()
 	// 初始化 access logger
 	accessLogger, err := logger.NewJSONLogger(
 		// logger.WithDisableConsole(), // 注释掉以启用控制台输出
@@ -44,25 +48,12 @@ func main() {
 		panic(err)
 	}
 
-	// 初始化 cron logger
-	cronLogger, err := logger.NewJSONLogger(
-		// logger.WithDisableConsole(), // 注释掉以启用控制台输出
-		logger.WithField("domain", fmt.Sprintf("%s[%s]", configs.ProjectName, env.Active().Value())),
-		logger.WithTimeLayout(timeutil.CSTLayout),
-		logger.WithFileP(configs.ProjectCronLogFile),
-	)
-
-	if err != nil {
-		panic(err)
-	}
-
 	defer func() {
 		_ = accessLogger.Sync()
-		_ = cronLogger.Sync()
 	}()
 
 	// 初始化 HTTP 服务
-	s, err := router.NewHTTPServer(accessLogger, cronLogger)
+	s, err := router.NewHTTPServer(accessLogger, *forceReseed)
 	if err != nil {
 		panic(err)
 	}
@@ -109,13 +100,6 @@ func main() {
 				if err := s.Cache.Close(); err != nil {
 					accessLogger.Error("cache close err", zap.Error(err))
 				}
-			}
-		},
-
-		// 关闭 cron Server
-		func() {
-			if s.CronServer != nil {
-				s.CronServer.Stop()
 			}
 		},
 	)

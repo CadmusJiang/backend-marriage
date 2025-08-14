@@ -30,7 +30,7 @@ type logoutResponse struct {
 // Login 用户登录
 // @Summary 用户登录
 // @Description 用户登录接口
-// @Tags API.account
+// @Tags CoreAuth
 // @Accept application/json
 // @Produce json
 // @Param request body loginRequest true "登录请求"
@@ -130,7 +130,7 @@ func (h *handler) Login() core.HandlerFunc {
 // Logout 退出登录
 // @Summary 退出登录
 // @Description 用户退出登录
-// @Tags API.account
+// @Tags CoreAuth
 // @Accept application/x-www-form-urlencoded
 // @Produce json
 // @Success 200 {object} logoutResponse

@@ -1,0 +1,33 @@
+version: 2
+run:
+  timeout: 5m
+  tests: true
+  skip-dirs:
+    - internal/services/customer_authorization_record
+
+linters:
+  enable:
+    - unused
+
+linters-settings:
+  gocyclo:
+    min-complexity: 20
+  revive:
+    severity: warning
+    rules:
+      - name: exported
+        arguments:
+          - disableStutteringCheck
+      - name: var-naming
+      - name: receiver-naming
+      - name: import-shadowing
+
+issues:
+  exclude-use-default: false
+  exclude:
+    - 'error return value not checked.*(Close|Sync|Flush)\(\)'
+    - '(exported|comment)\s+.*\s+should have comment'
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+

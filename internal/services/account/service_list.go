@@ -3,6 +3,7 @@ package account
 import (
 	"fmt"
 
+	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
@@ -29,6 +30,18 @@ func (s *service) PageList(ctx core.Context, searchData *SearchData) (listData [
 	// if searchData.BelongGroup != "" {
 	// 	accountQueryBuilder.WhereBelongGroupNickname(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
 	// }
+
+	// 访问范围过滤
+	scope, scopeErr := authz.ComputeScope(ctx, s.db)
+	if scopeErr == nil && !scope.ScopeAll {
+		if len(scope.AllowedAccountIDs) > 0 {
+			accountQueryBuilder.WhereIdIn(scope.AllowedAccountIDs)
+		} else if len(scope.AllowedTeamIDs) > 0 {
+			accountQueryBuilder.WhereBelongTeamIdIn(scope.AllowedTeamIDs)
+		} else if len(scope.AllowedGroupIDs) > 0 {
+			accountQueryBuilder.WhereBelongGroupIdIn(scope.AllowedGroupIDs)
+		}
+	}
 
 	// 设置分页
 	offset := (searchData.Current - 1) * searchData.PageSize
@@ -68,6 +81,18 @@ func (s *service) PageListCount(ctx core.Context, searchData *SearchData) (total
 	// 	accountQueryBuilder.WhereBelongGroupNickname(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
 	// }
 
+	// 访问范围过滤
+	scope, scopeErr := authz.ComputeScope(ctx, s.db)
+	if scopeErr == nil && !scope.ScopeAll {
+		if len(scope.AllowedAccountIDs) > 0 {
+			accountQueryBuilder.WhereIdIn(scope.AllowedAccountIDs)
+		} else if len(scope.AllowedTeamIDs) > 0 {
+			accountQueryBuilder.WhereBelongTeamIdIn(scope.AllowedTeamIDs)
+		} else if len(scope.AllowedGroupIDs) > 0 {
+			accountQueryBuilder.WhereBelongGroupIdIn(scope.AllowedGroupIDs)
+		}
+	}
+
 	// 查询总数
 	total, err = accountQueryBuilder.Count(s.db.GetDbR())
 	if err != nil {
@@ -93,6 +118,12 @@ func (s *service) Detail(ctx core.Context, accountId string) (info *account.Acco
 	}
 	if info == nil {
 		return nil, fmt.Errorf("账户不存在")
+	}
+
+	// 范围校验
+	scope, scopeErr := authz.ComputeScope(ctx, s.db)
+	if scopeErr == nil && !authz.CanAccessAccount(scope, info) {
+		return nil, fmt.Errorf("无权限访问该账户")
 	}
 
 	return info, nil
