@@ -271,6 +271,10 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		"/favicon.ico": true,
 
 		"/system/health": true,
+
+		// 日志服务相关路径，避免日志循环记录
+		"/system/logs/latest":  true,
+		"/system/logs/unified": true,
 	}
 
 	opt := new(option)
@@ -342,7 +346,10 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		context.setLogger(logger)
 		context.ableRecordMetrics()
 
-		if !withoutTracePaths[ctx.Request.URL.Path] {
+		// 检查是否在withoutTracePaths中，如果是则不记录日志
+		isWithoutTrace := withoutTracePaths[ctx.Request.URL.Path]
+
+		if !isWithoutTrace {
 			if traceId := context.GetHeader(trace.Header); traceId != "" {
 				context.setTrace(trace.New(traceId))
 			} else {
@@ -351,6 +358,11 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 		}
 
 		defer func() {
+			// 如果在withoutTracePaths中，直接返回，不记录任何日志
+			if isWithoutTrace {
+				return
+			}
+
 			var (
 				response        interface{}
 				businessCode    int

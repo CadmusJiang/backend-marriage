@@ -4,6 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+
+	"crypto/rand"
+	"encoding/base64"
+	"strings"
 
 	"github.com/xinliangnote/go-gin-api/configs"
 	"github.com/xinliangnote/go-gin-api/internal/code"
@@ -84,54 +89,25 @@ func (h *handler) Login() core.HandlerFunc {
 			zap.String("role_type", accountInfo.RoleType),
 		)
 
-		// 转换为API响应格式
-		userInfo := accountData{
-			ID:        fmt.Sprintf("%d", accountInfo.Id),
-			Username:  accountInfo.Username,
-			Name:      accountInfo.Name,
-			Phone:     accountInfo.Phone,
-			RoleType:  accountInfo.RoleType,
-			Status:    fmt.Sprintf("%d", accountInfo.Status),
-			CreatedAt: accountInfo.CreatedAt.Unix(),
-			UpdatedAt: accountInfo.UpdatedAt.Unix(),
-			LastLoginAt: func() int64 {
-				if accountInfo.LastLoginAt != nil {
-					return accountInfo.LastLoginAt.Unix()
-				}
-				return 0
-			}(),
+		// 生成安全的session token
+		token, err := generateSecureSessionToken()
+		if err != nil {
+			h.logger.Error("生成session token失败", zap.Error(err))
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"登录失败").WithError(err),
+			)
+			return
 		}
-
-		// 暂时移除组织信息，因为新模型中没有相关字段
-		// if accountInfo.BelongGroupId > 0 {
-		// 	userInfo.BelongGroup = &orgInfo{
-		// 		ID:                int(accountInfo.BelongGroupId),
-		// 		Username:          accountInfo.BelongGroupUsername,
-		// 		Name:              accountInfo.BelongGroupName,
-		// 		CreatedAt:         accountInfo.BelongGroupCreatedTimestamp,
-		// 		UpdatedAt:         accountInfo.BelongGroupModifiedTimestamp,
-		// 		CurrentCnt:        int(accountInfo.BelongGroupCurrentCnt),
-		// 	}
-		// }
-
-		// if accountInfo.BelongTeamId > 0 {
-		// 	userInfo.BelongTeam = &orgInfo{
-		// 		ID:                int(accountInfo.BelongTeamId),
-		// 		Username:          accountInfo.BelongTeamUsername,
-		// 		Name:              accountInfo.BelongTeamName,
-		// 		CreatedAt:         accountInfo.BelongTeamCreatedTimestamp,
-		// 		UpdatedAt:         accountInfo.BelongTeamModifiedTimestamp,
-		// 		CurrentCnt:        int(accountInfo.BelongTeamCurrentCnt),
-		// 	}
-		// }
-
-		// 生成token（实际应该使用JWT）
-		token := userInfo.Username + "-token-123"
 
 		// 将用户信息存储到Redis中
 		sessionUserInfo := proposal.SessionUserInfo{
-			UserID:   int32(accountInfo.Id),
-			UserName: accountInfo.Username,
+			UserID:    int32(accountInfo.Id),
+			UserName:  accountInfo.Username,
+			RoleType:  accountInfo.RoleType,
+			Status:    accountInfo.Status,
+			LoginTime: time.Now().Unix(), // 使用当前时间作为登录时间
 		}
 
 		// 序列化用户信息
@@ -160,14 +136,14 @@ func (h *handler) Login() core.HandlerFunc {
 		}
 
 		h.logger.Info("用户会话已存储到Redis",
-			zap.String("username", userInfo.Username),
+			zap.String("username", accountInfo.Username),
 			zap.String("token", token),
 			zap.String("redis_key", redisKey),
 		)
 
 		res.Status = "success"
 		res.Data.Token = token
-		res.Data.Username = userInfo.Username
+		res.Data.Username = accountInfo.Username
 
 		c.Payload(res)
 	}
@@ -196,21 +172,57 @@ func (h *handler) Logout() core.HandlerFunc {
 			}
 		}
 
-		if token != "" {
-			// 从Redis中删除token
-			redisKey := configs.RedisKeyPrefixLoginUser + token
-			h.cache.Del(redisKey, redis.WithTrace(c.Trace()))
+		// 验证token是否为空
+		if token == "" {
+			h.logger.Error("退出登录失败：缺少token")
+			c.AbortWithError(core.Error(
+				http.StatusBadRequest,
+				code.ParamBindError,
+				"缺少token参数").WithError(fmt.Errorf("token不能为空")),
+			)
+			return
+		}
 
-			h.logger.Info("用户会话已从Redis删除",
+		// 验证token是否存在于Redis中
+		redisKey := configs.RedisKeyPrefixLoginUser + token
+		exists := h.cache.Exists(redisKey)
+		if !exists {
+			h.logger.Error("退出登录失败：token不存在或已过期",
 				zap.String("token", token),
 				zap.String("redis_key", redisKey),
 			)
+			c.AbortWithError(core.Error(
+				http.StatusUnauthorized,
+				code.AuthorizationError,
+				"token无效或已过期").WithError(fmt.Errorf("token不存在或已过期")),
+			)
+			return
 		}
 
+		// 从Redis中删除token
+		deleted := h.cache.Del(redisKey, redis.WithTrace(c.Trace()))
+		if !deleted {
+			h.logger.Error("删除Redis中的token失败",
+				zap.String("token", token),
+				zap.String("redis_key", redisKey),
+			)
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"退出登录失败").WithError(fmt.Errorf("删除token失败")),
+			)
+			return
+		}
+
+		h.logger.Info("用户会话已从Redis删除",
+			zap.String("token", token),
+			zap.String("redis_key", redisKey),
+		)
+
 		// 调用服务层退出登录
-		err := h.accountService.Logout(c, token)
-		if err != nil {
-			h.logger.Error("退出登录失败", zap.Error(err))
+		logoutErr := h.accountService.Logout(c, token)
+		if logoutErr != nil {
+			h.logger.Error("退出登录失败", zap.Error(logoutErr))
 		}
 
 		res.Success = true
@@ -218,4 +230,24 @@ func (h *handler) Logout() core.HandlerFunc {
 
 		c.Payload(res)
 	}
+}
+
+// generateSecureSessionToken 生成安全的session token
+// 使用行业标准的32字节随机数 + Base64编码，确保token的唯一性和安全性
+func generateSecureSessionToken() (string, error) {
+	// 生成32字节的随机数
+	randomBytes := make([]byte, 32)
+	_, err := rand.Read(randomBytes)
+	if err != nil {
+		return "", err
+	}
+
+	// 使用Base64编码，确保token只包含URL安全的字符
+	// 去掉填充字符(=)以保持整洁
+	token := base64.URLEncoding.EncodeToString(randomBytes)
+
+	// 去掉Base64填充字符
+	token = strings.TrimRight(token, "=")
+
+	return token, nil
 }

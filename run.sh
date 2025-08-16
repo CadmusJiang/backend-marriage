@@ -2,6 +2,11 @@
 
 # 统一的项目管理脚本
 # 自动检查服务状态，如果运行中就停止，然后启动服务
+# 
+# 环境配置说明:
+# - ENV=dev: 使用 dev_configs.toml 配置文件
+# - GO_ENV=dev: Go环境变量，确保使用正确的配置
+# - 这样配置会使用腾讯云Redis: gz-crs-jaz1h340.sql.tencentcdb.com:28627
 
 # 颜色定义
 RED='\033[0;31m'
@@ -14,6 +19,10 @@ NC='\033[0m' # No Color
 PROJECT_NAME="marriage_system"
 PORT="9999"
 LOG_DIR="./logs"
+
+# 环境配置 - 使用腾讯云Redis
+export ENV="dev"
+export GO_ENV="dev"
 
 echo -e "${BLUE}================================${NC}"
 echo -e "${BLUE}    ${PROJECT_NAME} 统一管理脚本${NC}"
@@ -140,6 +149,12 @@ start_service() {
     echo -e "${BLUE}服务将在端口 ${PORT} 上启动${NC}"
     echo -e "${BLUE}访问地址: http://localhost:${PORT}${NC}"
     echo -e "${BLUE}API文档: http://localhost:${PORT}/docs/swagger.html${NC}"
+    echo ""
+    echo -e "${YELLOW}当前环境配置:${NC}"
+    echo -e "${BLUE}  - ENV: $ENV${NC}"
+    echo -e "${BLUE}  - GO_ENV: $GO_ENV${NC}"
+    echo -e "${BLUE}  - Redis: 腾讯云 (gz-crs-jaz1h340.sql.tencentcdb.com:28627)${NC}"
+    echo -e "${BLUE}  - 配置文件: dev_configs.toml${NC}"
     echo ""
     echo -e "${YELLOW}注意: 将使用 -rebuild-db -force-reseed 参数启动${NC}"
     echo -e "${YELLOW}这将重建所有数据库表并插入mock数据${NC}"

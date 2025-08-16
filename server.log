@@ -1,0 +1,78 @@
+Warning: '-env' cannot be found, or it is illegal. The default 'fat' will be used.
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:49","msg":"正在初始化数据库连接...","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:62","msg":"正在测试数据库连接...","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:68","msg":"数据库连接成功","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:80","msg":"正在检查并创建缺失的数据表...","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"org"}
+{"level":"info","time":"2025-08-16 09:11:46","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"org"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"org"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"org"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"org"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"org_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"org_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"org_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"org_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"org_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"account"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"account"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"account"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"account"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"account"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"account_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"account_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"account_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"account_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"account_history"}
+{"level":"info","time":"2025-08-16 09:11:47","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"account_org_relation"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"account_org_relation"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"account_org_relation"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"account_org_relation"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"account_org_relation"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"customer_authorization_record"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"customer_authorization_record"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"customer_authorization_record"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"customer_authorization_record"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"customer_authorization_record"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"customer_authorization_record_history"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"customer_authorization_record_history"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"customer_authorization_record_history"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"customer_authorization_record_history"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"customer_authorization_record_history"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"cooperation_store"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"cooperation_store"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"cooperation_store"}
+{"level":"info","time":"2025-08-16 09:11:48","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"cooperation_store"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"cooperation_store"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"cooperation_store_history"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"cooperation_store_history"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"cooperation_store_history"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"cooperation_store_history"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"cooperation_store_history"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:210","msg":"强制重建表","domain":"marriage_system[fat]","table":"outbox_events"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:219","msg":"表已存在，正在删除...","domain":"marriage_system[fat]","table":"outbox_events"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:224","msg":"表删除完成","domain":"marriage_system[fat]","table":"outbox_events"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:228","msg":"正在创建表...","domain":"marriage_system[fat]","table":"outbox_events"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:232","msg":"表创建完成","domain":"marriage_system[fat]","table":"outbox_events"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:85","msg":"数据表检查完成","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:98","msg":"正在初始化Redis缓存...","domain":"marriage_system[fat]"}
+{"level":"info","time":"2025-08-16 09:11:49","caller":"router/router.go:104","msg":"Redis连接成功","domain":"marriage_system[fat]"}
+[34m
+ ██████╗  ██████╗        ██████╗ ██╗███╗   ██╗       █████╗ ██████╗ ██╗
+██╔════╝ ██╔═══██╗      ██╔════╝ ██║████╗  ██║      ██╔══██╗██╔══██╗██║
+██║  ███╗██║   ██║█████╗██║  ███╗██║██╔██╗ ██║█████╗███████║██████╔╝██║
+██║   ██║██║   ██║╚════╝██║   ██║██║██║╚██╗██║╚════╝██╔══██║██╔═══╝ ██║
+╚██████╔╝╚██████╔╝      ╚██████╔╝██║██║ ╚████║      ██║  ██║██║     ██║
+ ╚═════╝  ╚═════╝        ╚═════╝ ╚═╝╚═╝  ╚═══╝      ╚═╝  ╚═╝╚═╝     ╚═╝
+[0m
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.285608e-003 traceId= 40880ae81c8edd784b5a
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.639189e-003 traceId= b6db99314e6ca367ae54
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +1.211508e-003 traceId= 6dd9dc09ab2405df01e1
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +2.011155e-003 traceId= 29f62bad0e6d17251666
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.285608e-003 traceId= 40880ae81c8edd784b5a
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.639189e-003 traceId= b6db99314e6ca367ae54
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +1.211508e-003 traceId= 6dd9dc09ab2405df01e1
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +2.011155e-003 traceId= 29f62bad0e6d17251666
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.285608e-003 traceId= 40880ae81c8edd784b5a
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +3.639189e-003 traceId= b6db99314e6ca367ae54
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +1.211508e-003 traceId= 6dd9dc09ab2405df01e1
+DEBUG: Extracted fields: method= GET path= /system/logs/unified statusCode= 200 duration= +2.011155e-003 traceId= 29f62bad0e6d17251666

@@ -33,9 +33,9 @@
     user = "marriage_system"
 
 [redis]
-  addr = "127.0.0.1:6379"
+  addr = "gz-crs-jaz1h340.sql.tencentcdb.com:28627"
   db = "0"
   maxretries = 3
   minidleconns = 20
-  pass = ""
+  pass = "19970901Zyt"
   poolsize = 50

@@ -4,8 +4,11 @@ import "encoding/json"
 
 // SessionUserInfo 当前用户会话信息
 type SessionUserInfo struct {
-	UserID   int32  `json:"user_id"`   // 用户ID
-	UserName string `json:"user_name"` // 用户名
+	UserID    int32  `json:"user_id"`    // 用户ID
+	UserName  string `json:"user_name"`  // 用户名
+	RoleType  string `json:"role_type"`  // 角色类型
+	Status    string `json:"status"`     // 用户状态
+	LoginTime int64  `json:"login_time"` // 登录时间戳
 }
 
 // Marshal 序列化到JSON
