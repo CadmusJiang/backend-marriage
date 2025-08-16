@@ -6,13 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"crypto/rand"
-	"encoding/base64"
-	"strings"
-
 	"github.com/xinliangnote/go-gin-api/configs"
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
+	"github.com/xinliangnote/go-gin-api/internal/pkg/token"
 	"github.com/xinliangnote/go-gin-api/internal/proposal"
 	"github.com/xinliangnote/go-gin-api/internal/repository/redis"
 	"go.uber.org/zap"
@@ -90,7 +87,7 @@ func (h *handler) Login() core.HandlerFunc {
 		)
 
 		// 生成安全的session token
-		token, err := generateSecureSessionToken()
+		token, err := token.GenerateSecureSessionToken(int32(accountInfo.Id))
 		if err != nil {
 			h.logger.Error("生成session token失败", zap.Error(err))
 			c.AbortWithError(core.Error(
@@ -122,9 +119,23 @@ func (h *handler) Login() core.HandlerFunc {
 			return
 		}
 
-		// 存储到Redis，设置过期时间
-		redisKey := configs.RedisKeyPrefixLoginUser + token
-		err = h.cache.Set(redisKey, string(sessionData), configs.LoginSessionTTL, redis.WithTrace(c.Trace()))
+		// 清理该用户之前的旧session（防止同一用户多个session）
+		userSessionKey := fmt.Sprintf("%suser:%d", configs.RedisKeyPrefixLoginUser, accountInfo.Id)
+		oldSessionData, oldSessionErr := h.cache.Get(userSessionKey, redis.WithTrace(c.Trace()))
+		if oldSessionErr == nil && oldSessionData != "" {
+			// 解析旧session数据，获取旧token
+			var oldSessionUserInfo proposal.SessionUserInfo
+			if json.Unmarshal([]byte(oldSessionData), &oldSessionUserInfo) == nil {
+				// 这里可以记录日志，但不删除旧数据（因为会被覆盖）
+				h.logger.Info("用户重新登录，将覆盖旧session",
+					zap.String("username", accountInfo.Username),
+					zap.Uint32("user_id", accountInfo.Id),
+				)
+			}
+		}
+
+		// 直接存储用户session数据到用户ID对应的key
+		err = h.cache.Set(userSessionKey, string(sessionData), configs.LoginSessionTTL, redis.WithTrace(c.Trace()))
 		if err != nil {
 			h.logger.Error("存储用户会话到Redis失败", zap.Error(err))
 			c.AbortWithError(core.Error(
@@ -135,10 +146,13 @@ func (h *handler) Login() core.HandlerFunc {
 			return
 		}
 
+		// 注意：这里不再存储token映射，因为token本身包含用户ID信息
+		// CheckLogin拦截器可以直接解密token获取用户ID，然后查找用户session
+
 		h.logger.Info("用户会话已存储到Redis",
 			zap.String("username", accountInfo.Username),
 			zap.String("token", token),
-			zap.String("redis_key", redisKey),
+			zap.String("user_session_key", userSessionKey),
 		)
 
 		res.Status = "success"
@@ -163,17 +177,17 @@ func (h *handler) Logout() core.HandlerFunc {
 		res := new(logoutResponse)
 
 		// 从请求头获取token
-		token := c.GetHeader(configs.HeaderLoginToken)
-		if token == "" {
+		tokenStr := c.GetHeader(configs.HeaderLoginToken)
+		if tokenStr == "" {
 			// 尝试从Authorization Bearer头部获取
 			authHeader := c.GetHeader(configs.HeaderSignToken)
 			if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
-				token = authHeader[7:] // 去掉"Bearer "前缀
+				tokenStr = authHeader[7:] // 去掉"Bearer "前缀
 			}
 		}
 
 		// 验证token是否为空
-		if token == "" {
+		if tokenStr == "" {
 			h.logger.Error("退出登录失败：缺少token")
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
@@ -183,44 +197,57 @@ func (h *handler) Logout() core.HandlerFunc {
 			return
 		}
 
-		// 验证token是否存在于Redis中
-		redisKey := configs.RedisKeyPrefixLoginUser + token
-		exists := h.cache.Exists(redisKey)
-		if !exists {
-			h.logger.Error("退出登录失败：token不存在或已过期",
-				zap.String("token", token),
-				zap.String("redis_key", redisKey),
-			)
+		// 解密token获取用户ID
+		tokenData, decryptErr := token.DecryptTokenFromString(tokenStr)
+		if decryptErr != nil {
+			h.logger.Error("退出登录失败：token解密失败", zap.Error(decryptErr))
 			c.AbortWithError(core.Error(
 				http.StatusUnauthorized,
 				code.AuthorizationError,
-				"token无效或已过期").WithError(fmt.Errorf("token不存在或已过期")),
+				"token无效").WithError(decryptErr),
 			)
 			return
 		}
 
-		// 从Redis中删除token
-		deleted := h.cache.Del(redisKey, redis.WithTrace(c.Trace()))
+		// 直接通过用户ID查找并删除session
+		userSessionKey := fmt.Sprintf("%suser:%d", configs.RedisKeyPrefixLoginUser, tokenData.UserID)
+		exists := h.cache.Exists(userSessionKey)
+		if !exists {
+			h.logger.Error("退出登录失败：用户session不存在",
+				zap.Int32("user_id", tokenData.UserID),
+				zap.String("user_session_key", userSessionKey),
+			)
+			c.AbortWithError(core.Error(
+				http.StatusUnauthorized,
+				code.AuthorizationError,
+				"用户session不存在").WithError(fmt.Errorf("用户session不存在")),
+			)
+			return
+		}
+
+		// 从Redis中删除用户session
+		deleted := h.cache.Del(userSessionKey, redis.WithTrace(c.Trace()))
 		if !deleted {
-			h.logger.Error("删除Redis中的token失败",
-				zap.String("token", token),
-				zap.String("redis_key", redisKey),
+			h.logger.Error("删除Redis中的用户session失败",
+				zap.Int32("user_id", tokenData.UserID),
+				zap.String("user_session_key", userSessionKey),
 			)
 			c.AbortWithError(core.Error(
 				http.StatusInternalServerError,
 				code.ServerError,
-				"退出登录失败").WithError(fmt.Errorf("删除token失败")),
+				"退出登录失败").WithError(fmt.Errorf("删除用户session失败")),
 			)
 			return
 		}
 
 		h.logger.Info("用户会话已从Redis删除",
-			zap.String("token", token),
-			zap.String("redis_key", redisKey),
+			zap.String("token", tokenStr),
+			zap.Int32("user_id", tokenData.UserID),
+			zap.String("user_session_key", userSessionKey),
 		)
 
 		// 调用服务层退出登录
-		logoutErr := h.accountService.Logout(c, token)
+		logoutErr := h.accountService.Logout(c, tokenStr)
 		if logoutErr != nil {
 			h.logger.Error("退出登录失败", zap.Error(logoutErr))
 		}
@@ -232,22 +259,4 @@ func (h *handler) Logout() core.HandlerFunc {
 	}
 }
 
-// generateSecureSessionToken 生成安全的session token
-// 使用行业标准的32字节随机数 + Base64编码，确保token的唯一性和安全性
-func generateSecureSessionToken() (string, error) {
-	// 生成32字节的随机数
-	randomBytes := make([]byte, 32)
-	_, err := rand.Read(randomBytes)
-	if err != nil {
-		return "", err
-	}
-
-	// 使用Base64编码，确保token只包含URL安全的字符
-	// 去掉填充字符(=)以保持整洁
-	token := base64.URLEncoding.EncodeToString(randomBytes)
-
-	// 去掉Base64填充字符
-	token = strings.TrimRight(token, "=")
-
-	return token, nil
-}
+// 注意：加密解密逻辑已移至 internal/pkg/token/token.go 工具类中
