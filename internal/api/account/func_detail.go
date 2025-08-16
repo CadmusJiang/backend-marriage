@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
@@ -114,45 +115,17 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 
 		// 账户接口不做脱敏
 
-		// 根据角色类型和includeGroup参数决定是否包含组信息
-		if strings.ToLower(req.IncludeGroup) != "false" {
-			switch accountInfo.RoleType {
-			case "company_manager":
-				// company_manager不能有归属组
-				accountData.BelongGroup = nil
-			case "group_manager", "team_manager", "employee":
-				// 这些角色必须有归属组
-				if accountInfo.BelongGroupId > 0 {
-					groupInfo := h.getGroupInfo(int(accountInfo.BelongGroupId))
-					if groupInfo != nil {
-						accountData.BelongGroup = groupInfo
-					}
-				}
-			}
-		}
+		// 根据includeGroup和includeTeam参数决定是否包含组织信息
+		if strings.ToLower(req.IncludeGroup) != "false" || strings.ToLower(req.IncludeTeam) != "false" {
+			// 通过组织关系表查询账户的归属信息
+			belongGroup, belongTeam := h.getAccountOrgInfo(int(accountInfo.Id))
 
-		// 根据角色类型和includeTeam参数决定是否包含团队信息
-		if strings.ToLower(req.IncludeTeam) != "false" {
-			switch accountInfo.RoleType {
-			case "company_manager", "group_manager":
-				// company_manager和group_manager不能有归属团队
-				accountData.BelongTeam = nil
-			case "team_manager":
-				// team_manager必须有归属团队
-				if accountInfo.BelongTeamId > 0 {
-					teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
-					if teamInfo != nil {
-						accountData.BelongTeam = teamInfo
-					}
-				}
-			case "employee":
-				// employee可以有归属团队（可选）
-				if accountInfo.BelongTeamId > 0 {
-					teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
-					if teamInfo != nil {
-						accountData.BelongTeam = teamInfo
-					}
-				}
+			if strings.ToLower(req.IncludeGroup) != "false" {
+				accountData.BelongGroup = belongGroup
+			}
+
+			if strings.ToLower(req.IncludeTeam) != "false" {
+				accountData.BelongTeam = belongTeam
 			}
 		}
 
@@ -229,41 +202,19 @@ func (h *handler) Me() core.HandlerFunc {
 			}(),
 		}
 
-		// 根据角色类型决定是否包含组信息
-		switch accountInfo.RoleType {
-		case "company_manager":
-			// company_manager不能有归属组
-			accountData.BelongGroup = nil
-		case "group_manager", "team_manager", "employee":
-			// 这些角色必须有归属组
-			if accountInfo.BelongGroupId > 0 {
-				groupInfo := h.getGroupInfo(int(accountInfo.BelongGroupId))
-				if groupInfo != nil {
-					accountData.BelongGroup = groupInfo
-				}
+		// 直接查询归属组信息（如果有的话）
+		if accountInfo.BelongGroupId > 0 {
+			groupInfo := h.getGroupInfo(int(accountInfo.BelongGroupId))
+			if groupInfo != nil {
+				accountData.BelongGroup = groupInfo
 			}
 		}
 
-		// 根据角色类型决定是否包含团队信息
-		switch accountInfo.RoleType {
-		case "company_manager", "group_manager":
-			// company_manager和group_manager不能有归属团队
-			accountData.BelongTeam = nil
-		case "team_manager":
-			// team_manager必须有归属团队
-			if accountInfo.BelongTeamId > 0 {
-				teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
-				if teamInfo != nil {
-					accountData.BelongTeam = teamInfo
-				}
-			}
-		case "employee":
-			// employee可以有归属团队（可选）
-			if accountInfo.BelongTeamId > 0 {
-				teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
-				if teamInfo != nil {
-					accountData.BelongTeam = teamInfo
-				}
+		// 直接查询归属团队信息（如果有的话）
+		if accountInfo.BelongTeamId > 0 {
+			teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
+			if teamInfo != nil {
+				accountData.BelongTeam = teamInfo
 			}
 		}
 
@@ -283,7 +234,62 @@ func isNumeric(s string) bool {
 	return len(s) > 0
 }
 
-// getGroupInfo 根据组ID获取组信息
+// getAccountOrgInfo 通过组织关系表查询账户的归属信息
+func (h *handler) getAccountOrgInfo(accountID int) (belongGroup *org, belongTeam *org) {
+	// 查询账户的所有组织关系
+	var relations []struct {
+		OrgID        uint32    `gorm:"column:org_id"`
+		OrgType      string    `gorm:"column:org_type"`
+		OrgUsername  string    `gorm:"column:org_username"`
+		OrgName      string    `gorm:"column:org_name"`
+		OrgCreatedAt time.Time `gorm:"column:org_created_at"`
+		OrgUpdatedAt time.Time `gorm:"column:org_updated_at"`
+	}
+
+	// 联表查询：account_org_relation + org
+	query := `
+		SELECT 
+			o.id as org_id,
+			o.org_type,
+			o.username as org_username,
+			o.name as org_name,
+			o.created_at as org_created_at,
+			o.updated_at as org_updated_at
+		FROM account_org_relation aor
+		JOIN org o ON aor.org_id = o.id
+		WHERE aor.account_id = ? 
+		AND aor.relation_type = 'belong' 
+		AND aor.status = 'active'
+		AND o.status = 'enabled'
+	`
+
+	err := h.db.GetDbR().Raw(query, accountID).Scan(&relations).Error
+	if err != nil {
+		return nil, nil
+	}
+
+	// 处理查询结果
+	for _, rel := range relations {
+		orgInfo := &org{
+			ID:         uint64(rel.OrgID),
+			Username:   rel.OrgUsername,
+			Name:       rel.OrgName,
+			CreatedAt:  rel.OrgCreatedAt.Unix(),
+			UpdatedAt:  rel.OrgUpdatedAt.Unix(),
+			CurrentCnt: 0, // 暂时设为0，如果需要可以再查询
+		}
+
+		if rel.OrgType == "group" {
+			belongGroup = orgInfo
+		} else if rel.OrgType == "team" {
+			belongTeam = orgInfo
+		}
+	}
+
+	return belongGroup, belongTeam
+}
+
+// getGroupInfo 根据组ID获取组信息（保留兼容性）
 func (h *handler) getGroupInfo(groupID int) *org {
 	rec := new(orgrepo.Org)
 	err := h.db.GetDbR().Where("id = ? AND org_type = ?", groupID, 1).First(rec).Error
@@ -300,7 +306,7 @@ func (h *handler) getGroupInfo(groupID int) *org {
 	}
 }
 
-// getTeamInfo 根据团队ID获取团队信息
+// getTeamInfo 根据团队ID获取团队信息（保留兼容性）
 func (h *handler) getTeamInfo(teamID int) *org {
 	rec := new(orgrepo.Org)
 	err := h.db.GetDbR().Where("id = ? AND org_type = ?", teamID, 2).First(rec).Error

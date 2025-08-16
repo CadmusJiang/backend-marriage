@@ -160,30 +160,9 @@ func (h *handler) GetAccountList() core.HandlerFunc {
 
 			// 根据includeGroup参数决定是否包含组信息
 			if req.IncludeGroup != "false" {
-				fmt.Printf("Debug: IncludeGroup is not false, checking group info for %s\n", acc.Username)
-				// 根据角色类型决定是否包含组信息
-				switch acc.RoleType {
-				case "company_manager":
-					// company_manager不能有归属组
-					fmt.Printf("Debug: company_manager cannot have belongGroup for %s\n", acc.Username)
-					accountData.BelongGroup = nil
-				case "group_manager", "team_manager", "employee":
-					// 这些角色必须有归属组
-					if acc.BelongGroupId > 0 {
-						fmt.Printf("Debug: BelongGroupId > 0, getting group info for ID %d\n", acc.BelongGroupId)
-						groupInfo := h.getGroupInfo(int(acc.BelongGroupId))
-						if groupInfo != nil {
-							accountData.BelongGroup = groupInfo
-							fmt.Printf("Debug: Added group info for %s: %s\n", acc.Username, groupInfo.Name)
-						} else {
-							fmt.Printf("Debug: Group info is nil for ID %d\n", acc.BelongGroupId)
-						}
-					} else {
-						fmt.Printf("Debug: BelongGroupId is 0 for %s\n", acc.Username)
-					}
-				}
-			} else {
-				fmt.Printf("Debug: IncludeGroup is false for %s\n", acc.Username)
+				// 通过组织关系表查询账户的归属组信息
+				belongGroup, _ := h.getAccountOrgInfo(int(acc.Id))
+				accountData.BelongGroup = belongGroup
 			}
 
 			// 根据includeTeam参数决定是否包含团队信息

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 )
 
@@ -15,8 +16,23 @@ func New(db mysql.Repo) Service {
 	return &service{db: db}
 }
 
-func (s *service) ListGroups(ctx Context, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error) {
-	db := s.db.GetDbR().WithContext(ctx.RequestContext()).Table("org").Where("org_type = 1")
+func (s *service) ListGroups(ctx Context, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error) {
+	db := s.db.GetDbR().WithContext(ctx.RequestContext()).Table("org").Where("org_type = 'group'")
+
+	// 根据权限范围添加过滤条件
+	if scope != nil {
+		if scope.ScopeAll {
+			// company_manager: 可以查看所有组
+			// 不需要额外过滤
+		} else if len(scope.AllowedGroupIDs) > 0 {
+			// group_manager: 只能查看自己管理的组
+			db = db.Where("id IN ?", scope.AllowedGroupIDs)
+		} else {
+			// 其他角色没有组权限，返回空结果
+			return []map[string]interface{}{}, 0, nil
+		}
+	}
+
 	if keyword != "" {
 		db = db.Where("name LIKE ?", "%"+keyword+"%")
 	}
@@ -30,7 +46,7 @@ func (s *service) ListGroups(ctx Context, current, pageSize int, keyword string)
 		Id        uint32    `db:"id"`
 		Username  string    `db:"username"`
 		Name      string    `db:"name"`
-		Status    int32     `db:"status"`
+		Status    string    `db:"status"`
 		CreatedAt time.Time `db:"created_at"`
 		UpdatedAt time.Time `db:"updated_at"`
 	}
@@ -59,7 +75,7 @@ func (s *service) ListGroups(ctx Context, current, pageSize int, keyword string)
 func (s *service) CreateGroup(ctx Context, payload *CreateGroupPayload) (uint32, error) {
 	now := time.Now()
 	m := map[string]interface{}{
-		"org_type":     1,
+		"org_type":     "group",
 		"parent_id":    0,
 		"path":         "/",
 		"username":     payload.Username,
@@ -84,14 +100,14 @@ func (s *service) GetGroup(ctx Context, id uint32) (map[string]interface{}, erro
 		Id        uint32    `db:"id"`
 		Username  string    `db:"username"`
 		Name      string    `db:"name"`
-		Status    int32     `db:"status"`
+		Status    string    `db:"status"`
 		CreatedAt time.Time `db:"created_at"`
 		UpdatedAt time.Time `db:"updated_at"`
 	}
 
 	if err := s.db.GetDbR().WithContext(ctx.RequestContext()).
 		Select("id, username, name, status, created_at, updated_at").
-		Table("org").Where("id = ? AND org_type = 1", id).Take(&row).Error; err != nil {
+		Table("org").Where("id = ? AND org_type = 'group'", id).Take(&row).Error; err != nil {
 		return nil, err
 	}
 
@@ -116,7 +132,7 @@ func (s *service) UpdateGroup(ctx Context, id uint32, payload *UpdateGroupPayloa
 	}
 
 	result := s.db.GetDbW().WithContext(ctx.RequestContext()).
-		Table("org").Where("id = ? AND org_type = 1 AND version = ?", id, payload.Version).
+		Table("org").Where("id = ? AND org_type = 'group' AND version = ?", id, payload.Version).
 		Updates(updates)
 
 	if result.Error != nil {

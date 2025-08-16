@@ -49,7 +49,7 @@ func CreateCustomerAuthorizationRecordHistoryTableSql() (sql string) {
 func CreateCustomerAuthorizationRecordHistoryTableDataSql() (sql string) {
 	// 预置客户授权记录历史数据
 	sql = "INSERT INTO `customer_authorization_record_history` (`history_id`, `customer_authorization_record_id`, `operate_type`, `operated_at`, `content`, `operator_username`, `operator_name`, `operator_role_type`, `is_deleted`, `created_user`, `updated_user`) VALUES"
-	sql += "('hist_001', 'auth_001', 'created', '2024-01-13 10:00:00', '{\"customerName\": \"张三\", \"phone\": \"13800138000\", \"authorizationType\": \"full\"}', 'admin', '系统管理员', 'company_admin', 'false', '系统管理员', '系统管理员'),"
+	sql += "('hist_001', 'auth_001', 'created', '2024-01-13 10:00:00', '{\"customerName\": \"张三\", \"phone\": \"13800138000\", \"authorizationType\": \"full\"}', 'admin', '系统管理员', 'company_manager', 'false', '系统管理员', '系统管理员'),"
 	sql += "('hist_002', 'auth_002', 'created', '2024-01-13 10:00:00', '{\"customerName\": \"李四\", \"phone\": \"13800138001\", \"authorizationType\": \"partial\"}', 'employee001', '张三', 'employee', 'false', '张三', '张三');"
 
 	return

@@ -232,6 +232,12 @@ func ensureTables(db mysql.Repo, logger *zap.Logger) error {
 		logger.Info("表创建完成", zap.String("table", t.name))
 	}
 
+	// 插入测试数据
+	logger.Info("正在插入测试数据...")
+	if err := reinsertMockData(db, logger); err != nil {
+		return fmt.Errorf("插入测试数据失败: %v", err)
+	}
+
 	return nil
 }
 
@@ -241,7 +247,7 @@ func rebuildTables(db mysql.Repo, logger *zap.Logger) error {
 	logger.Info("正在删除所有现有表...")
 	tablesToDrop := []string{
 		"cooperation_store_history",
-		"customer_authorization_record_history", 
+		"customer_authorization_record_history",
 		"account_history",
 		"org_history",
 		"account_org_relation",

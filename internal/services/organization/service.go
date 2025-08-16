@@ -1,20 +1,21 @@
 package orgsvc
 
 import (
+	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	"github.com/xinliangnote/go-gin-api/internal/proposal"
 )
 
 type Service interface {
 	// Group operations
-	ListGroups(ctx Context, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	ListGroups(ctx Context, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error)
 	GetGroup(ctx Context, id uint32) (map[string]interface{}, error)
 	CreateGroup(ctx Context, payload *CreateGroupPayload) (uint32, error)
 	UpdateGroup(ctx Context, id uint32, payload *UpdateGroupPayload) (uint32, error)
 	DeleteGroup(ctx Context, id uint32) error
 
 	// Team operations
-	ListTeams(ctx Context, belongGroupId uint32, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	ListTeams(ctx Context, belongGroupId uint32, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error)
 	GetTeam(ctx Context, id uint32) (map[string]interface{}, error)
 	CreateTeam(ctx Context, payload *CreateTeamPayload) (uint32, error)
 	UpdateTeam(ctx Context, id uint32, payload *UpdateTeamPayload) (uint32, error)

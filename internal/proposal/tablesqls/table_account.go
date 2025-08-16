@@ -55,7 +55,7 @@ func CreateAccountTableDataSql() (sql string) {
 	// 预置账户数据，确保与 org 和 account_org_relation 的示例数据相匹配
 	// 密码: 123456 (bcrypt哈希)
 	sql = "INSERT INTO `account` (`username`, `name`, `password`, `phone`, `role_type`, `status`, `belong_group_id`, `belong_team_id`, `last_login_at`, `created_user`, `updated_user`) VALUES"
-	sql += "('admin', '系统管理员', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138001', 'company_admin', 'enabled', 1, 4, NULL, '系统管理员', '系统管理员'),"
+	sql += "('admin', '系统管理员', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138001', 'company_manager', 'enabled', 1, 4, NULL, '系统管理员', '系统管理员'),"
 	sql += "('employee001', '张三', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138002', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
 	sql += "('employee002', '李四', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138003', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
 	sql += "('employee003', '王五', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138004', 'employee', 'enabled', 3, 7, NULL, '系统管理员', '系统管理员'),"
