@@ -3,29 +3,30 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 type Account struct {
-	Id       int32  `gorm:"primaryKey;column:id"`
+	Id       uint32 `gorm:"primaryKey;column:id"`
 	Username string `gorm:"column:username"`
-	Nickname string `gorm:"column:nickname"`
+	Name     string `gorm:"column:name"`
 	Password string `gorm:"column:password"`
 	Phone    string `gorm:"column:phone"`
 	RoleType string `gorm:"column:role_type"`
-	Status   string `gorm:"column:status"`
+	Status   int32  `gorm:"column:status"`
 
 	// 所属组信息
-	BelongGroupId int32 `gorm:"column:belong_group_id"`
-	BelongTeamId  int32 `gorm:"column:belong_team_id"`
+	BelongGroupId uint32 `gorm:"column:belong_group_id"`
+	BelongTeamId  uint32 `gorm:"column:belong_team_id"`
 
-	LastLoginTimestamp int64  `gorm:"column:last_login_timestamp"`
-	CreatedTimestamp   int64  `gorm:"column:created_timestamp"`
-	ModifiedTimestamp  int64  `gorm:"column:modified_timestamp"`
-	CreatedUser        string `gorm:"column:created_user"`
-	UpdatedUser        string `gorm:"column:updated_user"`
+	LastLoginAt *time.Time `gorm:"column:last_login_at"`
+	CreatedAt   time.Time  `gorm:"column:created_at"`
+	UpdatedAt   time.Time  `gorm:"column:updated_at"`
+	CreatedUser string     `gorm:"column:created_user"`
+	UpdatedUser string     `gorm:"column:updated_user"`
 }
 
 func main() {

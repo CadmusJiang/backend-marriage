@@ -39,24 +39,24 @@ func ComputeScope(ctx core.Context, db mysql.Repo) (AccessScope, error) {
 	}
 
 	scope.RoleType = acc.RoleType
-	scope.SelfAccountID = acc.Id
+	scope.SelfAccountID = int32(acc.Id)
 
 	switch acc.RoleType {
 	case "company_manager":
 		scope.ScopeAll = true
 	case "group_manager":
 		if acc.BelongGroupId > 0 {
-			scope.AllowedGroupIDs = []int32{acc.BelongGroupId}
+			scope.AllowedGroupIDs = []int32{int32(acc.BelongGroupId)}
 		}
 	case "team_manager":
 		if acc.BelongTeamId > 0 {
-			scope.AllowedTeamIDs = []int32{acc.BelongTeamId}
+			scope.AllowedTeamIDs = []int32{int32(acc.BelongTeamId)}
 		}
 	case "employee":
-		scope.AllowedAccountIDs = []int32{acc.Id}
+		scope.AllowedAccountIDs = []int32{int32(acc.Id)}
 	default:
 		// 未知角色，默认最小权限
-		scope.AllowedAccountIDs = []int32{acc.Id}
+		scope.AllowedAccountIDs = []int32{int32(acc.Id)}
 	}
 
 	return scope, nil
@@ -72,19 +72,19 @@ func CanAccessAccount(scope AccessScope, target *mysqlAccount.Account) bool {
 	}
 	// 自己
 	for _, id := range scope.AllowedAccountIDs {
-		if id == target.Id {
+		if int32(id) == int32(target.Id) {
 			return true
 		}
 	}
 	// 组
 	for _, gid := range scope.AllowedGroupIDs {
-		if gid > 0 && gid == target.BelongGroupId {
+		if gid > 0 && gid == int32(target.BelongGroupId) {
 			return true
 		}
 	}
 	// 队
 	for _, tid := range scope.AllowedTeamIDs {
-		if tid > 0 && tid == target.BelongTeamId {
+		if tid > 0 && tid == int32(target.BelongTeamId) {
 			return true
 		}
 	}

@@ -34,7 +34,7 @@ type Server struct {
 	Cache redis.Repo
 }
 
-func NewHTTPServer(logger *zap.Logger, forceReseed bool) (*Server, error) {
+func NewHTTPServer(logger *zap.Logger, forceReseed bool, rebuildDatabase bool) (*Server, error) {
 	if logger == nil {
 		return nil, errors.New("logger required")
 	}
@@ -69,12 +69,21 @@ func NewHTTPServer(logger *zap.Logger, forceReseed bool) (*Server, error) {
 		r.db = dbRepo
 
 		// 启动即确保表结构并插入 mock 数据（逐表输出进度，便于中断场景下确认进度）
-		logger.Info("正在检查并创建缺失的数据表...")
-		if err := ensureTables(dbRepo, logger); err != nil {
-			logger.Error("创建/校验数据表失败", zap.Error(err))
-			return nil, fmt.Errorf("创建/校验数据表失败: %v", err)
+		if rebuildDatabase {
+			logger.Info("正在强制重建数据库表...")
+			if err := rebuildTables(dbRepo, logger); err != nil {
+				logger.Error("重建数据表失败", zap.Error(err))
+				return nil, fmt.Errorf("重建数据表失败: %v", err)
+			}
+			logger.Info("数据库表重建完成")
+		} else {
+			logger.Info("正在检查并创建缺失的数据表...")
+			if err := ensureTables(dbRepo, logger); err != nil {
+				logger.Error("创建/校验数据表失败", zap.Error(err))
+				return nil, fmt.Errorf("创建/校验数据表失败: %v", err)
+			}
+			logger.Info("数据表检查完成")
 		}
-		logger.Info("数据表检查完成")
 
 		if forceReseed {
 			logger.Info("正在强制重置并插入 mock 数据...")
@@ -178,7 +187,7 @@ func testDatabaseConnection(db mysql.Repo) error {
 	return nil
 }
 
-// ensureTables 创建核心业务相关的数据表（若不存在）
+// ensureTables 强制删除并重新创建核心业务相关的数据表
 func ensureTables(db mysql.Repo, logger *zap.Logger) error {
 	type table struct {
 		name string
@@ -193,27 +202,77 @@ func ensureTables(db mysql.Repo, logger *zap.Logger) error {
 		{name: "customer_authorization_record", sql: tablesqls.CreateCustomerAuthorizationRecordTableSql()},
 		{name: "customer_authorization_record_history", sql: tablesqls.CreateCustomerAuthorizationRecordHistoryTableSql()},
 		{name: "cooperation_store", sql: tablesqls.CreateCooperationStoreTableSql()},
+		{name: "cooperation_store_history", sql: tablesqls.CreateCooperationStoreHistoryTableSql()},
 		{name: "outbox_events", sql: tablesqls.CreateOutboxTableSql()},
 	}
 
 	for _, t := range tables {
-		logger.Info("检查/创建表", zap.String("table", t.name))
-		// 是否存在
+		logger.Info("强制重建表", zap.String("table", t.name))
+
+		// 检查表是否存在
 		var exists bool
 		if err := db.GetDbW().Raw("SELECT COUNT(*) > 0 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = ?", t.name).Scan(&exists).Error; err != nil {
 			return fmt.Errorf("检查表 %s 是否存在失败: %v", t.name, err)
 		}
-		if !exists {
-			logger.Info("表不存在，正在创建...", zap.String("table", t.name))
-			if err := db.GetDbW().Exec(t.sql).Error; err != nil {
-				return fmt.Errorf("创建表 %s 失败: %v", t.name, err)
+
+		if exists {
+			logger.Info("表已存在，正在删除...", zap.String("table", t.name))
+			// 删除表（如果存在）
+			if err := db.GetDbW().Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", t.name)).Error; err != nil {
+				return fmt.Errorf("删除表 %s 失败: %v", t.name, err)
 			}
-			logger.Info("创建完成", zap.String("table", t.name))
-		} else {
-			logger.Info("表已存在，跳过创建", zap.String("table", t.name))
+			logger.Info("表删除完成", zap.String("table", t.name))
 		}
+
+		// 重新创建表
+		logger.Info("正在创建表...", zap.String("table", t.name))
+		if err := db.GetDbW().Exec(t.sql).Error; err != nil {
+			return fmt.Errorf("创建表 %s 失败: %v", t.name, err)
+		}
+		logger.Info("表创建完成", zap.String("table", t.name))
 	}
 
+	return nil
+}
+
+// rebuildTables 强制重建数据库表（删除所有表并重新创建）
+func rebuildTables(db mysql.Repo, logger *zap.Logger) error {
+	// 先删除所有表
+	logger.Info("正在删除所有现有表...")
+	tablesToDrop := []string{
+		"cooperation_store_history",
+		"customer_authorization_record_history", 
+		"account_history",
+		"org_history",
+		"account_org_relation",
+		"customer_authorization_record",
+		"cooperation_store",
+		"account",
+		"org",
+		"outbox_events",
+	}
+
+	for _, tableName := range tablesToDrop {
+		logger.Info("删除表", zap.String("table", tableName))
+		if err := db.GetDbW().Exec(fmt.Sprintf("DROP TABLE IF EXISTS `%s`", tableName)).Error; err != nil {
+			logger.Error("删除表失败", zap.String("table", tableName), zap.Error(err))
+		}
+	}
+	logger.Info("所有表删除完成")
+
+	// 重新创建表
+	logger.Info("正在重新创建表...")
+	if err := ensureTables(db, logger); err != nil {
+		return fmt.Errorf("重新创建表失败: %v", err)
+	}
+
+	// 插入测试数据
+	logger.Info("正在插入测试数据...")
+	if err := reinsertMockData(db, logger); err != nil {
+		return fmt.Errorf("插入测试数据失败: %v", err)
+	}
+
+	logger.Info("数据库重建完成")
 	return nil
 }
 
@@ -233,6 +292,7 @@ func reinsertMockData(db mysql.Repo, logger *zap.Logger) error {
 		{name: "customer_authorization_record", insert: tablesqls.CreateCustomerAuthorizationRecordTableDataSql()},
 		{name: "customer_authorization_record_history", insert: tablesqls.CreateCustomerAuthorizationRecordHistoryTableDataSql()},
 		{name: "cooperation_store", insert: tablesqls.CreateCooperationStoreTableDataSql()},
+		{name: "cooperation_store_history", insert: tablesqls.CreateCooperationStoreHistoryTableDataSql()},
 	}
 
 	for _, it := range items {

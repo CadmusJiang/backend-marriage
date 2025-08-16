@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/proposal"
 	"github.com/xinliangnote/go-gin-api/pkg/trace"
 
@@ -244,7 +245,24 @@ func (c *context) getPayload() interface{} {
 }
 
 func (c *context) Payload(payload interface{}) {
-	c.ctx.Set(_PayloadName, payload)
+	// 如果payload已经是Success或Failure格式，直接使用
+	if _, ok := payload.(*code.Success); ok {
+		c.ctx.Set(_PayloadName, payload)
+		return
+	}
+	if _, ok := payload.(*code.Failure); ok {
+		c.ctx.Set(_PayloadName, payload)
+		return
+	}
+	
+	// 否则包装为成功响应格式
+	successResponse := &code.Success{
+		Success: true,
+		Data:    payload,
+		Message: "操作成功",
+		Code:    "SUCCESS",
+	}
+	c.ctx.Set(_PayloadName, successResponse)
 }
 
 func (c *context) getGraphPayload() interface{} {

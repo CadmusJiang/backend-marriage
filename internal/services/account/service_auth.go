@@ -10,6 +10,7 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Login 用户登录
@@ -37,6 +38,9 @@ func (s *service) Login(ctx core.Context, username, password string) (accountInf
 	accountQueryBuilder.WhereUsername(mysql.EqualPredicate, username)
 
 	ctx.Logger().Info("查询用户信息", zap.String("username", username))
+
+	// 确保数据库查询传递trace信息
+	dbR = dbR.WithContext(ctx.RequestContext())
 	accountInfo, err = accountQueryBuilder.QueryOne(dbR)
 	if err != nil {
 		ctx.Logger().Error("查询账户失败",
@@ -52,29 +56,38 @@ func (s *service) Login(ctx core.Context, username, password string) (accountInf
 
 	ctx.Logger().Info("用户查询成功",
 		zap.String("username", username),
-		zap.Int32("user_id", accountInfo.Id),
+		zap.Uint32("user_id", accountInfo.Id),
 		zap.String("status", accountInfo.Status),
 	)
 
 	// 验证密码
-	hashedPassword := s.generateMD5(password)
+	// 支持bcrypt和MD5两种密码格式
+	passwordMatch := false
+
+	// 首先尝试bcrypt验证
+	if err := bcrypt.CompareHashAndPassword([]byte(accountInfo.Password), []byte(password)); err == nil {
+		passwordMatch = true
+	} else {
+		// 如果bcrypt验证失败，尝试MD5验证
+		hashedPassword := s.generateMD5(password)
+		passwordMatch = accountInfo.Password == hashedPassword
+	}
+
 	ctx.Logger().Info("密码验证",
-		zap.String("input_password_hash", hashedPassword),
 		zap.String("stored_password_hash", accountInfo.Password),
-		zap.Bool("password_match", accountInfo.Password == hashedPassword),
+		zap.Bool("password_match", passwordMatch),
 	)
 
-	if accountInfo.Password != hashedPassword {
+	if !passwordMatch {
 		ctx.Logger().Warn("密码错误",
 			zap.String("username", username),
-			zap.String("input_password_hash", hashedPassword),
 			zap.String("stored_password_hash", accountInfo.Password),
 		)
 		return nil, fmt.Errorf("密码错误")
 	}
 
 	// 检查账户状态
-	if accountInfo.Status != "enabled" {
+	if accountInfo.Status != "enabled" { // "enabled"表示启用，"disabled"表示禁用
 		ctx.Logger().Warn("账户已被禁用",
 			zap.String("username", username),
 			zap.String("status", accountInfo.Status),
@@ -84,12 +97,13 @@ func (s *service) Login(ctx core.Context, username, password string) (accountInf
 
 	// 更新最后登录时间
 	updateFields := map[string]interface{}{
-		"last_login_at": uint64(time.Now().Unix()),
-		"updated_at":    uint64(time.Now().Unix()),
-		"updated_user":  username,
+		"LastLoginAt": time.Now(),
+		"UpdatedUser": username,
 	}
 
-	err = accountQueryBuilder.Updates(s.db.GetDbW(), updateFields)
+	// 确保数据库更新传递trace信息
+	dbW := s.db.GetDbW().WithContext(ctx.RequestContext())
+	err = accountQueryBuilder.Updates(dbW, updateFields)
 	if err != nil {
 		// 记录日志但不影响登录流程
 		ctx.Logger().Error("更新登录时间失败", zap.Error(err))
@@ -99,7 +113,7 @@ func (s *service) Login(ctx core.Context, username, password string) (accountInf
 
 	ctx.Logger().Info("登录验证完成",
 		zap.String("username", username),
-		zap.Int32("user_id", accountInfo.Id),
+		zap.Uint32("user_id", accountInfo.Id),
 	)
 
 	return accountInfo, nil

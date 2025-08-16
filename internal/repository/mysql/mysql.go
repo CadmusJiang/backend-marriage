@@ -10,6 +10,7 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -104,7 +105,7 @@ func dbConnect(user, pass, addr, dbName, connType string) (*gorm.DB, error) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
-		//Logger: logger.Default.LogMode(logger.Info), // 日志配置
+		Logger: logger.Default.LogMode(logger.Error), // 只记录错误，不记录所有SQL
 	})
 
 	if err != nil {

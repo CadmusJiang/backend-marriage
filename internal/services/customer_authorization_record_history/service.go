@@ -32,7 +32,7 @@ type HistoryItem struct {
 	OperateTimestamp              int64
 	Content                       map[string]interface{}
 	OperatorUsername              string
-	OperatorNickname              string
+	OperatorName                  string
 	OperatorRoleType              string
 	CreatedAt                     string
 	UpdatedAt                     string

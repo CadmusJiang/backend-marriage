@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 )
 
 // CustomerAuthorizationRecordHistory 客户授权记录历史记录表
@@ -12,10 +13,10 @@ type CustomerAuthorizationRecordHistory struct {
 	HistoryId                     string      `db:"history_id"`                       // 历史记录ID
 	CustomerAuthorizationRecordId string      `db:"customer_authorization_record_id"` // 客户授权记录ID
 	OperateType                   string      `db:"operate_type"`                     // 操作类型: created, modified, deleted
-	OperateTimestamp              int64       `db:"operate_timestamp"`                // 操作时间戳
+	OperatedAt                    time.Time   `db:"operated_at"`                      // 操作时间
 	Content                       *JSONString `db:"content"`                          // 操作内容
 	OperatorUsername              string      `db:"operator_username"`                // 操作人用户名
-	OperatorNickname              string      `db:"operator_nickname"`                // 操作人姓名
+	OperatorName                  string      `db:"operator_name"`                    // 操作人姓名
 	OperatorRoleType              string      `db:"operator_role_type"`               // 操作人角色类型
 	IsDeleted                     int8        `db:"is_deleted"`                       // 是否删除 1:是  -1:否
 	CreatedUser                   string      `db:"created_user"`                     // 创建人

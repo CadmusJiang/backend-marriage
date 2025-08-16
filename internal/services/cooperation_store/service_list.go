@@ -21,7 +21,7 @@ func (s *service) List(ctx core.Context, req *ListRequest) (items []StoreItem, t
 		db = db.Where("store_name LIKE ?", "%"+req.StoreName+"%")
 	}
 	if req.CooperationCity != "" {
-		db = db.Where("cooperation_city = ?", req.CooperationCity)
+		db = db.Where("cooperation_city_code = ?", req.CooperationCity)
 	}
 	if len(req.CooperationStatus) > 0 {
 		db = db.Where("cooperation_status IN (?)", req.CooperationStatus)
@@ -84,7 +84,7 @@ func (s *service) List(ctx core.Context, req *ListRequest) (items []StoreItem, t
 		out = append(out, StoreItem{
 			Id:                    strconv.Itoa(int(r.Id)),
 			StoreName:             r.StoreName,
-			CooperationCity:       r.CooperationCity,
+			CooperationCity:       r.CooperationCityCode,
 			CooperationType:       coopType,
 			StoreShortName:        r.StoreShortName,
 			CompanyName:           r.CompanyName,
@@ -94,8 +94,8 @@ func (s *service) List(ctx core.Context, req *ListRequest) (items []StoreItem, t
 			StorePhotos:           storePhotos,
 			ActualBusinessAddress: r.ActualBusinessAddress,
 			ContractPhotos:        contractPhotos,
-			CreatedAt:             time.Unix(r.CreatedTimestamp, 0).Format(time.RFC3339),
-			UpdatedAt:             time.Unix(r.ModifiedTimestamp, 0).Format(time.RFC3339),
+			CreatedAt:             r.CreatedAt.Format(time.RFC3339),
+			UpdatedAt:             r.UpdatedAt.Format(time.RFC3339),
 		})
 	}
 	return out, total, nil

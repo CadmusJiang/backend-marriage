@@ -280,13 +280,13 @@ func (qb *accountHistoryQueryBuilder) WhereOperateTimestampNotIn(value []uint64)
 	return qb
 }
 
-func (qb *accountHistoryQueryBuilder) OrderByOperateTimestamp(asc bool) *accountHistoryQueryBuilder {
+func (qb *accountHistoryQueryBuilder) OrderByOperatedAt(asc bool) *accountHistoryQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "operate_timestamp "+order)
+	qb.order = append(qb.order, "operated_at "+order)
 	return qb
 }
 

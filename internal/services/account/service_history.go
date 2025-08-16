@@ -13,19 +13,19 @@ import (
 // CreateHistory 创建历史记录
 func (s *service) CreateHistory(ctx core.Context, historyData *CreateHistoryData) (err error) {
 	// 创建历史记录
-	now := uint64(time.Now().Unix())
+	now := time.Now()
 	accountId, _ := strconv.ParseUint(historyData.AccountId, 10, 64)
 	newHistory := &account_history.AccountHistory{
-		AccountId:         accountId,
-		OperateType:       historyData.OperateType,
-		OperateTimestamp:  now,
-		Content:           historyData.Content,
-		Operator:          historyData.Operator,
-		OperatorRoleType:  historyData.OperatorRoleType,
-		CreatedTimestamp:  now,
-		ModifiedTimestamp: now,
-		CreatedUser:       ctx.SessionUserInfo().UserName,
-		UpdatedUser:       ctx.SessionUserInfo().UserName,
+		AccountId:        accountId,
+		OperateType:      historyData.OperateType,
+		OperatedAt:       now,
+		Content:          historyData.Content,
+		Operator:         historyData.Operator,
+		OperatorRoleType: historyData.OperatorRoleType,
+		CreatedAt:        now,
+		UpdatedAt:        now,
+		CreatedUser:      ctx.SessionUserInfo().UserName,
+		UpdatedUser:      ctx.SessionUserInfo().UserName,
 	}
 
 	// 保存到数据库
@@ -55,7 +55,7 @@ func (s *service) PageListHistory(ctx core.Context, searchData *SearchHistoryDat
 	historyQueryBuilder.Limit(searchData.PageSize).Offset(offset)
 
 	// 按时间倒序排列
-	historyQueryBuilder.OrderByOperateTimestamp(false)
+	historyQueryBuilder.OrderByOperatedAt(false)
 
 	// 查询数据
 	listData, err = historyQueryBuilder.QueryAll(s.db.GetDbR())

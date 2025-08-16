@@ -19,10 +19,10 @@ type accountHistoryData struct {
 	ID               string                 `json:"id"`                // 历史记录ID
 	AccountID        string                 `json:"accountId"`         // 账户ID
 	OperateType      string                 `json:"operateType"`       // 操作类型
-	OccurredAt       int64                  `json:"occurredAt"`        // 操作时间戳
+	OperatedAt       int64                  `json:"operatedAt"`        // 操作时间戳
 	Content          map[string]interface{} `json:"content"`           // 操作内容
 	OperatorUsername string                 `json:"operator_username"` // 操作人用户名
-	OperatorNickname string                 `json:"operator_nickname"` // 操作人姓名
+	OperatorName     string                 `json:"operator_name"`     // 操作人姓名
 	OperatorRoleType string                 `json:"operatorRoleType"`  // 操作人角色类型
 }
 
@@ -103,13 +103,13 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				ID:          "101",
 				AccountID:   "1",
 				OperateType: "created",
-				OccurredAt:  1705123200, // 2024-01-13 10:00:00
+				OperatedAt:  1705123200, // 2024-01-13 10:00:00
 				Content: map[string]interface{}{
 					"username": map[string]string{
 						"old": "",
 						"new": "admin",
 					},
-					"nickname": map[string]string{
+					"name": map[string]string{
 						"old": "",
 						"new": "系统管理员",
 					},
@@ -127,14 +127,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "system",
-				OperatorNickname: "系统",
+				OperatorName:     "系统",
 				OperatorRoleType: "system",
 			},
 			{
 				ID:          "102",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705209600, // 2024-01-14 10:00:00
+				OperatedAt:  1705209600, // 2024-01-14 10:00:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138000",
@@ -142,29 +142,29 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "103",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705296000, // 2024-01-15 10:00:00
+				OperatedAt:  1705296000, // 2024-01-15 10:00:00
 				Content: map[string]interface{}{
-					"nickname": map[string]string{
+					"name": map[string]string{
 						"old": "系统管理员",
 						"new": "超级管理员",
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "104",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705382400, // 2024-01-16 10:00:00
+				OperatedAt:  1705382400, // 2024-01-16 10:00:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "enabled",
@@ -176,14 +176,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "105",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705468800, // 2024-01-17 10:00:00
+				OperatedAt:  1705468800, // 2024-01-17 10:00:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "disabled",
@@ -195,14 +195,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 			},
 			{
-				ID:               "106",
-				AccountID:        "1",
-				OperateType:      "modified",
-				OperateTimestamp: 1705555200, // 2024-01-18 10:00:00
+				ID:          "106",
+				AccountID:   "1",
+				OperateType: "modified",
+				OperatedAt:  1705555200, // 2024-01-18 10:00:00
 				Content: map[string]interface{}{
 					"password": map[string]string{
 						"old": "****",
@@ -210,29 +210,29 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "超级管理员",
+				OperatorName:     "超级管理员",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "107",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705641600, // 2024-01-19 10:00:00
+				OperatedAt:  1705641600, // 2024-01-19 10:00:00
 				Content: map[string]interface{}{
-					"nickname": map[string]string{
+					"name": map[string]string{
 						"old": "超级管理员",
 						"new": "系统管理员",
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "超级管理员",
+				OperatorName:     "超级管理员",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "108",
 				AccountID:   "1",
 				OperateType: "modified",
-				OccurredAt:  1705728000, // 2024-01-20 10:00:00
+				OperatedAt:  1705728000, // 2024-01-20 10:00:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138001",
@@ -240,7 +240,7 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 			},
 			// accountId=6 的原有历史记录
@@ -248,7 +248,7 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 				ID:          "1",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1705923000, // 2024-01-22 14:30:00
+				OperatedAt:  1705923000, // 2024-01-22 14:30:00
 				Content: map[string]interface{}{
 					"roleType": map[string]string{
 						"old": "员工",
@@ -264,14 +264,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "2",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1705754700, // 2024-01-20 16:45:00
+				OperatedAt:  1705754700, // 2024-01-20 16:45:00
 				Content: map[string]interface{}{
 					"belongGroup": map[string]string{
 						"old": "南京-天元大厦组",
@@ -283,14 +283,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "liming",
-				OperatorNickname: "李明",
+				OperatorName:     "李明",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "3",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1705565700, // 2024-01-18 09:15:00
+				OperatedAt:  1705565700, // 2024-01-18 09:15:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "enabled",
@@ -298,14 +298,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "wangfang",
-				OperatorNickname: "王芳",
+				OperatorName:     "王芳",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "4",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1705303200, // 2024-01-15 11:20:00
+				OperatedAt:  1705303200, // 2024-01-15 11:20:00
 				Content: map[string]interface{}{
 					"phone": map[string]string{
 						"old": "13800138000",
@@ -317,16 +317,16 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "liuqiang",
-				OperatorNickname: "刘强",
+				OperatorName:     "刘强",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "5",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1705032000, // 2024-01-12 10:00:00
+				OperatedAt:  1705032000, // 2024-01-12 10:00:00
 				Content: map[string]interface{}{
-					"nickname": map[string]string{
+					"name": map[string]string{
 						"old": "张三",
 						"new": "张明",
 					},
@@ -336,20 +336,20 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "chenjing",
-				OperatorNickname: "陈静",
+				OperatorName:     "陈静",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "6",
 				AccountID:   "6",
 				OperateType: "created",
-				OccurredAt:  1704877800, // 2024-01-10 14:30:00
+				OperatedAt:  1704877800, // 2024-01-10 14:30:00
 				Content: map[string]interface{}{
 					"username": map[string]string{
 						"old": "",
 						"new": "employee001",
 					},
-					"nickname": map[string]string{
+					"name": map[string]string{
 						"old": "",
 						"new": "张三",
 					},
@@ -371,14 +371,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "7",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1704709200, // 2024-01-08 16:20:00
+				OperatedAt:  1704709200, // 2024-01-08 16:20:00
 				Content: map[string]interface{}{
 					"belongGroup": map[string]string{
 						"old": "南京-天元大厦组",
@@ -390,14 +390,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhaomin",
-				OperatorNickname: "赵敏",
+				OperatorName:     "赵敏",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "8",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1704457500, // 2024-01-05 13:45:00
+				OperatedAt:  1704457500, // 2024-01-05 13:45:00
 				Content: map[string]interface{}{
 					"status": map[string]string{
 						"old": "disabled",
@@ -409,14 +409,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "liming",
-				OperatorNickname: "李明",
+				OperatorName:     "李明",
 				OperatorRoleType: "team_manager",
 			},
 			{
 				ID:          "9",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1704265800, // 2024-01-03 10:30:00
+				OperatedAt:  1704265800, // 2024-01-03 10:30:00
 				Content: map[string]interface{}{
 					"password": map[string]string{
 						"old": "****",
@@ -424,14 +424,14 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 			},
 			{
 				ID:          "10",
 				AccountID:   "6",
 				OperateType: "modified",
-				OccurredAt:  1704081600, // 2024-01-01 09:00:00
+				OperatedAt:  1704081600, // 2024-01-01 09:00:00
 				Content: map[string]interface{}{
 					"password": map[string]string{
 						"old": "****",
@@ -439,7 +439,7 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "wangfang",
-				OperatorNickname: "王芳",
+				OperatorName:     "王芳",
 				OperatorRoleType: "team_manager",
 			},
 		}
@@ -456,7 +456,7 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 		if req.AccountUsername != "" {
 			var filtered []accountHistoryData
 			for _, hist := range filteredHistories {
-				if hist.OperatorNickname == req.AccountUsername {
+				if hist.OperatorName == req.AccountUsername {
 					filtered = append(filtered, hist)
 				}
 			}

@@ -6,7 +6,7 @@ func CreateOutboxTableSql() (sql string) {
 	sql += "`id` bigint unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',"
 	sql += "`topic` varchar(128) NOT NULL COMMENT '投递目标/主题',"
 	sql += "`payload` json NOT NULL COMMENT '事件载荷(JSON)',"
-	sql += "`status` tinyint NOT NULL DEFAULT 0 COMMENT '0=未发布 1=已发布',"
+	sql += "`status` enum('unpublished','published') NOT NULL DEFAULT 'unpublished' COMMENT '发布状态 unpublished:未发布 published:已发布',"
 	sql += "`retry_count` int NOT NULL DEFAULT 0 COMMENT '重试次数',"
 	sql += "`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
 	sql += "`published_at` timestamp NULL DEFAULT NULL COMMENT '发布时间',"

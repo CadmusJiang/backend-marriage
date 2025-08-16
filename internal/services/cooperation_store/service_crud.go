@@ -18,17 +18,17 @@ func (s *service) Get(ctx core.Context, id string) (*StoreItem, error) {
 }
 
 func (s *service) Create(ctx core.Context, req *CreateRequest) (*StoreItem, error) {
-	now := time.Now().Unix()
+
 	m := &model.CooperationStore{
 		StoreName:             req.StoreName,
-		CooperationCity:       req.CooperationCity,
+		CooperationCityCode:   req.CooperationCity,
 		StoreShortName:        req.StoreShortName,
 		CompanyName:           req.CompanyName,
 		CooperationStatus:     req.CooperationStatus,
 		BusinessLicense:       req.BusinessLicense,
 		ActualBusinessAddress: req.ActualBusinessAddress,
-		CreatedAt:             now,
-		UpdatedAt:             now,
+		CreatedAt:             time.Now(),
+		UpdatedAt:             time.Now(),
 		CreatedUser:           ctx.SessionUserInfo().UserName,
 		UpdatedUser:           ctx.SessionUserInfo().UserName,
 	}
@@ -65,14 +65,14 @@ func (s *service) Update(ctx core.Context, id string, req *UpdateRequest) (*Stor
 	}
 
 	updates := map[string]interface{}{
-		"updated_at":   time.Now().Unix(),
+		"updated_at":   time.Now(),
 		"updated_user": ctx.SessionUserInfo().UserName,
 	}
 	if req.StoreName != "" {
 		updates["store_name"] = req.StoreName
 	}
 	if req.CooperationCity != "" {
-		updates["cooperation_city"] = req.CooperationCity
+		updates["cooperation_city_code"] = req.CooperationCity
 	}
 	if req.CooperationStatus != "" {
 		updates["cooperation_status"] = req.CooperationStatus
@@ -138,7 +138,7 @@ func convertRow(r *model.CooperationStore) *StoreItem {
 	return &StoreItem{
 		Id:                    strconv.Itoa(int(r.Id)),
 		StoreName:             r.StoreName,
-		CooperationCity:       r.CooperationCity,
+		CooperationCity:       r.CooperationCityCode,
 		CooperationType:       coopType,
 		StoreShortName:        r.StoreShortName,
 		CompanyName:           r.CompanyName,
@@ -148,7 +148,7 @@ func convertRow(r *model.CooperationStore) *StoreItem {
 		StorePhotos:           storePhotos,
 		ActualBusinessAddress: r.ActualBusinessAddress,
 		ContractPhotos:        contractPhotos,
-		CreatedAt:             time.Unix(r.CreatedTimestamp, 0).Format(time.RFC3339),
-		UpdatedAt:             time.Unix(r.ModifiedTimestamp, 0).Format(time.RFC3339),
+		CreatedAt:             r.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:             r.UpdatedAt.Format(time.RFC3339),
 	}
 }

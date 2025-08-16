@@ -20,8 +20,7 @@ type detailRequest struct {
 }
 
 type detailResponse struct {
-	Data    accountData `json:"data"`
-	Success bool        `json:"success"`
+	Data accountData `json:"data"`
 }
 
 // GetAccountDetail 获取账户详情
@@ -97,15 +96,20 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 
 		// 构建响应数据
 		accountData := accountData{
-			ID:          fmt.Sprintf("%d", accountInfo.Id),
-			Username:    accountInfo.Username,
-			Name:        accountInfo.Nickname,
-			Phone:       accountInfo.Phone,
-			RoleType:    accountInfo.RoleType,
-			Status:      accountInfo.Status,
-			CreatedAt:   int64(accountInfo.CreatedTimestamp),
-			UpdatedAt:   int64(accountInfo.ModifiedTimestamp),
-			LastLoginAt: int64(accountInfo.LastLoginTimestamp), // 改为lastLoginAt
+			ID:        fmt.Sprintf("%d", accountInfo.Id),
+			Username:  accountInfo.Username,
+			Name:      accountInfo.Name,
+			Phone:     accountInfo.Phone,
+			RoleType:  accountInfo.RoleType,
+			Status:    fmt.Sprintf("%d", accountInfo.Status),
+			CreatedAt: accountInfo.CreatedAt.Unix(),
+			UpdatedAt: accountInfo.UpdatedAt.Unix(),
+			LastLoginAt: func() int64 {
+				if accountInfo.LastLoginAt != nil {
+					return accountInfo.LastLoginAt.Unix()
+				}
+				return 0
+			}(),
 		}
 
 		// 账户接口不做脱敏
@@ -153,18 +157,119 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 		}
 
 		res.Data = accountData
-		res.Success = true
 
 		c.Payload(res)
 	}
 }
 
-// Me 返回当前用户信息（示例使用 sessionUserInfo 或简单查询）
+// Me 获取当前用户信息
+// @Summary 获取当前用户信息
+// @Description 获取当前登录用户的详细信息
+// @Tags CoreAuth
+// @Accept application/x-www-form-urlencoded
+// @Produce json
+// @Success 200 {object} detailResponse
+// @Failure 400 {object} code.Failure
+// @Failure 401 {object} code.Failure
+// @Router /api/v1/me [get]
 func (h *handler) Me() core.HandlerFunc {
 	return func(c core.Context) {
-		// 简化：从 accountId 查询或返回固定用户
-		// 这里可以结合登录态信息返回当前用户
-		c.Payload(map[string]interface{}{"success": true, "data": map[string]interface{}{"id": "u_1", "username": "admin", "name": "系统管理员", "roleType": "company_manager", "status": "enabled", "phone": "13800000000"}})
+		res := new(detailResponse)
+
+		// 从会话中获取当前用户ID
+		sessionUserInfo := c.SessionUserInfo()
+		if sessionUserInfo.UserID == 0 {
+			c.AbortWithError(core.Error(
+				http.StatusUnauthorized,
+				code.AuthorizationError,
+				"用户未登录").WithError(fmt.Errorf("session user info is empty")),
+			)
+			return
+		}
+
+		// 查询当前用户信息
+		accountQueryBuilder := account.NewQueryBuilder()
+		accountQueryBuilder.WhereId(mysql.EqualPredicate, sessionUserInfo.UserID)
+
+		accountInfo, err := accountQueryBuilder.QueryOne(h.db.GetDbR())
+		if err != nil {
+			h.logger.Error("查询当前用户失败", zap.Error(err))
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.AdminDetailError,
+				"查询用户信息失败").WithError(err),
+			)
+			return
+		}
+
+		if accountInfo == nil {
+			c.AbortWithError(core.Error(
+				http.StatusNotFound,
+				code.AdminDetailError,
+				"用户不存在"),
+			)
+			return
+		}
+
+		// 构建响应数据
+		accountData := accountData{
+			ID:        fmt.Sprintf("%d", accountInfo.Id),
+			Username:  accountInfo.Username,
+			Name:      accountInfo.Name,
+			Phone:     accountInfo.Phone,
+			RoleType:  accountInfo.RoleType,
+			Status:    fmt.Sprintf("%d", accountInfo.Status),
+			CreatedAt: accountInfo.CreatedAt.Unix(),
+			UpdatedAt: accountInfo.UpdatedAt.Unix(),
+			LastLoginAt: func() int64 {
+				if accountInfo.LastLoginAt != nil {
+					return accountInfo.LastLoginAt.Unix()
+				}
+				return 0
+			}(),
+		}
+
+		// 根据角色类型决定是否包含组信息
+		switch accountInfo.RoleType {
+		case "company_manager":
+			// company_manager不能有归属组
+			accountData.BelongGroup = nil
+		case "group_manager", "team_manager", "employee":
+			// 这些角色必须有归属组
+			if accountInfo.BelongGroupId > 0 {
+				groupInfo := h.getGroupInfo(int(accountInfo.BelongGroupId))
+				if groupInfo != nil {
+					accountData.BelongGroup = groupInfo
+				}
+			}
+		}
+
+		// 根据角色类型决定是否包含团队信息
+		switch accountInfo.RoleType {
+		case "company_manager", "group_manager":
+			// company_manager和group_manager不能有归属团队
+			accountData.BelongTeam = nil
+		case "team_manager":
+			// team_manager必须有归属团队
+			if accountInfo.BelongTeamId > 0 {
+				teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
+				if teamInfo != nil {
+					accountData.BelongTeam = teamInfo
+				}
+			}
+		case "employee":
+			// employee可以有归属团队（可选）
+			if accountInfo.BelongTeamId > 0 {
+				teamInfo := h.getTeamInfo(int(accountInfo.BelongTeamId))
+				if teamInfo != nil {
+					accountData.BelongTeam = teamInfo
+				}
+			}
+		}
+
+		res.Data = accountData
+
+		c.Payload(res)
 	}
 }
 
@@ -188,9 +293,9 @@ func (h *handler) getGroupInfo(groupID int) *org {
 	return &org{
 		ID:         uint64(rec.Id),
 		Username:   rec.Username,
-		Name:       rec.Nickname,
-		CreatedAt:  rec.CreatedTimestamp,
-		UpdatedAt:  rec.ModifiedTimestamp,
+		Name:       rec.Name,
+		CreatedAt:  rec.CreatedAt.Unix(),
+		UpdatedAt:  rec.UpdatedAt.Unix(),
 		CurrentCnt: 0,
 	}
 }
@@ -205,9 +310,9 @@ func (h *handler) getTeamInfo(teamID int) *org {
 	return &org{
 		ID:         uint64(rec.Id),
 		Username:   rec.Username,
-		Name:       rec.Nickname,
-		CreatedAt:  rec.CreatedTimestamp,
-		UpdatedAt:  rec.ModifiedTimestamp,
+		Name:       rec.Name,
+		CreatedAt:  rec.CreatedAt.Unix(),
+		UpdatedAt:  rec.UpdatedAt.Unix(),
 		CurrentCnt: 0,
 	}
 }

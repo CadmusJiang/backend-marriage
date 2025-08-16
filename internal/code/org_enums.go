@@ -1,45 +1,7 @@
 package code
 
-// 组织类型枚举
-const (
-	OrgTypeGroup = 1 // 组
-	OrgTypeTeam  = 2 // 团队
-)
-
-// 组织状态枚举
-const (
-	OrgStatusEnabled  = 1 // 启用
-	OrgStatusDisabled = 2 // 禁用
-)
-
-// 关联类型枚举
-const (
-	RelationTypeBelong = 1 // 属于
-	RelationTypeManage = 2 // 管理
-)
-
-// 关联状态枚举
-const (
-	RelationStatusActive   = 1 // 活跃
-	RelationStatusInactive = 2 // 非活跃
-)
-
-// 角色类型枚举
-const (
-	RoleTypeCompanyManager = 1 // 公司管理员
-	RoleTypeGroupManager   = 2 // 组管理员
-	RoleTypeTeamManager    = 3 // 小队管理员
-	RoleTypeEmployee       = 4 // 员工
-)
-
-// 账户状态枚举
-const (
-	AccountStatusEnabled  = 1 // 启用
-	AccountStatusDisabled = 2 // 禁用
-)
-
 // 获取组织类型名称
-func GetOrgTypeName(orgType int) string {
+func GetOrgTypeName(orgType string) string {
 	switch orgType {
 	case OrgTypeGroup:
 		return "group"
@@ -51,11 +13,11 @@ func GetOrgTypeName(orgType int) string {
 }
 
 // 获取组织状态名称
-func GetOrgStatusName(status int) string {
+func GetOrgStatusName(status string) string {
 	switch status {
-	case OrgStatusEnabled:
+	case StatusEnabled:
 		return "enabled"
-	case OrgStatusDisabled:
+	case StatusDisabled:
 		return "disabled"
 	default:
 		return "unknown"
@@ -63,7 +25,7 @@ func GetOrgStatusName(status int) string {
 }
 
 // 获取关联类型名称
-func GetRelationTypeName(relationType int) string {
+func GetRelationTypeName(relationType string) string {
 	switch relationType {
 	case RelationTypeBelong:
 		return "belong"
@@ -75,11 +37,11 @@ func GetRelationTypeName(relationType int) string {
 }
 
 // 获取关联状态名称
-func GetRelationStatusName(status int) string {
+func GetRelationStatusName(status string) string {
 	switch status {
-	case RelationStatusActive:
+	case StatusActive:
 		return "active"
-	case RelationStatusInactive:
+	case StatusInactive:
 		return "inactive"
 	default:
 		return "unknown"
@@ -87,7 +49,7 @@ func GetRelationStatusName(status int) string {
 }
 
 // 获取角色类型名称
-func GetRoleTypeName(roleType int) string {
+func GetRoleTypeName(roleType string) string {
 	switch roleType {
 	case RoleTypeCompanyManager:
 		return "company_manager"
@@ -103,11 +65,11 @@ func GetRoleTypeName(roleType int) string {
 }
 
 // 获取账户状态名称
-func GetAccountStatusName(status int) string {
+func GetAccountStatusName(status string) string {
 	switch status {
-	case AccountStatusEnabled:
+	case StatusEnabled:
 		return "enabled"
-	case AccountStatusDisabled:
+	case StatusDisabled:
 		return "disabled"
 	default:
 		return "unknown"

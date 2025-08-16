@@ -11,8 +11,18 @@ var ByteCodeFile []byte
 
 // Failure 错误时返回结构
 type Failure struct {
-	Code    int    `json:"code"`    // 业务码
-	Message string `json:"message"` // 描述信息
+	Success bool                   `json:"success"` // 是否成功
+	Code    string                `json:"code"`    // 错误代码
+	Message string                `json:"message"` // 描述信息
+	Details map[string]interface{} `json:"details"` // 详细信息
+}
+
+// Success 成功时返回结构
+type Success struct {
+	Success bool        `json:"success"` // 是否成功
+	Data    interface{} `json:"data"`    // 数据
+	Message string      `json:"message"` // 描述信息
+	Code    string      `json:"code"`    // 状态代码
 }
 
 const (

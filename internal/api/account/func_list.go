@@ -14,7 +14,7 @@ type listRequest struct {
 	Current      int    `form:"current"`      // 当前页码
 	PageSize     int    `form:"pageSize"`     // 每页数量
 	Username     string `form:"username"`     // 用户名搜索
-	Nickname     string `form:"nickname"`     // 姓名搜索
+	Name         string `form:"name"`         // 姓名搜索
 	RoleType     string `form:"roleType"`     // 角色类型筛选
 	Status       string `form:"status"`       // 状态筛选
 	Phone        string `form:"phone"`        // 手机号搜索
@@ -64,7 +64,7 @@ type listResponse struct {
 // @Param current query int false "当前页码" default(1)
 // @Param pageSize query int false "每页数量" default(10)
 // @Param username query string false "用户名搜索"
-// @Param nickname query string false "姓名搜索"
+// @Param name query string false "姓名搜索"
 // @Param roleType query string false "角色类型筛选"
 // @Param status query string false "状态筛选"
 // @Param phone query string false "手机号搜索"
@@ -100,7 +100,7 @@ func (h *handler) GetAccountList() core.HandlerFunc {
 		// 调用服务层获取账户列表
 		searchData := &accountService.SearchData{
 			Username:    req.Username,
-			Nickname:    req.Nickname,
+			Name:        req.Name,
 			RoleType:    req.RoleType,
 			Status:      req.Status,
 			BelongGroup: req.BelongGroup,
@@ -140,15 +140,20 @@ func (h *handler) GetAccountList() core.HandlerFunc {
 				acc.Id, acc.Username, acc.BelongGroupId, acc.BelongTeamId)
 
 			accountData := accountData{
-				ID:          fmt.Sprintf("%d", acc.Id),
-				Username:    acc.Username,
-				Name:        acc.Nickname,
-				Phone:       acc.Phone,
-				RoleType:    acc.RoleType,
-				Status:      acc.Status,
-				CreatedAt:   int64(acc.CreatedTimestamp),
-				UpdatedAt:   int64(acc.ModifiedTimestamp),
-				LastLoginAt: int64(acc.LastLoginTimestamp),
+				ID:        fmt.Sprintf("%d", acc.Id),
+				Username:  acc.Username,
+				Name:      acc.Name,
+				Phone:     acc.Phone,
+				RoleType:  acc.RoleType,
+				Status:    fmt.Sprintf("%d", acc.Status),
+				CreatedAt: acc.CreatedAt.Unix(),
+				UpdatedAt: acc.UpdatedAt.Unix(),
+				LastLoginAt: func() int64 {
+					if acc.LastLoginAt != nil {
+						return acc.LastLoginAt.Unix()
+					}
+					return 0
+				}(),
 			}
 
 			// 账户接口不做脱敏

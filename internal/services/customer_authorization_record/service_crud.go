@@ -11,35 +11,35 @@ import (
 )
 
 func (s *service) Create(ctx core.Context, req *CreateRequest) (*RecordItem, error) {
-	now := time.Now().Unix()
+
 	m := &model.CustomerAuthorizationRecord{
-		Name:              req.Name,
-		BirthYear:         (*int32)(req.BirthYear),
-		Gender:            req.Gender,
-		Height:            (*int32)(req.Height),
-		City:              req.City,
-		Education:         req.Education,
-		Profession:        req.Profession,
-		Income:            (*string)(req.Income),
-		Phone:             req.Phone,
-		Wechat:            req.Wechat,
-		DrainageAccount:   req.DrainageAccount,
-		DrainageId:        req.DrainageId,
-		DrainageChannel:   req.DrainageChannel,
-		Remark:            req.Remark,
-		IsAuthorized:      req.AuthorizationStatus,
-		IsProfileComplete: req.CompletionStatus,
-		IsAssigned:        req.AssignmentStatus,
-		IsPaid:            req.PaymentStatus,
-		PaymentAmount:     req.PaymentAmount,
-		RefundAmount:      req.RefundAmount,
-		Group:             req.AuthorizedStore, // mapping fields as needed
-		Team:              req.BelongTeam,
-		Account:           req.BelongAccount,
-		CreatedAt:         now,
-		UpdatedAt:         now,
-		CreatedUser:       ctx.SessionUserInfo().UserName,
-		UpdatedUser:       ctx.SessionUserInfo().UserName,
+		Name:                req.Name,
+		BirthYear:           (*int32)(req.BirthYear),
+		Gender:              req.Gender,
+		Height:              (*int32)(req.Height),
+		CityCode:            req.City,
+		Education:           req.Education,
+		Profession:          req.Profession,
+		Income:              (*string)(req.Income),
+		Phone:               req.Phone,
+		Wechat:              req.Wechat,
+		DrainageAccount:     req.DrainageAccount,
+		DrainageId:          req.DrainageId,
+		DrainageChannel:     req.DrainageChannel,
+		Remark:              req.Remark,
+		AuthorizationStatus: req.AuthorizationStatus,
+		CompletionStatus:    req.CompletionStatus,
+		AssignmentStatus:    req.AssignmentStatus,
+		PaymentStatus:       req.PaymentStatus,
+		PaymentAmount:       req.PaymentAmount,
+		RefundAmount:        req.RefundAmount,
+		Group:               req.AuthorizedStore, // mapping fields as needed
+		Team:                req.BelongTeam,
+		Account:             req.BelongAccount,
+		CreatedAt:           time.Now(),
+		UpdatedAt:           time.Now(),
+		CreatedUser:         ctx.SessionUserInfo().UserName,
+		UpdatedUser:         ctx.SessionUserInfo().UserName,
 	}
 	if len(req.AuthorizationPhotos) > 0 {
 		jp := model.JSONString(req.AuthorizationPhotos)
@@ -86,7 +86,7 @@ func (s *service) Update(ctx core.Context, id string, req *UpdateRequest) (*Reco
 		updates["height"] = *req.Height
 	}
 	if req.City != nil {
-		updates["city"] = *req.City
+		updates["city_code"] = *req.City
 	}
 	if req.Education != nil {
 		updates["education"] = *req.Education
@@ -115,10 +115,10 @@ func (s *service) Update(ctx core.Context, id string, req *UpdateRequest) (*Reco
 	if req.Remark != nil {
 		updates["remark"] = *req.Remark
 	}
-	updates["is_authorized"] = req.AuthorizationStatus
-	updates["is_assigned"] = req.AssignmentStatus
-	updates["is_profile_complete"] = req.CompletionStatus
-	updates["is_paid"] = req.PaymentStatus
+	updates["authorization_status"] = req.AuthorizationStatus
+	updates["assignment_status"] = req.AssignmentStatus
+	updates["completion_status"] = req.CompletionStatus
+	updates["payment_status"] = req.PaymentStatus
 	updates["payment_amount"] = req.PaymentAmount
 	updates["refund_amount"] = req.RefundAmount
 	if req.AuthorizedStore != nil {

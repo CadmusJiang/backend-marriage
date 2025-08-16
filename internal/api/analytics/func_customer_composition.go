@@ -65,7 +65,7 @@ func (h *handler) GetCustomerComposition() core.HandlerFunc {
 			Income:    []distributionItem{{Type: "<30w", Value: 20}, {Type: "30-60w", Value: 50}, {Type: ">60w", Value: 30}},
 			BirthYear: []distributionItem{{Type: "1980s", Value: 25}, {Type: "1990s", Value: 50}, {Type: "2000s", Value: 25}},
 			Education: []distributionItem{{Type: "本科", Value: 60}, {Type: "硕士", Value: 30}, {Type: "其他", Value: 10}},
-			City:      []distributionItem{{Type: "北京", Value: 40}, {Type: "上海", Value: 35}, {Type: "深圳", Value: 25}},
+			City:      []distributionItem{{Type: "110000", Value: 40}, {Type: "310000", Value: 35}, {Type: "440300", Value: 25}},
 		}
 
 		res := new(customerCompositionResponse)

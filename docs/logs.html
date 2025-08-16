@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>统一日志监控面板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #fff;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #7f8c8d;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+
+        .nav-tab:hover {
+            color: #3498db;
+        }
+
+        .tab-content {
+            background: #fff;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .error {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #ffeaa7;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+
+        .log-entry {
+            background: #fff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .log-entry.http {
+            border-left-color: #3498db;
+        }
+
+        .log-entry.mysql {
+            border-left-color: #e74c3c;
+        }
+
+        .log-entry.redis {
+            border-left-color: #f39c12;
+        }
+
+        .log-entry.system {
+            border-left-color: #9b59b6;
+        }
+        
+        .request-response-details {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .detail-label {
+            font-weight: 500;
+            color: #2c3e50;
+            min-width: 80px;
+            margin-right: 10px;
+        }
+        
+        .detail-value {
+            color: #34495e;
+            word-break: break-all;
+        }
+
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .log-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .log-type.http {
+            background: #e8f4fd;
+            color: #3498db;
+        }
+
+        .log-type.mysql {
+            background: #fdf2f2;
+            color: #e74c3c;
+        }
+
+        .log-type.redis {
+            background: #fef9e7;
+            color: #f39c12;
+        }
+
+        .log-type.system {
+            background: #f4f1f8;
+            color: #9b59b6;
+        }
+
+        .log-timestamp {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .log-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .log-detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+        }
+
+        .log-detail-label {
+            font-weight: 500;
+            color: #34495e;
+            font-size: 12px;
+        }
+
+        .log-detail-value {
+            color: #7f8c8d;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .log-message {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        .sql-list, .redis-list {
+            margin-top: 10px;
+        }
+
+        .sql-item, .redis-item {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 11px;
+            margin-bottom: 5px;
+            overflow-x: auto;
+        }
+
+        .sql-item {
+            border-left: 3px solid #e74c3c;
+        }
+
+        .redis-item {
+            border-left: 3px solid #f39c12;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .filters {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .filter-select, .filter-input {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .filter-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .filter-btn:hover {
+            background: #229954;
+        }
+
+        .clear-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .clear-btn:hover {
+            background: #7f8c8d;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .page-btn:hover {
+            background: #f8f9fa;
+        }
+
+        .page-btn.active {
+            background: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+
+        .page-info {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .auto-refresh {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .auto-refresh-label {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .auto-refresh-select {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-success {
+            background: #27ae60;
+        }
+
+        .status-error {
+            background: #e74c3c;
+        }
+
+        .status-warning {
+            background: #f39c12;
+        }
+
+        .status-info {
+            background: #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .nav-tab {
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .nav-tab.active {
+                border-left-color: #3498db;
+                border-bottom-color: transparent;
+            }
+            
+            .log-details {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 统一日志监控面板</h1>
+            <div class="subtitle">实时监控HTTP请求、SQL操作、Redis操作和系统日志</div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('unified')">🔍 统一日志</button>
+            <button class="nav-tab" onclick="switchTab('http')">🌐 HTTP请求</button>
+            <button class="nav-tab" onclick="switchTab('sql')">🗄️ SQL操作</button>
+            <button class="nav-tab" onclick="switchTab('redis')">🔴 Redis操作</button>
+            <button class="nav-tab" onclick="switchTab('system')">⚙️ 系统日志</button>
+        </div>
+
+        <div class="tab-content">
+            <!-- 统一日志标签页 -->
+            <div id="unified-tab" class="tab-pane active">
+                <div class="auto-refresh">
+                    <span class="auto-refresh-label">自动刷新:</span>
+                    <select class="auto-refresh-select" onchange="setAutoRefresh(this.value)">
+                        <option value="0">关闭</option>
+                        <option value="5">5秒</option>
+                        <option value="10">10秒</option>
+                        <option value="30" selected>30秒</option>
+                        <option value="60">1分钟</option>
+                    </select>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <span class="filter-label">日志类型:</span>
+                            <select class="filter-select" id="typeFilter">
+                                <option value="">全部</option>
+                                <option value="http">HTTP请求</option>
+                                <option value="mysql">SQL操作</option>
+                                <option value="redis">Redis操作</option>
+                                <option value="system">系统日志</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">状态:</span>
+                            <select class="filter-select" id="statusFilter">
+                                <option value="">全部</option>
+                                <option value="success">成功</option>
+                                <option value="error">错误</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <span class="filter-label">搜索:</span>
+                            <input type="text" class="filter-input" id="searchFilter" placeholder="搜索日志内容...">
+                        </div>
+                        <button class="filter-btn" onclick="applyFilters()">应用过滤</button>
+                        <button class="clear-btn" onclick="clearFilters()">清除过滤</button>
+                    </div>
+                </div>
+
+                <button class="refresh-btn" onclick="loadUnifiedLogs()">🔄 刷新日志</button>
+                <div id="unified-loading" class="loading">正在加载统一日志信息...</div>
+                <div id="unified-error" class="error" style="display: none;"></div>
+                <div id="unified-content" style="display: none;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-logs">0</div>
+                            <div class="stat-label">总日志数</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="http-logs">0</div>
+                            <div class="stat-label">HTTP请求</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="sql-logs">0</div>
+                            <div class="stat-label">SQL操作</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="redis-logs">0</div>
+                            <div class="stat-label">Redis操作</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="system-logs">0</div>
+                            <div class="stat-label">系统日志</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="with-sql">0</div>
+                            <div class="stat-label">包含SQL</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="with-redis">0</div>
+                            <div class="stat-label">包含Redis</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="last-update">-</div>
+                            <div class="stat-label">最后更新</div>
+                        </div>
+                    </div>
+                    <div id="unified-logs-list"></div>
+                    <div class="pagination">
+                        <button class="page-btn" onclick="changePage(-1)">上一页</button>
+                        <span class="page-info" id="page-info">第 1 页，共 1 页</span>
+                        <button class="page-btn" onclick="changePage(1)">下一页</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- HTTP请求标签页 -->
+            <div id="http-tab" class="tab-pane">
+                <button class="refresh-btn" onclick="loadHttpLogs()">🔄 刷新HTTP日志</button>
+                <div id="http-loading" class="loading">正在加载HTTP请求日志...</div>
+                <div id="http-error" class="error" style="display: none;"></div>
+                <div id="http-content" style="display: none;">
+                    <div id="http-logs-list"></div>
+                </div>
+            </div>
+
+            <!-- SQL操作标签页 -->
+            <div id="sql-tab" class="tab-pane">
+                <button class="refresh-btn" onclick="loadSqlLogs()">🔄 刷新SQL日志</button>
+                <div id="sql-loading" class="loading">正在加载SQL操作日志...</div>
+                <div id="sql-error" class="error" style="display: none;"></div>
+                <div id="sql-content" style="display: none;">
+                    <div id="sql-logs-list"></div>
+                </div>
+            </div>
+
+            <!-- Redis操作标签页 -->
+            <div id="redis-tab" class="tab-pane">
+                <button class="refresh-btn" onclick="loadRedisLogs()">🔄 刷新Redis日志</button>
+                <div id="redis-loading" class="loading">正在加载Redis操作日志...</div>
+                <div id="redis-error" class="error" style="display: none;"></div>
+                <div id="redis-content" style="display: none;">
+                    <div id="redis-logs-list"></div>
+                </div>
+            </div>
+
+            <!-- 系统日志标签页 -->
+            <div id="system-tab" class="tab-pane">
+                <button class="refresh-btn" onclick="loadSystemLogs()">🔄 刷新系统日志</button>
+                <div id="system-loading" class="loading">正在加载系统日志...</div>
+                <div id="system-error" class="error" style="display: none;"></div>
+                <div id="system-content" style="display: none;">
+                    <div id="system-logs-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'unified';
+        let currentPage = 1;
+        let pageSize = 20;
+        let logs = []; // Changed from allLogs to logs
+        let filteredLogs = [];
+        let autoRefreshInterval = null;
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUnifiedLogs();
+            setAutoRefresh('30');
+        });
+
+        function switchTab(tabName) {
+            // 更新标签页状态
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+
+            // 找到对应的tab按钮并激活
+            const tabButton = document.querySelector(`[onclick="switchTab('${tabName}')"]`);
+            if (tabButton) {
+                tabButton.classList.add('active');
+            }
+            
+            // 激活对应的内容面板
+            const tabPane = document.getElementById(`${tabName}-tab`);
+            if (tabPane) {
+                tabPane.classList.add('active');
+            }
+
+            currentTab = tabName;
+
+            // 加载对应数据
+            switch(tabName) {
+                case 'unified':
+                    loadUnifiedLogs();
+                    break;
+                case 'http':
+                    loadHttpLogs();
+                    break;
+                case 'sql':
+                    loadSqlLogs();
+                    break;
+                case 'redis':
+                    loadRedisLogs();
+                    break;
+                case 'system':
+                    loadSystemLogs();
+                    break;
+            }
+        }
+
+        function setAutoRefresh(interval) {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            if (interval > 0) {
+                autoRefreshInterval = setInterval(() => {
+                    switch(currentTab) {
+                        case 'unified':
+                            loadUnifiedLogs();
+                            break;
+                        case 'http':
+                            loadHttpLogs();
+                            break;
+                        case 'sql':
+                            loadSqlLogs();
+                            break;
+                        case 'redis':
+                            loadRedisLogs();
+                            break;
+                        case 'system':
+                            loadSystemLogs();
+                            break;
+                    }
+                }, interval * 1000);
+            }
+        }
+
+        function loadUnifiedLogs() {
+            const loading = document.getElementById('unified-loading');
+            const error = document.getElementById('unified-error');
+            const content = document.getElementById('unified-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            // 统一日志显示所有日志内容
+            fetch('/system/logs/unified')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                    
+                    if (data.success === false) {
+                        throw new Error(data.message || '加载失败');
+                    }
+                    
+                    // 统一日志显示所有日志，不进行过滤
+                    const allLogs = data.data ? data.data.logs || [] : [];
+                    logs = allLogs;
+                    filteredLogs = [...logs];
+                    applyCurrentFilters();
+                    renderLogsList();
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    error.textContent = '加载统一日志失败: ' + err.message;
+                });
+        }
+
+        function renderUnifiedLogs(data) {
+            // 更新统计信息
+            if (data.data && data.data.stats) {
+                document.getElementById('total-logs').textContent = data.data.stats.total || 0;
+                document.getElementById('http-logs').textContent = data.data.stats.http || 0;
+                document.getElementById('sql-logs').textContent = data.data.stats.mysql || 0;
+                document.getElementById('redis-logs').textContent = data.data.stats.redis || 0;
+                document.getElementById('system-logs').textContent = data.data.stats.system || 0;
+                document.getElementById('with-sql').textContent = data.data.stats.with_sql || 0;
+                document.getElementById('with-redis').textContent = data.data.stats.with_redis || 0;
+            }
+            
+            document.getElementById('last-update').textContent = data.data ? data.data.timestamp : '-';
+
+            // 存储所有日志
+            logs = data.data ? data.data.logs || [] : []; // Changed from allLogs to logs
+            filteredLogs = [...logs];
+            
+            // 应用当前过滤条件
+            applyCurrentFilters();
+            
+            // 渲染日志列表
+            renderLogsList();
+        }
+
+        function applyFilters() {
+            applyCurrentFilters();
+            renderLogsList();
+        }
+
+        function applyCurrentFilters() {
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            filteredLogs = logs.filter(log => { // Changed from allLogs to logs
+                // 类型过滤
+                if (typeFilter && !log.type.includes(typeFilter)) {
+                    return false;
+                }
+
+                // 状态过滤
+                if (statusFilter) {
+                    if (statusFilter === 'success' && !log.success) {
+                        return false;
+                    }
+                    if (statusFilter === 'error' && log.success !== false) {
+                        return false;
+                    }
+                }
+
+                // 搜索过滤
+                if (searchFilter) {
+                    const searchText = [
+                        log.message || '',
+                        log.path || '',
+                        log.method || '',
+                        log.traceId || '',
+                        log.error || ''
+                    ].join(' ').toLowerCase();
+                    
+                    if (!searchText.includes(searchFilter)) {
+                        return false;
+                    }
+                }
+
+                return true;
+            });
+
+            currentPage = 1;
+        }
+
+        function clearFilters() {
+            document.getElementById('typeFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('searchFilter').value = '';
+            applyCurrentFilters();
+            renderLogsList();
+        }
+
+        function changePage(delta) {
+            const totalPages = Math.ceil(filteredLogs.length / pageSize);
+            const newPage = currentPage + delta;
+            
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                renderLogsList();
+            }
+        }
+
+        function renderLogsList() {
+            const container = document.getElementById('unified-logs-list');
+            
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📝</div>
+                        <div>暂无日志记录</div>
+                        <div style="font-size: 12px; margin-top: 10px;">请检查过滤条件或稍后再试</div>
+                    </div>
+                `;
+                document.getElementById('page-info').textContent = '第 1 页，共 1 页';
+                return;
+            }
+
+            const totalPages = Math.ceil(filteredLogs.length / pageSize);
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = Math.min(startIndex + pageSize, filteredLogs.length);
+            const pageLogs = filteredLogs.slice(startIndex, endIndex);
+
+            let logsHtml = '';
+            pageLogs.forEach((log, index) => {
+                const statusClass = log.success ? 'status-success' : 'status-error';
+                const statusText = log.success ? '成功' : '失败';
+                
+                logsHtml += `
+                    <div class="log-entry ${log.type}">
+                        <div class="log-header">
+                            <div>
+                                <span class="log-type ${log.type}">${getLogTypeText(log.type)}</span>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 12px; color: #7f8c8d;">${statusText}</span>
+                            </div>
+                            <div class="log-timestamp">${log.timestamp}</div>
+                        </div>
+                        
+                        <div class="log-details">
+                            ${log.traceId ? `<div class="log-detail-item">
+                                <span class="log-detail-label">Trace ID:</span>
+                                <span class="log-detail-value">${log.traceId}</span>
+                            </div>` : ''}
+                            ${log.method ? `<div class="log-detail-item">
+                                <span class="log-detail-label">方法:</span>
+                                <span class="log-detail-value">${log.method}</span>
+                            </div>` : ''}
+                            ${log.path ? `<div class="log-detail-item">
+                                <span class="log-detail-label">路径:</span>
+                                <span class="log-detail-value">${log.path}</span>
+                            </div>` : ''}
+                            ${log.statusCode ? `<div class="log-detail-item">
+                                <span class="log-detail-label">状态码:</span>
+                                <span class="log-detail-value">${log.statusCode}</span>
+                            </div>` : ''}
+                            ${log.duration ? `<div class="log-detail-item">
+                                <span class="log-detail-label">耗时:</span>
+                                <span class="log-detail-value">${log.duration.toFixed(3)}s</span>
+                            </div>` : ''}
+                        </div>
+                        
+                        ${log.message ? `<div class="log-message">${log.message}</div>` : ''}
+                        
+                        ${log.error ? `<div class="log-message" style="background: #fdf2f2; color: #e74c3c;">错误: ${log.error}</div>` : ''}
+                        
+                        ${renderHttpDetails(log)}
+                        
+                        ${log.sqls && log.sqls.length > 0 ? `
+                            <div class="sql-list" style="margin-top: 10px; padding: 12px; background: #fef7f7; border-radius: 6px; border: 1px solid #fadbd8;">
+                                <div style="font-weight: 600; margin-bottom: 10px; color: #e74c3c; font-size: 14px;">🗄️ SQL操作 (${log.sqls.length})</div>
+                                ${log.sqls.map((sql, index) => `
+                                    <div class="sql-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #e74c3c; color: #ecf0f1;">
+                                        <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">SQL #${index + 1}:</div>
+                                        <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #e74c3c; line-height: 1.4; color: #ecf0f1;">
+                                            ${sql.sql || 'N/A'}
+                                        </div>
+                                        <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                            <span>⏱️ 耗时: ${(sql.cost_seconds || 0).toFixed(3)}s</span>
+                                            <span>📊 影响行数: ${sql.rows_affected || 0}</span>
+                                            <span>📍 位置: ${sql.stack || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        ${log.redisOps && log.redisOps.length > 0 ? `
+                            <div class="redis-list" style="margin-top: 10px; padding: 12px; background: #fef9e7; border-radius: 6px; border: 1px solid #f8d7da;">
+                                <div style="font-weight: 600; margin-bottom: 10px; color: #f39c12; font-size: 14px;">🔴 Redis操作 (${log.redisOps.length})</div>
+                                ${log.redisOps.map((redis, index) => `
+                                    <div class="redis-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #f39c12; color: #ecf0f1;">
+                                        <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">Redis #${index + 1}:</div>
+                                        <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #f39c12; line-height: 1.4; color: #ecf0f1;">
+                                            ${redis.handle || 'N/A'}
+                                        </div>
+                                        <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                            <span>⏱️ 耗时: ${(redis.cost_seconds || 0).toFixed(3)}s</span>
+                                            <span>🔑 Key: ${redis.key || 'N/A'}</span>
+                                            ${redis.value ? `<span>💾 Value: ${redis.value}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = logsHtml;
+            document.getElementById('page-info').textContent = `第 ${currentPage} 页，共 ${totalPages} 页`;
+        }
+
+        function getLogTypeText(type) {
+            switch(type) {
+                case 'http':
+                    return 'HTTP';
+                case 'http_with_sql':
+                    return 'HTTP+SQL';
+                case 'http_with_redis':
+                    return 'HTTP+Redis';
+                case 'http_with_sql_redis':
+                    return 'HTTP+SQL+Redis';
+                case 'mysql':
+                    return 'SQL';
+                case 'redis':
+                    return 'Redis';
+                case 'system':
+                    return 'System';
+                default:
+                    return type;
+            }
+        }
+
+        function loadHttpLogs() {
+            const loading = document.getElementById('http-loading');
+            const error = document.getElementById('http-error');
+            const content = document.getElementById('http-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            // HTTP请求tab只显示HTTP相关的日志
+            fetch('/system/logs/unified')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                    
+                    if (data.success === false) {
+                        throw new Error(data.message || '加载失败');
+                    }
+                    
+                    // 过滤出HTTP相关的日志，包括包含HTTP信息的日志
+                    const httpLogs = (data.data ? data.data.logs || [] : []).filter(log => {
+                        // 检查是否是HTTP类型的日志
+                        if (log.type && (log.type.includes('http') || log.method || log.path)) {
+                            return true;
+                        }
+                        // 检查是否包含HTTP相关信息
+                        if (log.details && log.details.原始数据 && log.details.原始数据.trace_info) {
+                            return true;
+                        }
+                        return false;
+                    });
+                    
+                    console.log('HTTP日志过滤结果:', httpLogs); // 调试信息
+                    renderFilteredLogs(httpLogs, 'http-logs-list');
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    error.textContent = '加载HTTP日志失败: ' + err.message;
+                });
+        }
+
+        function loadSqlLogs() {
+            const loading = document.getElementById('sql-loading');
+            const error = document.getElementById('sql-error');
+            const content = document.getElementById('sql-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            // SQL操作tab只显示SQL相关的日志
+            fetch('/system/logs/unified')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                    
+                    if (data.success === false) {
+                        throw new Error(data.message || '加载失败');
+                    }
+                    
+                    // 只过滤出SQL相关的日志
+                    const sqlLogs = (data.data ? data.data.logs || [] : []).filter(log => 
+                        log.type === 'mysql' || log.type === 'http_with_sql' || log.type === 'http_with_sql_redis' || log.sqlCount > 0
+                    );
+                    
+                    renderSqlLogs(sqlLogs);
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    error.textContent = '加载SQL日志失败: ' + err.message;
+                });
+        }
+
+        function loadRedisLogs() {
+            const loading = document.getElementById('redis-loading');
+            const error = document.getElementById('redis-error');
+            const content = document.getElementById('redis-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            // Redis操作tab只显示Redis相关的日志
+            fetch('/system/logs/unified')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                    
+                    if (data.success === false) {
+                        throw new Error(data.message || '加载失败');
+                    }
+                    
+                    // 只过滤出Redis相关的日志
+                    const redisLogs = (data.data ? data.data.logs || [] : []).filter(log => 
+                        log.type === 'redis' || log.type === 'http_with_redis' || log.type === 'http_with_sql_redis' || log.redisCount > 0
+                    );
+                    
+                    renderRedisLogs(redisLogs);
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    error.textContent = '加载Redis日志失败: ' + err.message;
+                });
+        }
+
+        function loadSystemLogs() {
+            const loading = document.getElementById('system-loading');
+            const error = document.getElementById('system-error');
+            const content = document.getElementById('system-content');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            content.style.display = 'none';
+
+            // 系统日志tab只显示系统相关的日志
+            fetch('/system/logs/unified')
+                .then(response => response.json())
+                .then(data => {
+                    loading.style.display = 'none';
+                    content.style.display = 'block';
+                    
+                    if (data.success === false) {
+                        throw new Error(data.message || '加载失败');
+                    }
+                    
+                    // 只过滤出系统相关的日志
+                    const systemLogs = (data.data ? data.data.logs || [] : []).filter(log => 
+                        log.type === 'system'
+                    );
+                    
+                    renderFilteredLogs(systemLogs, 'system-logs-list');
+                })
+                .catch(err => {
+                    loading.style.display = 'none';
+                    error.style.display = 'block';
+                    error.textContent = '加载系统日志失败: ' + err.message;
+                });
+        }
+
+        function renderFilteredLogs(logs, containerId) {
+            const container = document.getElementById(containerId);
+            
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📝</div>
+                        <div>暂无相关日志记录</div>
+                        <div style="font-size: 12px; margin-top: 10px;">请稍后再试或切换到其他标签页</div>
+                    </div>
+                `;
+                return;
+            }
+
+            console.log('渲染日志:', logs); // 调试信息
+
+            let logsHtml = '';
+            logs.forEach(log => {
+                const statusClass = log.success ? 'status-success' : 'status-error';
+                const statusText = log.success ? '成功' : '失败';
+                
+                logsHtml += `
+                    <div class="log-entry ${log.type}">
+                        <div class="log-header">
+                            <div>
+                                <span class="log-type ${log.type}">${getLogTypeText(log.type)}</span>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 12px; color: #7f8c8d;">${statusText}</span>
+                            </div>
+                            <div class="log-timestamp">${log.timestamp}</div>
+                        </div>
+                        
+                        <div class="log-details">
+                            ${log.traceId ? `<div class="log-detail-item">
+                                <span class="log-detail-label">Trace ID:</span>
+                                <span class="log-detail-value">${log.traceId}</span>
+                            </div>` : ''}
+                            ${log.method ? `<div class="log-detail-item">
+                                <span class="log-detail-label">方法:</span>
+                                <span class="log-detail-value">${log.method}</span>
+                            </div>` : ''}
+                            ${log.path ? `<div class="log-detail-item">
+                                <span class="log-detail-label">路径:</span>
+                                <span class="log-detail-value">${log.path}</span>
+                            </div>` : ''}
+                            ${log.statusCode ? `<div class="log-detail-item">
+                                <span class="log-detail-label">状态码:</span>
+                                <span class="log-detail-value">${log.statusCode}</span>
+                            </div>` : ''}
+                            ${log.duration ? `<div class="log-detail-item">
+                                <span class="log-detail-label">耗时:</span>
+                                <span class="log-detail-value">${log.duration.toFixed(3)}s</span>
+                            </div>` : ''}
+                        </div>
+                        
+                        ${log.message ? `<div class="log-message">${log.message}</div>` : ''}
+                        
+                        ${log.error ? `<div class="log-message" style="background: #fdf2f2; color: #e74c3c;">错误: ${log.error}</div>` : ''}
+                        
+                        ${renderHttpDetails(log)}
+                        
+                        ${containerId === 'http-logs-list' ? '' : `
+                            ${log.sqls && log.sqls.length > 0 ? `
+                                <div class="sql-list" style="margin-top: 10px; padding: 12px; background: #fef7f7; border-radius: 6px; border: 1px solid #fadbd8;">
+                                    <div style="font-weight: 600; margin-bottom: 10px; color: #e74c3c; font-size: 14px;">🗄️ SQL操作 (${log.sqls.length})</div>
+                                    ${log.sqls.map((sql, index) => `
+                                        <div class="sql-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #e74c3c; color: #ecf0f1;">
+                                            <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">SQL #${index + 1}:</div>
+                                            <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #e74c3c; line-height: 1.4; color: #ecf0f1;">
+                                                ${sql.sql || 'N/A'}
+                                            </div>
+                                            <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                                <span>⏱️ 耗时: ${(sql.cost_seconds || 0).toFixed(3)}s</span>
+                                                <span>📊 影响行数: ${sql.rows_affected || 0}</span>
+                                                <span>📍 位置: ${sql.stack || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                            
+                            ${log.redisOps && log.redisOps.length > 0 ? `
+                                <div class="redis-list" style="margin-top: 10px; padding: 12px; background: #fef9e7; border-radius: 6px; border: 1px solid #f8d7da;">
+                                    <div style="font-weight: 600; margin-bottom: 10px; color: #f39c12; font-size: 14px;">🔴 Redis操作 (${log.redisOps.length})</div>
+                                    ${log.redisOps.map((redis, index) => `
+                                        <div class="redis-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #f39c12; color: #ecf0f1;">
+                                            <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">Redis #${index + 1}:</div>
+                                            <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #f39c12; line-height: 1.4; color: #ecf0f1;">
+                                                ${redis.handle || 'N/A'}
+                                            </div>
+                                            <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                                <span>⏱️ 耗时: ${(redis.cost_seconds || 0).toFixed(3)}s</span>
+                                                <span>🔑 Key: ${redis.key || 'N/A'}</span>
+                                                ${redis.value ? `<span>💾 Value: ${redis.value}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        `}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = logsHtml;
+        }
+
+        // 新增函数：渲染HTTP详细内容
+        function renderHttpDetails(log) {
+            // 检查是否有trace_info数据
+            if (log.details && log.details.原始数据 && log.details.原始数据.trace_info) {
+                const traceInfo = log.details.原始数据.trace_info;
+                let detailsHtml = `
+                    <div class="request-response-details" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+                        <div style="font-weight: 500; margin-bottom: 10px; color: #3498db;">🔍 请求详情:</div>
+                `;
+
+                // 请求信息
+                if (traceInfo.request) {
+                    detailsHtml += `
+                        <div class="detail-section" style="margin-bottom: 15px;">
+                            <div style="font-weight: 500; margin-bottom: 5px; color: #2c3e50;">📤 请求信息:</div>
+                            <div class="detail-item">
+                                <span class="detail-label">方法:</span>
+                                <span class="detail-value">${traceInfo.request.method || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">URL:</span>
+                                <span class="detail-value">${traceInfo.request.decoded_url || 'N/A'}</span>
+                            </div>
+                            ${traceInfo.request.header ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">请求头:</span>
+                                    <div class="detail-value" style="background: #fff; padding: 10px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; border: 1px solid #ddd; line-height: 1.5; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        ${JSON.stringify(traceInfo.request.header, null, 2)}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${traceInfo.request.body ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">请求体:</span>
+                                    <div class="detail-value" style="background: #fff; padding: 10px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; border: 1px solid #ddd; line-height: 1.5; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        ${traceInfo.request.body}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                // 响应信息
+                if (traceInfo.response) {
+                    detailsHtml += `
+                        <div class="detail-section" style="margin-bottom: 15px;">
+                            <div style="font-weight: 500; margin-bottom: 5px; color: #2c3e50;">📥 响应信息:</div>
+                            <div class="detail-item">
+                                <span class="detail-label">状态码:</span>
+                                <span class="detail-value">${traceInfo.response.http_code || 'N/A'}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">状态消息:</span>
+                                <span class="detail-value">${traceInfo.response.http_code_msg || 'N/A'}</span>
+                            </div>
+                            ${traceInfo.response.header ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">响应头:</span>
+                                    <div class="detail-value" style="background: #fff; padding: 10px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; border: 1px solid #ddd; line-height: 1.5; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        ${JSON.stringify(traceInfo.response.header, null, 2)}
+                                    </div>
+                                </div>
+                            ` : ''}
+                            ${traceInfo.response.body ? `
+                                <div class="detail-item">
+                                    <span class="detail-label">响应体:</span>
+                                    <div class="detail-value" style="background: #fff; padding: 10px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 12px; white-space: pre-wrap; border: 1px solid #ddd; line-height: 1.5; color: #333; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                                        ${JSON.stringify(traceInfo.response.body, null, 2)}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+
+                detailsHtml += '</div>';
+                return detailsHtml;
+            }
+
+            return '';
+        }
+
+        // 新增函数：渲染SQL日志（只显示SQL相关内容）
+        function renderSqlLogs(logs) {
+            const container = document.getElementById('sql-logs-list');
+            
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🗄️</div>
+                        <div>暂无SQL操作日志</div>
+                        <div style="font-size: 12px; margin-top: 10px;">请稍后再试或切换到其他标签页</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let logsHtml = '';
+            logs.forEach(log => {
+                const statusClass = log.success ? 'status-success' : 'status-error';
+                const statusText = log.success ? '成功' : '失败';
+                
+                logsHtml += `
+                    <div class="log-entry ${log.type}">
+                        <div class="log-header">
+                            <div>
+                                <span class="log-type ${log.type}">${getLogTypeText(log.type)}</span>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 12px; color: #7f8c8d;">${statusText}</span>
+                            </div>
+                            <div class="log-timestamp">${log.timestamp}</div>
+                        </div>
+                        
+                        <div class="log-details">
+                            ${log.traceId ? `<div class="log-detail-item">
+                                <span class="log-detail-label">Trace ID:</span>
+                                <span class="log-detail-value">${log.traceId}</span>
+                            </div>` : ''}
+                            ${log.method ? `<div class="log-detail-item">
+                                <span class="log-detail-label">方法:</span>
+                                <span class="log-detail-value">${log.method}</span>
+                            </div>` : ''}
+                            ${log.path ? `<div class="log-detail-item">
+                                <span class="log-detail-label">路径:</span>
+                                <span class="log-detail-value">${log.path}</span>
+                            </div>` : ''}
+                            ${log.duration ? `<div class="log-detail-item">
+                                <span class="log-detail-label">总耗时:</span>
+                                <span class="log-detail-value">${log.duration.toFixed(3)}s</span>
+                            </div>` : ''}
+                        </div>
+                        
+                        ${log.message ? `<div class="log-message">${log.message}</div>` : ''}
+                        
+                        ${log.error ? `<div class="log-message" style="background: #fdf2f2; color: #e74c3c;">错误: ${log.error}</div>` : ''}
+                        
+                        ${log.sqls && log.sqls.length > 0 ? `
+                            <div class="sql-list" style="margin-top: 10px; padding: 12px; background: #fef7f7; border-radius: 6px; border: 1px solid #fadbd8;">
+                                <div style="font-weight: 600; margin-bottom: 10px; color: #e74c3c; font-size: 14px;">🗄️ SQL操作 (${log.sqls.length})</div>
+                                ${log.sqls.map((sql, index) => `
+                                    <div class="sql-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #e74c3c; color: #ecf0f1;">
+                                        <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">SQL #${index + 1}:</div>
+                                        <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #e74c3c; line-height: 1.4; color: #ecf0f1;">
+                                            ${sql.sql || 'N/A'}
+                                        </div>
+                                        <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                            <span>⏱️ 耗时: ${(sql.cost_seconds || 0).toFixed(3)}s</span>
+                                            <span>📊 影响行数: ${sql.rows_affected || 0}</span>
+                                            <span>📍 位置: ${sql.stack || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = logsHtml;
+        }
+
+        // 新增函数：渲染Redis日志（只显示Redis相关内容）
+        function renderRedisLogs(logs) {
+            const container = document.getElementById('redis-logs-list');
+            
+            if (logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔴</div>
+                        <div>暂无Redis操作日志</div>
+                        <div style="font-size: 12px; margin-top: 10px;">请稍后再试或切换到其他标签页</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let logsHtml = '';
+            logs.forEach(log => {
+                const statusClass = log.success ? 'status-success' : 'status-error';
+                const statusText = log.success ? '成功' : '失败';
+                
+                logsHtml += `
+                    <div class="log-entry ${log.type}">
+                        <div class="log-header">
+                            <div>
+                                <span class="log-type ${log.type}">${getLogTypeText(log.type)}</span>
+                                <span class="status-indicator ${statusClass}"></span>
+                                <span style="font-size: 12px; color: #7f8c8d;">${statusText}</span>
+                            </div>
+                            <div class="log-timestamp">${log.timestamp}</div>
+                        </div>
+                        
+                        <div class="log-details">
+                            ${log.traceId ? `<div class="log-detail-item">
+                                <span class="log-detail-label">Trace ID:</span>
+                                <span class="log-detail-value">${log.traceId}</span>
+                            </div>` : ''}
+                            ${log.method ? `<div class="log-detail-item">
+                                <span class="log-detail-label">方法:</span>
+                                <span class="log-detail-value">${log.method}</span>
+                            </div>` : ''}
+                            ${log.path ? `<div class="log-detail-item">
+                                <span class="log-detail-label">路径:</span>
+                                <span class="log-detail-value">${log.path}</span>
+                            </div>` : ''}
+                            ${log.duration ? `<div class="log-detail-item">
+                                <span class="log-detail-label">总耗时:</span>
+                                <span class="log-detail-value">${log.duration.toFixed(3)}s</span>
+                            </div>` : ''}
+                        </div>
+                        
+                        ${log.message ? `<div class="log-message">${log.message}</div>` : ''}
+                        
+                        ${log.error ? `<div class="log-message" style="background: #fdf2f2; color: #e74c3c;">错误: ${log.error}</div>` : ''}
+                        
+                        ${log.redisOps && log.redisOps.length > 0 ? `
+                            <div class="redis-list" style="margin-top: 10px; padding: 12px; background: #fef9e7; border-radius: 6px; border: 1px solid #f8d7da;">
+                                <div style="font-weight: 600; margin-bottom: 10px; color: #f39c12; font-size: 14px;">🔴 Redis操作 (${log.redisOps.length})</div>
+                                ${log.redisOps.map((redis, index) => `
+                                    <div class="redis-item" style="margin-bottom: 12px; padding: 10px; background: #2c3e50; border-radius: 4px; border: 1px solid #f39c12; color: #ecf0f1;">
+                                        <div style="font-weight: 600; margin-bottom: 8px; color: #ecf0f1; font-size: 12px;">Redis #${index + 1}:</div>
+                                        <div style="margin-bottom: 8px; font-family: 'Courier New', monospace; font-size: 12px; background: #34495e; padding: 8px; border-radius: 3px; border-left: 3px solid #f39c12; line-height: 1.4; color: #ecf0f1;">
+                                            ${redis.handle || 'N/A'}
+                                        </div>
+                                        <div style="display: flex; gap: 20px; font-size: 11px; color: #bdc3c7;">
+                                            <span>⏱️ 耗时: ${(redis.cost_seconds || 0).toFixed(3)}s</span>
+                                            <span>🔑 Key: ${redis.key || 'N/A'}</span>
+                                            ${redis.value ? `<span>💾 Value: ${redis.value}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+
+            container.innerHTML = logsHtml;
+        }
+    </script>
+</body>
+</html>

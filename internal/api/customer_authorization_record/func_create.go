@@ -36,8 +36,7 @@ type createRequest struct {
 }
 
 type createResponse struct {
-	Success bool         `json:"success"`
-	Data    customerData `json:"data"`
+	Data customerData `json:"data"`
 }
 
 // CreateCustomerAuthorizationRecord 创建客户授权记录
@@ -108,7 +107,6 @@ func (h *handler) CreateCustomerAuthorizationRecord() core.HandlerFunc {
 		}
 
 		res.Data = newCustomer
-		res.Success = true
 
 		c.Payload(res)
 	}

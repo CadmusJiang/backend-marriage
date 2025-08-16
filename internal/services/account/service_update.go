@@ -48,11 +48,11 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 	// 记录变更内容用于历史记录
 	changes := make(map[string]interface{})
 
-	if updateData.Nickname != "" && updateData.Nickname != existingAccount.Nickname {
-		updateFields["nickname"] = updateData.Nickname
-		changes["nickname"] = map[string]string{
-			"old": existingAccount.Nickname,
-			"new": updateData.Nickname,
+	if updateData.Name != "" && updateData.Name != existingAccount.Name {
+		updateFields["name"] = updateData.Name
+		changes["name"] = map[string]string{
+			"old": existingAccount.Name,
+			"new": updateData.Name,
 		}
 	}
 
@@ -64,11 +64,20 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 		}
 	}
 
-	if updateData.Status != "" && updateData.Status != existingAccount.Status {
-		updateFields["status"] = updateData.Status
-		changes["status"] = map[string]string{
-			"old": existingAccount.Status,
-			"new": updateData.Status,
+	// 状态变更
+	if updateData.Status != "" {
+		var newStatus string
+		if updateData.Status == "enabled" {
+			newStatus = "enabled"
+		} else {
+			newStatus = "disabled"
+		}
+		if newStatus != existingAccount.Status {
+			updateFields["status"] = newStatus
+			changes["status"] = map[string]string{
+				"old": existingAccount.Status,
+				"new": updateData.Status,
+			}
 		}
 	}
 
@@ -79,18 +88,18 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 		// 更新账户-组关联：先删除原 belong 关联，再插入新的
 		qbRel := account_org_relation.NewQueryBuilder()
 		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
-		qbRel.WhereRelationType(mysql.EqualPredicate, 1)
+		qbRel.WhereRelationType(mysql.EqualPredicate, "belong")
 		_ = qbRel.Delete(s.db.GetDbW())
 
 		rel := &account_org_relation.AccountOrgRelation{
-			AccountId:         uint32(id),
-			OrgId:             uint32(updateData.BelongGroup.ID),
-			RelationType:      1,
-			Status:            1,
-			CreatedTimestamp:  time.Now().Unix(),
-			ModifiedTimestamp: time.Now().Unix(),
-			CreatedUser:       ctx.SessionUserInfo().UserName,
-			UpdatedUser:       ctx.SessionUserInfo().UserName,
+			AccountId:    uint32(id),
+			OrgId:        uint32(updateData.BelongGroup.ID),
+			RelationType: "belong",
+			Status:       "active",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+			CreatedUser:  ctx.SessionUserInfo().UserName,
+			UpdatedUser:  ctx.SessionUserInfo().UserName,
 		}
 		if _, err := rel.Create(s.db.GetDbW()); err != nil {
 			ctx.Logger().Error("更新账户-组关联失败", zap.Error(err))
@@ -103,18 +112,18 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 		// 更新账户-团队关联：先删除原 belong 关联，再插入新的
 		qbRel := account_org_relation.NewQueryBuilder()
 		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
-		qbRel.WhereRelationType(mysql.EqualPredicate, 1)
+		qbRel.WhereRelationType(mysql.EqualPredicate, "belong")
 		_ = qbRel.Delete(s.db.GetDbW())
 
 		rel := &account_org_relation.AccountOrgRelation{
-			AccountId:         uint32(id),
-			OrgId:             uint32(updateData.BelongTeam.ID),
-			RelationType:      1,
-			Status:            1,
-			CreatedTimestamp:  time.Now().Unix(),
-			ModifiedTimestamp: time.Now().Unix(),
-			CreatedUser:       ctx.SessionUserInfo().UserName,
-			UpdatedUser:       ctx.SessionUserInfo().UserName,
+			AccountId:    uint32(id),
+			OrgId:        uint32(updateData.BelongTeam.ID),
+			RelationType: "belong",
+			Status:       "active",
+			CreatedAt:    time.Now(),
+			UpdatedAt:    time.Now(),
+			CreatedUser:  ctx.SessionUserInfo().UserName,
+			UpdatedUser:  ctx.SessionUserInfo().UserName,
 		}
 		if _, err := rel.Create(s.db.GetDbW()); err != nil {
 			ctx.Logger().Error("更新账户-团队关联失败", zap.Error(err))
@@ -131,20 +140,20 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 
 		if len(changes) > 0 {
 			contentBytes, _ := json.Marshal(changes)
-			now := uint64(time.Now().Unix())
+			now := time.Now()
 			accIdUint, _ := fmt.Sscanf(accountId, "%d", &id)
 			_ = accIdUint
 			hist := &account_history.AccountHistory{
-				AccountId:         uint64(id),
-				OperateType:       "modified",
-				OperateTimestamp:  now,
-				Content:           string(contentBytes),
-				Operator:          ctx.SessionUserInfo().UserName,
-				OperatorRoleType:  scope.RoleType,
-				CreatedTimestamp:  now,
-				ModifiedTimestamp: now,
-				CreatedUser:       ctx.SessionUserInfo().UserName,
-				UpdatedUser:       ctx.SessionUserInfo().UserName,
+				AccountId:        uint64(id),
+				OperateType:      "modified",
+				OperatedAt:       now,
+				Content:          string(contentBytes),
+				Operator:         ctx.SessionUserInfo().UserName,
+				OperatorRoleType: scope.RoleType,
+				CreatedAt:        now,
+				UpdatedAt:        now,
+				CreatedUser:      ctx.SessionUserInfo().UserName,
+				UpdatedUser:      ctx.SessionUserInfo().UserName,
 			}
 			if _, err := hist.Create(tx); err != nil {
 				return fmt.Errorf("写入账户历史失败: %v", err)

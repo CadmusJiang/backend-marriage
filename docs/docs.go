@@ -114,7 +114,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "姓名搜索",
-                        "name": "nickname",
+                        "name": "name",
                         "in": "query"
                     },
                     {
@@ -1001,6 +1001,41 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/me": {
+            "get": {
+                "description": "获取当前登录用户的详细信息",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CoreAuth"
+                ],
+                "summary": "获取当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/account.detailResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/code.Failure"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1077,19 +1112,19 @@ const docTemplate = `{
                     "description": "历史记录ID",
                     "type": "string"
                 },
-                "occurredAt": {
-                    "description": "操作时间戳",
-                    "type": "integer"
-                },
                 "operateType": {
                     "description": "操作类型",
                     "type": "string"
+                },
+                "operatedAt": {
+                    "description": "操作时间戳",
+                    "type": "integer"
                 },
                 "operatorRoleType": {
                     "description": "操作人角色类型",
                     "type": "string"
                 },
-                "operator_nickname": {
+                "operator_name": {
                     "description": "操作人姓名",
                     "type": "string"
                 },

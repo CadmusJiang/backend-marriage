@@ -31,7 +31,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 				HistoryId:                     "hist_car_001",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "created",
-				OccurredAt:                    1705123200,
+				OperatedAt:                    1705123200,
 				Content: map[string]interface{}{
 					"name": map[string]interface{}{
 						"old": "",
@@ -49,9 +49,9 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 						"old": "",
 						"new": 175,
 					},
-					"city": map[string]interface{}{
+					"cityCode": map[string]interface{}{
 						"old": "",
-						"new": "北京",
+						"new": "110000",
 					},
 					"authStore": map[string]interface{}{
 						"old": "",
@@ -139,7 +139,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName: "系统管理员",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
@@ -149,7 +149,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 				HistoryId:                     "hist_car_002",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "modified",
-				OccurredAt:                    1705209600,
+				OperatedAt:                    1705209600,
 				Content: map[string]interface{}{
 					"isAuthorized": map[string]interface{}{
 						"old": false,
@@ -165,7 +165,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName: "张伟",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),

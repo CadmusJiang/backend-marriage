@@ -13,7 +13,7 @@ var _ Service = (*service)(nil)
 // CreateAccountData 创建账户数据
 type CreateAccountData struct {
 	Username    string   `json:"username" binding:"required"`
-	Nickname    string   `json:"nickname" binding:"required"`
+	Name        string   `json:"name" binding:"required"`
 	Password    string   `json:"password" binding:"required"`
 	Phone       string   `json:"phone"`
 	RoleType    string   `json:"roleType"`
@@ -24,7 +24,7 @@ type CreateAccountData struct {
 
 // UpdateAccountData 更新账户数据
 type UpdateAccountData struct {
-	Nickname    string   `json:"nickname"`
+	Name        string   `json:"name"`
 	Phone       string   `json:"phone"`
 	Status      string   `json:"status"`
 	BelongGroup *OrgInfo `json:"belongGroup"`
@@ -35,7 +35,7 @@ type UpdateAccountData struct {
 type OrgInfo struct {
 	ID                int32  `json:"id"`
 	Username          string `json:"username"`
-	Nickname          string `json:"nickname"`
+	Name              string `json:"name"`
 	CreatedTimestamp  int64  `json:"createdTimestamp"`
 	ModifiedTimestamp int64  `json:"modifiedTimestamp"`
 	CurrentCnt        int32  `json:"currentCnt"`
@@ -44,7 +44,7 @@ type OrgInfo struct {
 // SearchData 搜索数据
 type SearchData struct {
 	Username    string `form:"username"`
-	Nickname    string `form:"nickname"`
+	Name        string `form:"name"`
 	RoleType    string `form:"roleType"`
 	Status      string `form:"status"`
 	BelongGroup string `form:"belongGroup"`

@@ -3,7 +3,6 @@ package customer_authorization_record
 import (
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
 	model "github.com/xinliangnote/go-gin-api/internal/repository/mysql/customer_authorization_record"
@@ -29,56 +28,56 @@ func (s *service) List(ctx core.Context, req *ListRequest) (items []RecordItem, 
 		db = db.Where("phone LIKE ?", "%"+like+"%")
 	}
 	if len(req.AuthorizationStatus) > 0 {
-		// map to boolean
-		var vals []int
+		// map to enum values
+		var vals []string
 		for _, v := range req.AuthorizationStatus {
-			if strings.ToLower(v) == "authorized" || v == "1" || strings.ToLower(v) == "true" {
-				vals = append(vals, 1)
-			} else if strings.ToLower(v) == "unauthorized" || v == "0" || strings.ToLower(v) == "false" {
-				vals = append(vals, 0)
+			if strings.ToLower(v) == "authorized" {
+				vals = append(vals, "authorized")
+			} else if strings.ToLower(v) == "unauthorized" {
+				vals = append(vals, "unauthorized")
 			}
 		}
 		if len(vals) > 0 {
-			db = db.Where("is_authorized IN (?)", vals)
+			db = db.Where("authorization_status IN (?)", vals)
 		}
 	}
 	if len(req.AssignmentStatus) > 0 {
-		var vals []int
+		var vals []string
 		for _, v := range req.AssignmentStatus {
-			if strings.ToLower(v) == "assigned" || v == "1" || strings.ToLower(v) == "true" {
-				vals = append(vals, 1)
-			} else if strings.ToLower(v) == "unassigned" || v == "0" || strings.ToLower(v) == "false" {
-				vals = append(vals, 0)
+			if strings.ToLower(v) == "assigned" {
+				vals = append(vals, "assigned")
+			} else if strings.ToLower(v) == "unassigned" {
+				vals = append(vals, "unassigned")
 			}
 		}
 		if len(vals) > 0 {
-			db = db.Where("is_assigned IN (?)", vals)
+			db = db.Where("assignment_status IN (?)", vals)
 		}
 	}
 	if len(req.CompletionStatus) > 0 {
-		var vals []int
+		var vals []string
 		for _, v := range req.CompletionStatus {
-			if strings.ToLower(v) == "complete" || v == "1" || strings.ToLower(v) == "true" {
-				vals = append(vals, 1)
-			} else if strings.ToLower(v) == "incomplete" || v == "0" || strings.ToLower(v) == "false" {
-				vals = append(vals, 0)
+			if strings.ToLower(v) == "complete" {
+				vals = append(vals, "complete")
+			} else if strings.ToLower(v) == "incomplete" {
+				vals = append(vals, "incomplete")
 			}
 		}
 		if len(vals) > 0 {
-			db = db.Where("is_profile_complete IN (?)", vals)
+			db = db.Where("completion_status IN (?)", vals)
 		}
 	}
 	if len(req.PaymentStatus) > 0 {
-		var vals []int
+		var vals []string
 		for _, v := range req.PaymentStatus {
-			if strings.ToLower(v) == "paid" || v == "1" || strings.ToLower(v) == "true" {
-				vals = append(vals, 1)
-			} else if strings.ToLower(v) == "unpaid" || v == "0" || strings.ToLower(v) == "false" {
-				vals = append(vals, 0)
+			if strings.ToLower(v) == "paid" {
+				vals = append(vals, "paid")
+			} else if strings.ToLower(v) == "unpaid" {
+				vals = append(vals, "unpaid")
 			}
 		}
 		if len(vals) > 0 {
-			db = db.Where("is_paid IN (?)", vals)
+			db = db.Where("payment_status IN (?)", vals)
 		}
 	}
 	if req.BirthYearMin > 0 {
@@ -139,39 +138,74 @@ func convertRow(r *model.CustomerAuthorizationRecord) *RecordItem {
 	if r.AuthPhotos != nil {
 		photos = []string(*r.AuthPhotos)
 	}
-	// normalize group/team/account to pointers
-	toPtr := func(s *string) *string { return s }
-	created := time.Unix(r.CreatedTimestamp, 0).Format(time.RFC3339)
-	updated := time.Unix(r.ModifiedTimestamp, 0).Format(time.RFC3339)
-	idStr := strconv.Itoa(int(r.Id))
+	// Convert group/team/account strings to uint64 pointers
+	// Convert int32 to int for BirthYear and Height
+	var birthYear *int
+	if r.BirthYear != nil {
+		year := int(*r.BirthYear)
+		birthYear = &year
+	}
+	var height *int
+	if r.Height != nil {
+		h := int(*r.Height)
+		height = &h
+	}
+
+	// Convert photos array to string
+	var authPhotosStr *string
+	if len(photos) > 0 {
+		photosStr := strings.Join(photos, ",")
+		authPhotosStr = &photosStr
+	}
+
+	// Convert group/team/account strings to uint64 pointers
+	var belongGroupID *uint64
+	if r.Group != nil {
+		if groupID, err := strconv.ParseUint(*r.Group, 10, 64); err == nil {
+			belongGroupID = &groupID
+		}
+	}
+	var belongTeamID *uint64
+	if r.Team != nil {
+		if teamID, err := strconv.ParseUint(*r.Team, 10, 64); err == nil {
+			belongTeamID = &teamID
+		}
+	}
+	var belongAccountID *uint64
+	if r.Account != nil {
+		if accountID, err := strconv.ParseUint(*r.Account, 10, 64); err == nil {
+			belongAccountID = &accountID
+		}
+	}
+
 	return &RecordItem{
-		Id:                idStr,
-		Name:              r.Name,
-		BirthYear:         (*int32)(r.BirthYear),
-		Gender:            r.Gender,
-		Height:            (*int32)(r.Height),
-		City:              r.City,
-		AuthStore:         r.AuthStore,
-		Education:         r.Education,
-		Profession:        r.Profession,
-		Income:            r.Income,
-		Phone:             r.Phone,
-		Wechat:            r.Wechat,
-		DrainageAccount:   r.DrainageAccount,
-		DrainageId:        r.DrainageId,
-		DrainageChannel:   r.DrainageChannel,
-		Remark:            r.Remark,
-		IsAuthorized:      r.IsAuthorized,
-		AuthPhotos:        photos,
-		IsProfileComplete: r.IsProfileComplete,
-		IsAssigned:        r.IsAssigned,
-		IsPaid:            r.IsPaid,
-		PaymentAmount:     r.PaymentAmount,
-		RefundAmount:      r.RefundAmount,
-		Group:             toPtr(r.Group),
-		Team:              toPtr(r.Team),
-		Account:           toPtr(r.Account),
-		CreatedAt:         created,
-		UpdatedAt:         updated,
+		ID:                  uint64(r.Id),
+		Name:                r.Name,
+		BirthYear:           birthYear,
+		Gender:              r.Gender,
+		Height:              height,
+		City:                r.CityCode,
+		AuthStore:           r.AuthStore,
+		Education:           r.Education,
+		Profession:          r.Profession,
+		Income:              r.Income,
+		Phone:               r.Phone,
+		Wechat:              r.Wechat,
+		DrainageAccount:     r.DrainageAccount,
+		DrainageId:          r.DrainageId,
+		DrainageChannel:     r.DrainageChannel,
+		Remark:              r.Remark,
+		AuthorizationStatus: r.AuthorizationStatus,
+		AuthPhotos:          authPhotosStr,
+		CompletionStatus:    r.CompletionStatus,
+		AssignmentStatus:    r.AssignmentStatus,
+		PaymentStatus:       r.PaymentStatus,
+		PaymentAmount:       r.PaymentAmount,
+		RefundAmount:        r.RefundAmount,
+		BelongGroupID:       belongGroupID,
+		BelongTeamID:        belongTeamID,
+		BelongAccountID:     belongAccountID,
+		CreatedAt:           r.CreatedAt,
+		UpdatedAt:           r.UpdatedAt,
 	}
 }

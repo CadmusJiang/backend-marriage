@@ -11,6 +11,7 @@ import (
 	repoOutbox "github.com/xinliangnote/go-gin-api/internal/repository/mysql/outbox"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 // StartRelay publishes outbox events to Redis Streams reliably.
@@ -39,7 +40,7 @@ func StartRelay(ctx context.Context, logger *zap.Logger, db mysql.Repo) {
 
 			// Pull a small batch with SKIP LOCKED to avoid thundering herd.
 			var batch []repoOutbox.Event
-			err := db.GetDbW().Transaction(func(tx *gorm.DB) error {
+			err := db.GetDbW().Session(&gorm.Session{Logger: gormlogger.Default.LogMode(gormlogger.Silent)}).Transaction(func(tx *gorm.DB) error {
 				// lock rows for this transaction
 				if err := tx.Raw("SELECT id, topic, payload, status, retry_count, created_at, published_at FROM outbox_events WHERE status = 0 ORDER BY id ASC LIMIT 100 FOR UPDATE SKIP LOCKED").Scan(&batch).Error; err != nil {
 					return err
@@ -55,7 +56,7 @@ func StartRelay(ctx context.Context, logger *zap.Logger, db mysql.Repo) {
 			}
 
 			// Publish one by one; update status in a transaction batch
-			_ = db.GetDbW().Transaction(func(tx *gorm.DB) error {
+			_ = db.GetDbW().Session(&gorm.Session{Logger: gormlogger.Default.LogMode(gormlogger.Silent)}).Transaction(func(tx *gorm.DB) error {
 				now := time.Now()
 				for i := range batch {
 					evt := &batch[i]

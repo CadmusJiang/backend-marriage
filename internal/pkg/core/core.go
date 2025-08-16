@@ -247,7 +247,10 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 	}
 
 	fmt.Println(color.Blue(_UI))
-	// 页面渲染与静态资源已移除，不再挂载模板与静态目录
+
+	// 添加静态文件服务
+	mux.engine.Static("/docs", "./docs")
+	mux.engine.Static("/assets", "./assets")
 
 	// withoutTracePaths 这些请求，默认不记录日志
 	withoutTracePaths := map[string]bool{
@@ -416,8 +419,12 @@ func New(logger *zap.Logger, options ...Option) (Mux, error) {
 					businessCode = err.BusinessCode()
 					businessCodeMsg = err.Message()
 					response = &code.Failure{
-						Code:    businessCode,
+						Success: false,
+						Code:    "BAD_REQUEST",
 						Message: businessCodeMsg,
+						Details: map[string]interface{}{
+							"business_code": businessCode,
+						},
 					}
 					ctx.JSON(err.HTTPCode(), response)
 				}

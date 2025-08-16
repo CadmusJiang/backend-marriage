@@ -31,7 +31,7 @@ type historyChange struct {
 
 type historyItem struct {
 	ID         string          `json:"id"`
-	OccurredAt string          `json:"occurredAt"`
+	OperatedAt string          `json:"operatedAt"`
 	Operator   historyOperator `json:"operator"`
 	Action     string          `json:"action"`
 	Changes    []historyChange `json:"changes"`
@@ -102,17 +102,17 @@ func (h *handler) GetCooperationStoreHistory() core.HandlerFunc {
 		items := []historyItem{
 			{
 				ID:         "h-" + idStr + "-1",
-				OccurredAt: now.Add(-72 * time.Hour).Format("2006-01-02T15:04:05.000Z"),
+				OperatedAt: now.Add(-72 * time.Hour).Format("2006-01-02T15:04:05.000Z"),
 				Operator:   historyOperator{ID: "1", Username: strPtr("admin"), Name: "系统管理员", Role: "admin", RoleType: "system"},
 				Action:     "created",
 				Changes: []historyChange{
 					{Field: "storeName", Old: nil, New: exists.StoreName},
-					{Field: "cooperationCity", Old: nil, New: exists.CooperationCity},
+					{Field: "cooperationCityCode", Old: nil, New: exists.CooperationCityCode},
 				},
 			},
 			{
 				ID:         "h-" + idStr + "-2",
-				OccurredAt: now.Add(-24 * time.Hour).Format("2006-01-02T15:04:05.000Z"),
+				OperatedAt: now.Add(-24 * time.Hour).Format("2006-01-02T15:04:05.000Z"),
 				Operator:   historyOperator{ID: "2", Username: strPtr("ops"), Name: "运营同学", Role: "operator", RoleType: "employee"},
 				Action:     "updated",
 				Changes: []historyChange{

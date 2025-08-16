@@ -16,10 +16,10 @@ type CreateRequest struct {
 	DrainageId          *string
 	DrainageChannel     *string
 	Remark              *string
-	AuthorizationStatus bool
-	AssignmentStatus    bool
-	CompletionStatus    bool
-	PaymentStatus       bool
+	AuthorizationStatus string
+	AssignmentStatus    string
+	CompletionStatus    string
+	PaymentStatus       string
 	PaymentAmount       float64
 	RefundAmount        float64
 	AuthorizedStore     *string
@@ -44,10 +44,10 @@ type UpdateRequest struct {
 	DrainageId          *string
 	DrainageChannel     *string
 	Remark              *string
-	AuthorizationStatus bool
-	AssignmentStatus    bool
-	CompletionStatus    bool
-	PaymentStatus       bool
+	AuthorizationStatus string
+	AssignmentStatus    string
+	CompletionStatus    string
+	PaymentStatus       string
 	PaymentAmount       float64
 	RefundAmount        float64
 	AuthorizedStore     *string

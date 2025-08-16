@@ -36,7 +36,11 @@ import (
 func main() {
 	// startup flags
 	forceReseed := flag.Bool("force-reseed", false, "If true, truncate and reseed core tables on startup")
+	rebuildDatabase := flag.Bool("rebuild-db", false, "If true, drop and recreate all tables with city codes")
 	flag.Parse()
+
+	// 重新解析环境变量
+	env.Active()
 	// 初始化 access logger
 	accessLogger, err := logger.NewJSONLogger(
 		// logger.WithDisableConsole(), // 注释掉以启用控制台输出
@@ -53,7 +57,7 @@ func main() {
 	}()
 
 	// 初始化 HTTP 服务
-	s, err := router.NewHTTPServer(accessLogger, *forceReseed)
+	s, err := router.NewHTTPServer(accessLogger, *forceReseed, *rebuildDatabase)
 	if err != nil {
 		panic(err)
 	}

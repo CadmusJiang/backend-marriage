@@ -4,13 +4,14 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"time"
 )
 
 // CooperationStore 合作门店表
 type CooperationStore struct {
 	Id                    int32       `db:"id"`                      // 主键
 	StoreName             string      `db:"store_name"`              // 门店名称
-	CooperationCity       string      `db:"cooperation_city"`        // 合作城市
+	CooperationCityCode   string      `db:"cooperation_city_code"`   // 合作城市编码
 	CooperationType       *JSONString `db:"cooperation_type"`        // 合作类型
 	StoreShortName        *string     `db:"store_short_name"`        // 门店简称
 	CompanyName           *string     `db:"company_name"`            // 公司名称
@@ -20,8 +21,8 @@ type CooperationStore struct {
 	StorePhotos           *JSONString `db:"store_photos"`            // 门店照片
 	ActualBusinessAddress *string     `db:"actual_business_address"` // 实际经营地址
 	ContractPhotos        *JSONString `db:"contract_photos"`         // 合同照片
-	CreatedAt             int64       `db:"created_at"`              // 创建时间
-	UpdatedAt             int64       `db:"updated_at"`              // 修改时间
+	CreatedAt             time.Time   `db:"created_at"`              // 创建时间
+	UpdatedAt             time.Time   `db:"updated_at"`              // 修改时间
 	CreatedUser           string      `db:"created_user"`            // 创建人
 	UpdatedUser           string      `db:"updated_user"`            // 更新人
 }

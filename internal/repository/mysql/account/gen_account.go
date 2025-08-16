@@ -22,7 +22,7 @@ func NewQueryBuilder() *accountQueryBuilder {
 	return new(accountQueryBuilder)
 }
 
-func (t *Account) Create(db *gorm.DB) (id int32, err error) {
+func (t *Account) Create(db *gorm.DB) (id uint32, err error) {
 	if err = db.Create(t).Error; err != nil {
 		return 0, errors.Wrap(err, "create err")
 	}
@@ -204,46 +204,46 @@ func (qb *accountQueryBuilder) OrderByUsername(asc bool) *accountQueryBuilder {
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereNickname(p mysql.Predicate, value string) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereName(p mysql.Predicate, value string) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "nickname", p),
+		fmt.Sprintf("%v %v ?", "name", p),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereNicknameIn(value []string) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereNameIn(value []string) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "nickname", "IN"),
+		fmt.Sprintf("%v %v ?", "name", "IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) WhereNicknameNotIn(value []string) *accountQueryBuilder {
+func (qb *accountQueryBuilder) WhereNameNotIn(value []string) *accountQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "nickname", "NOT IN"),
+		fmt.Sprintf("%v %v ?", "name", "NOT IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountQueryBuilder) OrderByNickname(asc bool) *accountQueryBuilder {
+func (qb *accountQueryBuilder) OrderByName(asc bool) *accountQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "nickname "+order)
+	qb.order = append(qb.order, "name "+order)
 	return qb
 }
 

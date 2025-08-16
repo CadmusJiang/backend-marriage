@@ -4,8 +4,8 @@ package tablesqls
 //`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',
 //`account_id` int unsigned NOT NULL COMMENT '账户ID',
 //`org_id` int unsigned NOT NULL COMMENT '组织ID',
-//`relation_type` tinyint(1) NOT NULL COMMENT '关联类型 1:belong 2:manage',
-//`status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态 1:active 2:inactive',
+//`relation_type` enum('belong','manage') NOT NULL COMMENT '关联类型 belong:belong manage:manage',
+//`status` enum('active','inactive') NOT NULL DEFAULT 'active' COMMENT '状态 active:active inactive:inactive',
 //`version` int NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',
 //`created_at` bigint NOT NULL COMMENT '创建时间戳',
 //`updated_at` bigint NOT NULL COMMENT '修改时间戳',
@@ -22,11 +22,11 @@ func CreateAccountOrgRelationTableSql() (sql string) {
 	sql += "`id` int unsigned NOT NULL AUTO_INCREMENT COMMENT '主键',"
 	sql += "`account_id` int unsigned NOT NULL COMMENT '账户ID',"
 	sql += "`org_id` int unsigned NOT NULL COMMENT '组织ID',"
-	sql += "`relation_type` tinyint(1) NOT NULL COMMENT '关联类型 1:belong 2:manage',"
-	sql += "`status` tinyint(1) NOT NULL DEFAULT 1 COMMENT '状态 1:active 2:inactive',"
+	sql += "`relation_type` enum('belong','manage') NOT NULL COMMENT '关联类型 belong:belong manage:manage',"
+	sql += "`status` enum('active','inactive') NOT NULL DEFAULT 'active' COMMENT '状态 active:active inactive:inactive',"
 	sql += "`version` int NOT NULL DEFAULT 0 COMMENT '乐观锁版本号',"
-	sql += "`created_at` bigint NOT NULL COMMENT '创建时间戳',"
-	sql += "`updated_at` bigint NOT NULL COMMENT '修改时间戳',"
+	sql += "`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',"
+	sql += "`updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '修改时间',"
 	sql += "`created_user` varchar(60) NOT NULL COMMENT '创建人',"
 	sql += "`updated_user` varchar(60) NOT NULL COMMENT '更新人',"
 	sql += "PRIMARY KEY (`id`),"
@@ -40,27 +40,27 @@ func CreateAccountOrgRelationTableSql() (sql string) {
 
 func CreateAccountOrgRelationTableDataSql() (sql string) {
 	sql = "INSERT INTO `account_org_relation` (`account_id`, `org_id`, `relation_type`, `status`, `created_at`, `updated_at`, `created_user`, `updated_user`) VALUES"
-	sql += "(1, 1, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(1, 4, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(2, 2, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(2, 5, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(3, 2, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(4, 2, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(4, 5, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(5, 3, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(5, 6, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(6, 3, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(6, 7, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(7, 2, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(7, 5, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(8, 3, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(8, 6, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(9, 3, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(9, 7, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(10, 3, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(10, 6, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(11, 2, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员'),"
-	sql += "(11, 5, 1, 1, 1705123200, 1705123200, '系统管理员', '系统管理员');"
+	sql += "(1, 1, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(1, 4, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(2, 2, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(2, 5, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(3, 2, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(4, 2, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(4, 5, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(5, 3, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(5, 6, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(6, 3, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(6, 7, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(7, 2, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(7, 5, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(8, 3, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(8, 6, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(9, 3, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(9, 7, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(10, 3, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(10, 6, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(11, 2, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员'),"
+	sql += "(11, 5, 'belong', 'active', '2024-01-13 10:00:00', '2024-01-13 10:00:00', '系统管理员', '系统管理员');"
 
 	return
 }

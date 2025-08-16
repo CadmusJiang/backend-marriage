@@ -1,67 +1,61 @@
-package organization
+package orgsvc
 
 import (
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
-	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
+	"github.com/xinliangnote/go-gin-api/internal/proposal"
 )
 
 type Service interface {
-	i()
+	// Group operations
+	ListGroups(ctx Context, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	GetGroup(ctx Context, id uint32) (map[string]interface{}, error)
+	CreateGroup(ctx Context, payload *CreateGroupPayload) (uint32, error)
+	UpdateGroup(ctx Context, id uint32, payload *UpdateGroupPayload) (uint32, error)
+	DeleteGroup(ctx Context, id uint32) error
 
-	// groups
-	ListGroups(ctx core.Context, current, pageSize int, keyword string) (list interface{}, total int64, err error)
-	CreateGroup(ctx core.Context, payload *CreateGroupPayload) (id uint32, err error)
-	GetGroup(ctx core.Context, orgId string) (info interface{}, err error)
-	UpdateGroup(ctx core.Context, orgId string, payload *UpdateGroupPayload) (newVersion int, err error)
-	ListGroupHistory(ctx core.Context, orgId string, current, pageSize int) (items interface{}, total int64, err error)
+	// Team operations
+	ListTeams(ctx Context, belongGroupId uint32, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	GetTeam(ctx Context, id uint32) (map[string]interface{}, error)
+	CreateTeam(ctx Context, payload *CreateTeamPayload) (uint32, error)
+	UpdateTeam(ctx Context, id uint32, payload *UpdateTeamPayload) (uint32, error)
+	DeleteTeam(ctx Context, id uint32) error
 
-	// teams
-	ListTeams(ctx core.Context, current, pageSize int, belongGroupId string, keyword string) (list interface{}, total int64, err error)
-	CreateTeam(ctx core.Context, payload *CreateTeamPayload) (id uint32, err error)
-	GetTeam(ctx core.Context, teamId string) (info interface{}, err error)
-	UpdateTeam(ctx core.Context, teamId string, payload *UpdateTeamPayload) (newVersion int, err error)
-	ListTeamHistory(ctx core.Context, teamId string, current, pageSize int) (items interface{}, total int64, err error)
-
-	// members
-	ListTeamMembers(ctx core.Context, teamId string, current, pageSize int) (list interface{}, total int64, err error)
-	AddTeamMember(ctx core.Context, teamId string, accountId string, roleType string) (id string, err error)
-	RemoveTeamMember(ctx core.Context, teamId string, accountId string) (err error)
-	UpdateTeamMemberRole(ctx core.Context, teamId string, accountId string, roleType string) (err error)
-
-	// misc
-	ListUnassignedAccounts(ctx core.Context, current, pageSize int, keyword string) (list interface{}, total int64, err error)
+	// Member operations
+	ListMembers(ctx Context, orgId uint32, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	AddMember(ctx Context, orgId uint32, accountId uint32) error
+	RemoveMember(ctx Context, orgId uint32, accountId uint32) error
 }
 
-type service struct {
-	db mysql.Repo
+type Context interface {
+	RequestContext() core.StdContext
+	SessionUserInfo() proposal.SessionUserInfo
 }
 
-func New(db mysql.Repo) Service {
-	return &service{db: db}
+type SessionUserInfo struct {
+	UserID   int32
+	UserName string
+	RoleType string
 }
 
-func (s *service) i() {}
-
-// Payloads
 type CreateGroupPayload struct {
 	Username string `json:"username"`
-	Nickname string `json:"nickname"`
+	Name     string `json:"name"`
 }
 
 type UpdateGroupPayload struct {
-	Nickname string `json:"nickname"`
-	Status   int32  `json:"status"`
-	Version  int    `json:"version"`
+	Name    string `json:"name"`
+	Status  int32  `json:"status"`
+	Version int32  `json:"version"`
 }
 
 type CreateTeamPayload struct {
-	BelongGroupId string `json:"belongGroupId"`
+	BelongGroupId uint32 `json:"belongGroupId"`
 	Username      string `json:"username"`
-	Nickname      string `json:"nickname"`
+	Name          string `json:"name"`
 }
 
 type UpdateTeamPayload struct {
-	Nickname string `json:"nickname"`
-	Status   int32  `json:"status"`
-	Version  int    `json:"version"`
+	Name    string `json:"name"`
+	Status  int32  `json:"status"`
+	Version int32  `json:"version"`
 }

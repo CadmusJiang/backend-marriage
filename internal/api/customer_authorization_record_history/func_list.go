@@ -22,10 +22,10 @@ type historyData struct {
 	HistoryId                     string                 `json:"historyId"`                     // 历史记录ID
 	CustomerAuthorizationRecordId string                 `json:"customerAuthorizationRecordId"` // 客户授权记录ID
 	OperateType                   string                 `json:"operateType"`                   // 操作类型
-	OccurredAt                    int64                  `json:"occurredAt"`                    // 操作时间戳
+	OperatedAt                    int64                  `json:"operatedAt"`                    // 操作时间戳
 	Content                       map[string]interface{} `json:"content"`                       // 操作内容
 	OperatorUsername              string                 `json:"operatorUsername"`              // 操作人用户名
-	OperatorNickname              string                 `json:"operatorNickname"`              // 操作人姓名
+	OperatorName                  string                 `json:"operatorName"`                  // 操作人姓名
 	OperatorRoleType              string                 `json:"operatorRoleType"`              // 操作人角色类型
 	CreatedAt                     string                 `json:"createdAt"`                     // 创建时间
 	UpdatedAt                     string                 `json:"updatedAt"`                     // 修改时间
@@ -66,7 +66,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				HistoryId:                     "hist_car_001",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "created",
-				OccurredAt:                    1705123200,
+				OperatedAt:                    1705123200,
 				Content: map[string]interface{}{
 					"name": map[string]interface{}{
 						"old": "",
@@ -84,9 +84,9 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 						"old": "",
 						"new": 175,
 					},
-					"city": map[string]interface{}{
+					"cityCode": map[string]interface{}{
 						"old": "",
-						"new": "北京",
+						"new": "110000",
 					},
 					"authStore": map[string]interface{}{
 						"old": "",
@@ -174,7 +174,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
@@ -184,7 +184,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				HistoryId:                     "hist_car_002",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "modified",
-				OccurredAt:                    1705209600,
+				OperatedAt:                    1705209600,
 				Content: map[string]interface{}{
 					"isAuthorized": map[string]interface{}{
 						"old": false,
@@ -200,7 +200,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorNickname: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),
@@ -210,7 +210,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				HistoryId:                     "hist_car_003",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "modified",
-				OccurredAt:                    1705296000,
+				OperatedAt:                    1705296000,
 				Content: map[string]interface{}{
 					"isAssigned": map[string]interface{}{
 						"old": false,
@@ -222,7 +222,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "liming",
-				OperatorNickname: "李明",
+				OperatorName:     "李明",
 				OperatorRoleType: "team_manager",
 				CreatedAt:        time.Unix(1705296000, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705296000, 0).Format("2006-01-02T15:04:05Z"),
@@ -232,7 +232,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				HistoryId:                     "hist_car_004",
 				CustomerAuthorizationRecordId: "1",
 				OperateType:                   "modified",
-				OccurredAt:                    1705382400,
+				OperatedAt:                    1705382400,
 				Content: map[string]interface{}{
 					"isPaid": map[string]interface{}{
 						"old": false,
@@ -244,7 +244,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "wangfang",
-				OperatorNickname: "王芳",
+				OperatorName:     "王芳",
 				OperatorRoleType: "team_manager",
 				CreatedAt:        time.Unix(1705382400, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705382400, 0).Format("2006-01-02T15:04:05Z"),
@@ -254,7 +254,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				HistoryId:                     "hist_car_005",
 				CustomerAuthorizationRecordId: "2",
 				OperateType:                   "created",
-				OccurredAt:                    1705209600,
+				OperatedAt:                    1705209600,
 				Content: map[string]interface{}{
 					"name": map[string]interface{}{
 						"old": "",
@@ -272,9 +272,9 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 						"old": "",
 						"new": 165,
 					},
-					"city": map[string]interface{}{
+					"cityCode": map[string]interface{}{
 						"old": "",
-						"new": "上海",
+						"new": "310000",
 					},
 					"authStore": map[string]interface{}{
 						"old": "",
@@ -362,7 +362,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorNickname: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),

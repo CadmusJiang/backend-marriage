@@ -11,7 +11,7 @@ import (
 type Account struct {
 	Id       int32  `gorm:"primaryKey;column:id"`
 	Username string `gorm:"column:username"`
-	Nickname string `gorm:"column:nickname"`
+	Name     string `gorm:"column:name"`
 	Password string `gorm:"column:password"`
 	Phone    string `gorm:"column:phone"`
 	RoleType string `gorm:"column:role_type"`
@@ -20,7 +20,7 @@ type Account struct {
 	// 所属组信息
 	BelongGroupId                int32  `gorm:"column:belong_group_id"`
 	BelongGroupUsername          string `gorm:"column:belong_group_username"`
-	BelongGroupNickname          string `gorm:"column:belong_group_nickname"`
+	BelongGroupName              string `gorm:"column:belong_group_name"`
 	BelongGroupCreatedTimestamp  int64  `gorm:"column:belong_group_created_timestamp"`
 	BelongGroupModifiedTimestamp int64  `gorm:"column:belong_group_modified_timestamp"`
 	BelongGroupCurrentCnt        int32  `gorm:"column:belong_group_current_cnt"`
@@ -28,7 +28,7 @@ type Account struct {
 	// 所属团队信息
 	BelongTeamId                int32  `gorm:"column:belong_team_id"`
 	BelongTeamUsername          string `gorm:"column:belong_team_username"`
-	BelongTeamNickname          string `gorm:"column:belong_team_nickname"`
+	BelongTeamName              string `gorm:"column:belong_team_name"`
 	BelongTeamCreatedTimestamp  int64  `gorm:"column:belong_team_created_timestamp"`
 	BelongTeamModifiedTimestamp int64  `gorm:"column:belong_team_modified_timestamp"`
 	BelongTeamCurrentCnt        int32  `gorm:"column:belong_team_current_cnt"`
@@ -56,10 +56,10 @@ func main() {
 		username      string
 		groupID       int32
 		groupUsername string
-		groupNickname string
+		groupName     string
 		teamID        int32
 		teamUsername  string
-		teamNickname  string
+		teamName      string
 	}{
 		{"admin", 1, "admin_group", "系统管理组", 1, "admin_team", "系统管理团队"},
 		{"company_manager", 2, "nanjing_tianyuan", "南京-天元大厦组", 2, "marketing_team_a", "营销团队A"},
@@ -91,6 +91,6 @@ func main() {
 	fmt.Println("\nUpdated accounts:")
 	for _, acc := range accounts {
 		fmt.Printf("ID: %d, Username: %s, Group: %s, Team: %s\n",
-			acc.Id, acc.Username, acc.BelongGroupNickname, acc.BelongTeamNickname)
+			acc.Id, acc.Username, acc.BelongGroupName, acc.BelongTeamName)
 	}
 }

@@ -1,4 +1,4 @@
-package organization
+package orgsvc
 
 import (
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"

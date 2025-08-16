@@ -247,7 +247,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByOrgId(asc bool) *accountOrgRela
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, value int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, value string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -258,7 +258,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereRelationType(p mysql.Predicate, v
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -269,7 +269,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeIn(value []int32) *ac
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeNotIn(value []int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereRelationTypeNotIn(value []string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -290,7 +290,7 @@ func (qb *accountOrgRelationQueryBuilder) OrderByRelationType(asc bool) *account
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -301,7 +301,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereStatus(p mysql.Predicate, value i
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
@@ -312,7 +312,7 @@ func (qb *accountOrgRelationQueryBuilder) WhereStatusIn(value []int32) *accountO
 	return qb
 }
 
-func (qb *accountOrgRelationQueryBuilder) WhereStatusNotIn(value []int32) *accountOrgRelationQueryBuilder {
+func (qb *accountOrgRelationQueryBuilder) WhereStatusNotIn(value []string) *accountOrgRelationQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}

@@ -17,8 +17,8 @@ func (s *service) PageList(ctx core.Context, searchData *SearchData) (listData [
 	if searchData.Username != "" {
 		accountQueryBuilder.WhereUsername(mysql.LikePredicate, "%"+searchData.Username+"%")
 	}
-	if searchData.Nickname != "" {
-		accountQueryBuilder.WhereNickname(mysql.LikePredicate, "%"+searchData.Nickname+"%")
+	if searchData.Name != "" {
+		accountQueryBuilder.WhereName(mysql.LikePredicate, "%"+searchData.Name+"%")
 	}
 	if searchData.RoleType != "" {
 		accountQueryBuilder.WhereRoleType(mysql.EqualPredicate, searchData.RoleType)
@@ -28,7 +28,7 @@ func (s *service) PageList(ctx core.Context, searchData *SearchData) (listData [
 	}
 	// 暂时移除组织搜索，因为新模型中没有相关字段
 	// if searchData.BelongGroup != "" {
-	// 	accountQueryBuilder.WhereBelongGroupNickname(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
+	// 	accountQueryBuilder.WhereBelongGroupName(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
 	// }
 
 	// 访问范围过滤
@@ -48,7 +48,7 @@ func (s *service) PageList(ctx core.Context, searchData *SearchData) (listData [
 	accountQueryBuilder.Limit(searchData.PageSize).Offset(offset)
 
 	// 按创建时间倒序排列
-	accountQueryBuilder.OrderByCreatedTimestamp(false)
+	accountQueryBuilder.OrderByCreatedAt(false)
 
 	// 查询数据
 	listData, err = accountQueryBuilder.QueryAll(s.db.GetDbR())
@@ -67,8 +67,8 @@ func (s *service) PageListCount(ctx core.Context, searchData *SearchData) (total
 	if searchData.Username != "" {
 		accountQueryBuilder.WhereUsername(mysql.LikePredicate, "%"+searchData.Username+"%")
 	}
-	if searchData.Nickname != "" {
-		accountQueryBuilder.WhereNickname(mysql.LikePredicate, "%"+searchData.Nickname+"%")
+	if searchData.Name != "" {
+		accountQueryBuilder.WhereName(mysql.LikePredicate, "%"+searchData.Name+"%")
 	}
 	if searchData.RoleType != "" {
 		accountQueryBuilder.WhereRoleType(mysql.EqualPredicate, searchData.RoleType)
@@ -78,7 +78,7 @@ func (s *service) PageListCount(ctx core.Context, searchData *SearchData) (total
 	}
 	// 暂时移除组织搜索，因为新模型中没有相关字段
 	// if searchData.BelongGroup != "" {
-	// 	accountQueryBuilder.WhereBelongGroupNickname(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
+	// 	accountQueryBuilder.WhereBelongGroupName(mysql.LikePredicate, "%"+searchData.BelongGroup+"%")
 	// }
 
 	// 访问范围过滤
