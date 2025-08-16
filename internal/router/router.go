@@ -119,6 +119,10 @@ func NewHTTPServer(logger *zap.Logger, forceReseed bool, rebuildDatabase bool) (
 		panic(err)
 	}
 
+	// 添加Trace中间件到gin引擎
+	ginEngine := mux.GetEngine()
+	ginEngine.Use(interceptor.TraceMiddleware(logger))
+
 	r.mux = mux
 	r.interceptors = interceptor.New(logger, r.cache, r.db)
 
@@ -271,6 +275,28 @@ func rebuildTables(db mysql.Repo, logger *zap.Logger) error {
 	if err := ensureTables(db, logger); err != nil {
 		return fmt.Errorf("重新创建表失败: %v", err)
 	}
+
+	// 重置AUTO_INCREMENT值，确保ID从1开始
+	logger.Info("正在重置AUTO_INCREMENT值...")
+	tablesToReset := []string{
+		"account",
+		"account_history",
+		"account_org_relation",
+		"cooperation_store",
+		"cooperation_store_history",
+		"customer_authorization_record",
+		"customer_authorization_record_history",
+		"org_history",
+		"outbox_events",
+	}
+
+	for _, tableName := range tablesToReset {
+		logger.Info("重置AUTO_INCREMENT", zap.String("table", tableName))
+		if err := db.GetDbW().Exec(fmt.Sprintf("ALTER TABLE `%s` AUTO_INCREMENT = 1", tableName)).Error; err != nil {
+			logger.Warn("重置AUTO_INCREMENT失败", zap.String("table", tableName), zap.Error(err))
+		}
+	}
+	logger.Info("AUTO_INCREMENT重置完成")
 
 	// 插入测试数据
 	logger.Info("正在插入测试数据...")

@@ -24,16 +24,14 @@ type CreateAccountData struct {
 
 // UpdateAccountData 更新账户数据
 type UpdateAccountData struct {
-	Name        string   `json:"name"`
-	Phone       string   `json:"phone"`
-	Status      string   `json:"status"`
-	BelongGroup *OrgInfo `json:"belongGroup"`
-	BelongTeam  *OrgInfo `json:"belongTeam"`
+	Name   string `json:"name"`
+	Phone  string `json:"phone"`
+	Status string `json:"status"`
 }
 
 // OrgInfo 组织信息
 type OrgInfo struct {
-	ID                int32  `json:"id"`
+	ID                string `json:"id"`
 	Username          string `json:"username"`
 	Name              string `json:"name"`
 	CreatedTimestamp  int64  `json:"createdTimestamp"`
@@ -57,8 +55,9 @@ type CreateHistoryData struct {
 	AccountId        string `json:"accountId"`
 	OperateType      string `json:"operateType"`
 	Content          string `json:"content"`
-	Operator         string `json:"operator"`
-	OperatorRoleType string `json:"operatorRoleType"`
+	OperatorUsername string `json:"operatorUsername"` // 操作人用户名
+	OperatorName     string `json:"operatorName"`     // 操作人姓名
+	OperatorRoleType string `json:"operatorRoleType"` // 操作人角色类型
 }
 
 // SearchHistoryData 搜索历史记录数据

@@ -20,8 +20,9 @@ func (s *service) CreateHistory(ctx core.Context, historyData *CreateHistoryData
 		OperateType:      historyData.OperateType,
 		OperatedAt:       now,
 		Content:          historyData.Content,
-		Operator:         historyData.Operator,
-		OperatorRoleType: historyData.OperatorRoleType,
+		OperatorUsername: historyData.OperatorUsername, // 操作人用户名
+		OperatorName:     historyData.OperatorName,     // 操作人姓名
+		OperatorRoleType: historyData.OperatorRoleType, // 操作人角色类型
 		CreatedAt:        now,
 		UpdatedAt:        now,
 		CreatedUser:      ctx.SessionUserInfo().UserName,

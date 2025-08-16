@@ -7,30 +7,24 @@ import (
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
+	"go.uber.org/zap"
 )
 
 type updateRequest struct {
-	Name                string   `json:"name"`
-	BirthYear           *int     `json:"birthYear"`
-	Gender              *string  `json:"gender"`
-	Height              *int     `json:"height"`
-	City                *string  `json:"city"`
-	Education           *string  `json:"education"`
-	Profession          *string  `json:"profession"`
-	Income              *int     `json:"income"`
-	Phone               *string  `json:"phone"`
-	Wechat              *string  `json:"wechat"`
-	DrainageAccount     *string  `json:"drainageAccount"`
-	DrainageId          *string  `json:"drainageId"`
-	DrainageChannel     *string  `json:"drainageChannel"`
-	Remark              *string  `json:"remark"`
-	AuthorizationStatus string   `json:"authorizationStatus"`
-	AssignmentStatus    string   `json:"assignmentStatus"`
-	CompletionStatus    string   `json:"completionStatus"`
-	PaymentStatus       string   `json:"paymentStatus"`
-	PaymentAmount       float64  `json:"paymentAmount"`
-	RefundAmount        float64  `json:"refundAmount"`
-	AuthorizationPhotos []string `json:"authorizationPhotos"`
+	Name            string  `json:"name"`
+	BirthYear       *int    `json:"birthYear"`
+	Gender          *string `json:"gender"`
+	Height          *int    `json:"height"`
+	City            *string `json:"city"`
+	Education       *string `json:"education"`
+	Profession      *string `json:"profession"`
+	Income          *int    `json:"income"`
+	Phone           *string `json:"phone"`
+	Wechat          *string `json:"wechat"`
+	DrainageAccount *string `json:"drainageAccount"`
+	DrainageId      *string `json:"drainageId"`
+	DrainageChannel *string `json:"drainageChannel"`
+	Remark          *string `json:"remark"`
 }
 
 type updateResponse struct {
@@ -38,14 +32,14 @@ type updateResponse struct {
 	Success bool         `json:"success"`
 }
 
-// UpdateCustomerAuthorizationRecord 更新客户授权记录
-// @Summary 更新客户授权记录
-// @Description 根据ID更新客户授权记录
+// UpdateCustomerAuthorizationRecord 更新客资授权记录
+// @Summary 更新客资授权记录
+// @Description 根据ID更新客资授权记录
 // @Tags Customer
 // @Accept json
 // @Produce json
-// @Param id path int true "客户授权记录ID"
-// @Param customer body updateRequest true "客户授权记录更新信息"
+// @Param id path int true "客资授权记录ID"
+// @Param customer body updateRequest true "客资授权记录更新信息"
 // @Success 200 {object} updateResponse
 // @Failure 400 {object} code.Failure
 // @Failure 404 {object} code.Failure
@@ -76,59 +70,51 @@ func (h *handler) UpdateCustomerAuthorizationRecord() core.HandlerFunc {
 			return
 		}
 
-		// Mock数据 - 查找现有客户
-		mockCustomers := []customerData{
-			{
-				Key:                 1,
-				Name:                "用户1",
-				BirthYear:           intPtr(1985),
-				Gender:              stringPtr("male"),
-				Height:              intPtr(175),
-				City:                stringPtr("110000"),
-				AuthStore:           stringPtr("朝阳门店***"),
-				Education:           stringPtr("本科"),
-				Profession:          stringPtr("工程师"),
-				Income:              intPtr(50),
-				Phone:               stringPtr("138****1234"),
-				Wechat:              stringPtr("wx_12345****"),
-				DrainageAccount:     stringPtr("drainage_001"),
-				DrainageId:          stringPtr("D12345"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr("备注信息1"),
-				AuthorizationStatus: "authorized",
-				AssignmentStatus:    "assigned",
-				CompletionStatus:    "complete",
-				PaymentStatus:       "paid",
-				PaymentAmount:       25000.00,
-				RefundAmount:        0.00,
-				BelongGroup:         &refObject{Id: "g-a", Name: "归属组A"},
-				BelongTeam:          &refObject{Id: "t-a", Name: "归属小队A"},
-				BelongAccount:       &refObject{Id: "acc-1", Name: "账户1"},
-				AuthorizationPhotos: []string{"https://picsum.photos/300/200?random=0", "https://picsum.photos/300/200?random=1", "https://picsum.photos/300/200?random=2"},
-				CreatedAt:           "2024-01-13T10:00:00Z",
-				UpdatedAt:           "2024-01-13T10:00:00Z",
-			},
-		}
-
-		// 查找指定ID的客户
-		var foundCustomer *customerData
-		for _, customer := range mockCustomers {
-			if customer.Key == id {
-				foundCustomer = &customer
-				break
-			}
-		}
-
-		if foundCustomer == nil {
+		// 从数据库查询现有客资
+		existingRecord, err := h.svc.GetByID(c, uint64(id))
+		if err != nil {
+			h.logger.Error("查询客资记录失败", zap.Error(err))
 			c.AbortWithError(core.Error(
 				http.StatusNotFound,
 				code.ServerError,
-				"客户不存在"),
+				"客资不存在").WithError(err),
 			)
 			return
 		}
 
-		// 更新客户信息
+		// 转换为customerData格式
+		foundCustomer := &customerData{
+			Key:                 int(existingRecord.ID),
+			Name:                existingRecord.Name,
+			BirthYear:           existingRecord.BirthYear,
+			Gender:              existingRecord.Gender,
+			Height:              existingRecord.Height,
+			City:                existingRecord.City,
+			AuthStore:           existingRecord.AuthStore,
+			Education:           existingRecord.Education,
+			Profession:          existingRecord.Profession,
+			Income:              intPtr(0), // 暂时设为0，后续可以完善解析逻辑
+			Phone:               existingRecord.Phone,
+			Wechat:              existingRecord.Wechat,
+			DrainageAccount:     existingRecord.DrainageAccount,
+			DrainageId:          existingRecord.DrainageId,
+			DrainageChannel:     existingRecord.DrainageChannel,
+			Remark:              existingRecord.Remark,
+			AuthorizationStatus: existingRecord.AuthorizationStatus,
+			AssignmentStatus:    existingRecord.AssignmentStatus,
+			CompletionStatus:    existingRecord.CompletionStatus,
+			PaymentStatus:       existingRecord.PaymentStatus,
+			PaymentAmount:       existingRecord.PaymentAmount,
+			RefundAmount:        existingRecord.RefundAmount,
+			BelongGroup:         &refObject{Id: toStringPtr(existingRecord.BelongGroupID), Name: ""},
+			BelongTeam:          &refObject{Id: toStringPtr(existingRecord.BelongTeamID), Name: ""},
+			BelongAccount:       &refObject{Id: toStringPtr(existingRecord.BelongAccountID), Name: ""},
+			AuthorizationPhotos: []string{}, // 暂时设为空数组
+			CreatedAt:           existingRecord.CreatedAt.Format("2006-01-02T15:04:05Z"),
+			UpdatedAt:           existingRecord.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+
+		// 更新客资信息
 		now := time.Now()
 		updatedCustomer := customerData{
 			Key:                 foundCustomer.Key,
@@ -147,16 +133,16 @@ func (h *handler) UpdateCustomerAuthorizationRecord() core.HandlerFunc {
 			DrainageId:          req.DrainageId,
 			DrainageChannel:     req.DrainageChannel,
 			Remark:              req.Remark,
-			AuthorizationStatus: req.AuthorizationStatus,
-			AssignmentStatus:    req.AssignmentStatus,
-			CompletionStatus:    req.CompletionStatus,
-			PaymentStatus:       req.PaymentStatus,
-			PaymentAmount:       req.PaymentAmount,
-			RefundAmount:        req.RefundAmount,
+			AuthorizationStatus: foundCustomer.AuthorizationStatus,
+			AssignmentStatus:    foundCustomer.AssignmentStatus,
+			CompletionStatus:    foundCustomer.CompletionStatus,
+			PaymentStatus:       foundCustomer.PaymentStatus,
+			PaymentAmount:       foundCustomer.PaymentAmount,
+			RefundAmount:        foundCustomer.RefundAmount,
 			BelongGroup:         foundCustomer.BelongGroup,
 			BelongTeam:          foundCustomer.BelongTeam,
 			BelongAccount:       foundCustomer.BelongAccount,
-			AuthorizationPhotos: req.AuthorizationPhotos,
+			AuthorizationPhotos: foundCustomer.AuthorizationPhotos,
 			CreatedAt:           foundCustomer.CreatedAt,
 			UpdatedAt:           now.Format(time.RFC3339),
 		}

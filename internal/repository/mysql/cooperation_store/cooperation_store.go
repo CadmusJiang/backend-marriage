@@ -46,7 +46,7 @@ func (j JSONString) Value() (driver.Value, error) {
 // Scan 实现sql.Scanner接口
 func (j *JSONString) Scan(value interface{}) error {
 	if value == nil {
-		*j = nil
+		*j = JSONString{} // 设置为空切片而不是nil
 		return nil
 	}
 

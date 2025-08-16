@@ -112,6 +112,9 @@ type Context interface {
 	// SetHeader 设置 Header
 	SetHeader(key, value string)
 
+	// GetTraceID 获取请求的Trace-ID，优先从X-Trace-ID获取
+	GetTraceID() string
+
 	// Param 获取路径参数
 	Param(key string) string
 
@@ -149,6 +152,11 @@ type Context interface {
 
 	// ResponseWriter 获取 ResponseWriter 对象
 	ResponseWriter() gin.ResponseWriter
+
+	// GetTraceFromGin 从gin.Context获取Trace对象
+	GetTraceFromGin() Trace
+	// GetLoggerFromGin 从gin.Context获取Logger对象
+	GetLoggerFromGin() *zap.Logger
 }
 
 type context struct {
@@ -254,7 +262,7 @@ func (c *context) Payload(payload interface{}) {
 		c.ctx.Set(_PayloadName, payload)
 		return
 	}
-	
+
 	// 否则包装为成功响应格式
 	successResponse := &code.Success{
 		Success: true,
@@ -299,6 +307,22 @@ func (c *context) GetHeader(key string) string {
 
 func (c *context) SetHeader(key, value string) {
 	c.ctx.Header(key, value)
+}
+
+func (c *context) GetTraceID() string {
+	// 优先从X-Trace-ID获取
+	if traceID := c.ctx.GetHeader("X-Trace-ID"); traceID != "" {
+		return traceID
+	}
+	// 备用从Trace-ID获取
+	if traceID := c.ctx.GetHeader("Trace-ID"); traceID != "" {
+		return traceID
+	}
+	// 最后从X-Request-ID获取
+	if traceID := c.ctx.GetHeader("X-Request-ID"); traceID != "" {
+		return traceID
+	}
+	return ""
 }
 
 func (c *context) Param(key string) string {
@@ -427,4 +451,20 @@ func (c *context) RequestContext() StdContext {
 // ResponseWriter 获取 ResponseWriter
 func (c *context) ResponseWriter() gin.ResponseWriter {
 	return c.ctx.Writer
+}
+
+// GetTraceFromGin 从gin.Context获取Trace对象
+func (c *context) GetTraceFromGin() Trace {
+	if t, exists := c.ctx.Get("_trace"); exists {
+		return t.(Trace)
+	}
+	return nil
+}
+
+// GetLoggerFromGin 从gin.Context获取Logger对象
+func (c *context) GetLoggerFromGin() *zap.Logger {
+	if logger, exists := c.ctx.Get("_trace_logger"); exists {
+		return logger.(*zap.Logger)
+	}
+	return nil
 }

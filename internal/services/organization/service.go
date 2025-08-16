@@ -7,29 +7,34 @@ import (
 )
 
 type Service interface {
-	// Group operations
+	i()
+
+	// 组管理
 	ListGroups(ctx Context, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error)
-	GetGroup(ctx Context, id uint32) (map[string]interface{}, error)
+	GetGroup(ctx Context, id string) (map[string]interface{}, error)
 	CreateGroup(ctx Context, payload *CreateGroupPayload) (uint32, error)
-	UpdateGroup(ctx Context, id uint32, payload *UpdateGroupPayload) (uint32, error)
-	DeleteGroup(ctx Context, id uint32) error
+	UpdateGroup(ctx Context, id string, payload *UpdateGroupPayload) (uint32, error)
+	DeleteGroup(ctx Context, id string) error
 
-	// Team operations
-	ListTeams(ctx Context, belongGroupId uint32, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error)
-	GetTeam(ctx Context, id uint32) (map[string]interface{}, error)
+	// 团队管理
+	ListTeams(ctx Context, belongGroupId string, current, pageSize int, keyword string, scope *authz.AccessScope) ([]map[string]interface{}, int64, error)
+	GetTeam(ctx Context, id string) (map[string]interface{}, error)
 	CreateTeam(ctx Context, payload *CreateTeamPayload) (uint32, error)
-	UpdateTeam(ctx Context, id uint32, payload *UpdateTeamPayload) (uint32, error)
-	DeleteTeam(ctx Context, id uint32) error
+	UpdateTeam(ctx Context, id string, payload *UpdateTeamPayload) (uint32, error)
+	DeleteTeam(ctx Context, id string) error
 
-	// Member operations
-	ListMembers(ctx Context, orgId uint32, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
-	AddMember(ctx Context, orgId uint32, accountId uint32) error
-	RemoveMember(ctx Context, orgId uint32, accountId uint32) error
+	// 成员管理
+	ListMembers(ctx Context, orgId string, current, pageSize int, keyword string) ([]map[string]interface{}, int64, error)
+	AddMember(ctx Context, orgId string, accountId string) error
+	RemoveMember(ctx Context, orgId string, accountId string) error
+	UpdateMemberRole(ctx Context, orgId string, accountId string, roleType string) error
 }
 
 type Context interface {
 	RequestContext() core.StdContext
 	SessionUserInfo() proposal.SessionUserInfo
+	// 直接使用core.Context的GetTraceID方法
+	GetTraceID() string
 }
 
 type SessionUserInfo struct {
@@ -44,9 +49,11 @@ type CreateGroupPayload struct {
 }
 
 type UpdateGroupPayload struct {
-	Name    string `json:"name"`
-	Status  int32  `json:"status"`
-	Version int32  `json:"version"`
+	Name    string                 `json:"name,omitempty"`
+	Address *string                `json:"address,omitempty"`
+	Extra   map[string]interface{} `json:"extra,omitempty"`
+	Status  string                 `json:"status,omitempty"`
+	Version int32                  `json:"version"`
 }
 
 type CreateTeamPayload struct {
@@ -56,7 +63,29 @@ type CreateTeamPayload struct {
 }
 
 type UpdateTeamPayload struct {
-	Name    string `json:"name"`
-	Status  int32  `json:"status"`
-	Version int32  `json:"version"`
+	Name    string                 `json:"name,omitempty"`
+	Address *string                `json:"address,omitempty"`
+	Extra   map[string]interface{} `json:"extra,omitempty"`
+	Status  string                 `json:"status,omitempty"`
+	Version int32                  `json:"version"`
+}
+
+// MemberOperationError 成员操作错误
+type MemberOperationError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Details string `json:"details"`
+}
+
+func (e *MemberOperationError) Error() string {
+	return e.Message
+}
+
+// NewMemberOperationError 创建成员操作错误
+func NewMemberOperationError(code, message, details string) *MemberOperationError {
+	return &MemberOperationError{
+		Code:    code,
+		Message: message,
+		Details: details,
+	}
 }

@@ -205,6 +205,15 @@ func wrapHandlers(handlers ...HandlerFunc) []gin.HandlerFunc {
 		handler := handler
 		funcs[i] = func(c *gin.Context) {
 			ctx := newContext(c)
+
+			// 从gin.Context中获取Trace信息并设置到Context中
+			if trace, exists := c.Get("_trace"); exists {
+				ctx.setTrace(trace.(Trace))
+			}
+			if logger, exists := c.Get("_trace_logger"); exists {
+				ctx.setLogger(logger.(*zap.Logger))
+			}
+
 			defer releaseContext(ctx)
 
 			handler(ctx)
@@ -220,6 +229,7 @@ var _ Mux = (*mux)(nil)
 type Mux interface {
 	http.Handler
 	Group(relativePath string, handlers ...HandlerFunc) RouterGroup
+	GetEngine() *gin.Engine
 }
 
 type mux struct {
@@ -234,6 +244,10 @@ func (m *mux) Group(relativePath string, handlers ...HandlerFunc) RouterGroup {
 	return &router{
 		group: m.engine.Group(relativePath, wrapHandlers(handlers...)...),
 	}
+}
+
+func (m *mux) GetEngine() *gin.Engine {
+	return m.engine
 }
 
 func New(logger *zap.Logger, options ...Option) (Mux, error) {

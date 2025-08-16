@@ -10,7 +10,7 @@ import (
 type CooperationStoreHistory struct {
 	Id               uint64      `db:"id"`                 // 主键
 	StoreId          uint32      `db:"store_id"`           // 合作门店ID
-	OperateType      string      `db:"operate_type"`       // 操作类型: created, modified, deleted
+	OperateType      string      `db:"operate_type"`       // 操作类型: created, updated, deleted
 	OccurredAt       int64       `db:"occurred_at"`        // 操作发生时间戳
 	Content          *JSONString `db:"content"`            // 操作内容
 	OperatorUsername string      `db:"operator_username"`  // 操作人用户名

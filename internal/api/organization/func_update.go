@@ -2,7 +2,6 @@ package organization
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
@@ -13,7 +12,7 @@ import (
 // UpdateGroup 更新组
 func (h *handler) UpdateGroup() core.HandlerFunc {
 	return func(c core.Context) {
-		groupID := c.Param("groupId")
+		groupID := c.Param("orgId")
 		if groupID == "" {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
@@ -23,28 +22,18 @@ func (h *handler) UpdateGroup() core.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.ParseUint(groupID, 10, 32)
-		if err != nil {
-			c.AbortWithError(core.Error(
-				http.StatusBadRequest,
-				code.ParamBindError,
-				"组ID格式错误").WithError(err),
-			)
-			return
-		}
-
 		var payload orgsvc.UpdateGroupPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,
-				"参数绑定失败").WithError(err),
+				"参数绑定失败"),
 			)
 			return
 		}
 
 		// 调用service层
-		_, updateErr := h.orgService.UpdateGroup(h.createContext(c), uint32(id), &payload)
+		_, updateErr := h.orgService.UpdateGroup(h.createContext(c), groupID, &payload)
 		if updateErr != nil {
 			h.logger.Error("更新组失败", zap.Error(updateErr))
 			c.AbortWithError(core.Error(
@@ -55,8 +44,21 @@ func (h *handler) UpdateGroup() core.HandlerFunc {
 			return
 		}
 
+		// 获取更新后的组信息
+		updatedGroup, err := h.orgService.GetGroup(h.createContext(c), groupID)
+		if err != nil {
+			h.logger.Error("获取更新后的组信息失败", zap.Error(err))
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"获取更新后的组信息失败").WithError(err),
+			)
+			return
+		}
+
 		c.Payload(map[string]interface{}{
 			"message": "更新组成功",
+			"data":    updatedGroup,
 		})
 	}
 }
@@ -74,28 +76,18 @@ func (h *handler) UpdateTeam() core.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.ParseUint(teamID, 10, 32)
-		if err != nil {
-			c.AbortWithError(core.Error(
-				http.StatusBadRequest,
-				code.ParamBindError,
-				"团队ID格式错误").WithError(err),
-			)
-			return
-		}
-
 		var payload orgsvc.UpdateTeamPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,
-				"参数绑定失败").WithError(err),
+				"参数绑定失败"),
 			)
 			return
 		}
 
 		// 调用service层
-		_, updateErr := h.orgService.UpdateTeam(h.createContext(c), uint32(id), &payload)
+		_, updateErr := h.orgService.UpdateTeam(h.createContext(c), teamID, &payload)
 		if updateErr != nil {
 			h.logger.Error("更新团队失败", zap.Error(updateErr))
 			c.AbortWithError(core.Error(
@@ -106,8 +98,21 @@ func (h *handler) UpdateTeam() core.HandlerFunc {
 			return
 		}
 
+		// 获取更新后的团队信息
+		updatedTeam, err := h.orgService.GetTeam(h.createContext(c), teamID)
+		if err != nil {
+			h.logger.Error("获取更新后的团队信息失败", zap.Error(err))
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"获取更新后的团队信息失败").WithError(err),
+			)
+			return
+		}
+
 		c.Payload(map[string]interface{}{
 			"message": "更新团队成功",
+			"data":    updatedTeam,
 		})
 	}
 }

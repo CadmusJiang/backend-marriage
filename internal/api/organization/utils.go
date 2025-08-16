@@ -28,6 +28,12 @@ func (sc *serviceContext) SessionUserInfo() proposal.SessionUserInfo {
 	return sc.coreContext.SessionUserInfo()
 }
 
+// GetTraceID 从请求头获取trace_id
+func (sc *serviceContext) GetTraceID() string {
+	// 直接调用core.Context的GetTraceID方法
+	return sc.coreContext.GetTraceID()
+}
+
 // getUserAccountInfo 获取用户账户信息
 func (h *handler) getUserAccountInfo(userID int) (*account.Account, error) {
 	qb := account.NewQueryBuilder()

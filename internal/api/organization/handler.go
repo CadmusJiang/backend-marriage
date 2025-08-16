@@ -86,6 +86,11 @@ type Handler interface {
 	// @Router /api/v1/organizations/{orgId}/members/{accountId}/role [put]
 	UpdateTeamMemberRole() core.HandlerFunc
 
+	// UpdateTeamMember 更新团队成员信息（包括角色等）
+	// @Tags Organization
+	// @Router /api/v1/organizations/{orgId}/members/{accountId} [patch]
+	UpdateTeamMember() core.HandlerFunc
+
 	// ==================== 其他接口 ====================
 	// ListUnassignedAccounts 获取未分配账户列表
 	// @Tags Organization

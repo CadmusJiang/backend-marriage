@@ -9,12 +9,12 @@ import (
 )
 
 type listRequest struct {
-	Current                       int    `form:"current"`                       // 当前页码
-	PageSize                      int    `form:"pageSize"`                      // 每页数量
-	CustomerAuthorizationRecordId string `form:"customerAuthorizationRecordId"` // 客户授权记录ID
-	OperateType                   string `form:"operateType"`                   // 操作类型
-	OperatorUsername              string `form:"operatorUsername"`              // 操作人用户名
-	OperatorRoleType              string `form:"operatorRoleType"`              // 操作人角色类型
+	Current  int `form:"current"`  // 当前页码
+	PageSize int `form:"pageSize"` // 每页数量
+	// CustomerAuthorizationRecordId 从路径参数获取，不需要在查询参数中
+	OperateType      string `form:"operateType"`      // 操作类型
+	OperatorUsername string `form:"operatorUsername"` // 操作人用户名
+	OperatorRoleType string `form:"operatorRoleType"` // 操作人角色类型
 }
 
 type historyData struct {
@@ -42,6 +42,19 @@ type listResponse struct {
 func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 	return func(ctx core.Context) {
 		req := new(listRequest)
+
+		// 从URL路径参数中获取customerAuthorizationRecordId
+		customerAuthorizationRecordId := ctx.Param("id")
+		if customerAuthorizationRecordId == "" {
+			ctx.AbortWithError(core.Error(
+				http.StatusBadRequest,
+				code.ParamBindError,
+				"缺少必要参数: id"),
+			)
+			return
+		}
+
+		// 从查询参数中获取其他参数
 		if err := ctx.ShouldBindQuery(req); err != nil {
 			ctx.AbortWithError(core.Error(
 				http.StatusBadRequest,
@@ -183,7 +196,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				Key:                           2,
 				HistoryId:                     "hist_car_002",
 				CustomerAuthorizationRecordId: "1",
-				OperateType:                   "modified",
+				OperateType:                   "updated",
 				OperatedAt:                    1705209600,
 				Content: map[string]interface{}{
 					"isAuthorized": map[string]interface{}{
@@ -209,7 +222,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				Key:                           3,
 				HistoryId:                     "hist_car_003",
 				CustomerAuthorizationRecordId: "1",
-				OperateType:                   "modified",
+				OperateType:                   "updated",
 				OperatedAt:                    1705296000,
 				Content: map[string]interface{}{
 					"isAssigned": map[string]interface{}{
@@ -231,7 +244,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 				Key:                           4,
 				HistoryId:                     "hist_car_004",
 				CustomerAuthorizationRecordId: "1",
-				OperateType:                   "modified",
+				OperateType:                   "updated",
 				OperatedAt:                    1705382400,
 				Content: map[string]interface{}{
 					"isPaid": map[string]interface{}{
@@ -373,7 +386,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryList() core.HandlerFunc {
 		filteredData := make([]historyData, 0)
 		for _, item := range mockData {
 			// 按客户授权记录ID过滤
-			if req.CustomerAuthorizationRecordId != "" && item.CustomerAuthorizationRecordId != req.CustomerAuthorizationRecordId {
+			if customerAuthorizationRecordId != "" && item.CustomerAuthorizationRecordId != customerAuthorizationRecordId {
 				continue
 			}
 			// 按操作类型过滤

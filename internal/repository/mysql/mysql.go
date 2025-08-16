@@ -1,12 +1,12 @@
 package mysql
 
 import (
+	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/xinliangnote/go-gin-api/configs"
-	"github.com/xinliangnote/go-gin-api/pkg/errors"
+	"github.com/xinliangnote/go-gin-api/pkg/trace"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -98,53 +98,54 @@ func dbConnect(user, pass, addr, dbName, connType string) (*gorm.DB, error) {
 		true,
 		"Local")
 
-	// 记录连接信息（不包含密码）
-	connInfo := fmt.Sprintf("%s@%s/%s", user, addr, dbName)
-
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
-		Logger: logger.Default.LogMode(logger.Error), // 只记录错误，不记录所有SQL
+		NowFunc: func() time.Time {
+			return time.Now()
+		},
 	})
 
 	if err != nil {
-		// 提供详细的错误诊断信息
-		var errorMsg string
-		if strings.Contains(err.Error(), "Access denied") {
-			errorMsg = fmt.Sprintf("数据库访问被拒绝，请检查用户名和密码是否正确。连接信息: %s", connInfo)
-		} else if strings.Contains(err.Error(), "Unknown database") {
-			errorMsg = fmt.Sprintf("数据库不存在，请检查数据库名称是否正确。连接信息: %s", connInfo)
-		} else if strings.Contains(err.Error(), "connection refused") {
-			errorMsg = fmt.Sprintf("无法连接到数据库服务器，请检查服务器地址和端口是否正确。连接信息: %s", connInfo)
-		} else if strings.Contains(err.Error(), "timeout") {
-			errorMsg = fmt.Sprintf("数据库连接超时，请检查网络连接和服务器状态。连接信息: %s", connInfo)
-		} else {
-			errorMsg = fmt.Sprintf("数据库连接失败: %v。连接信息: %s", err, connInfo)
-		}
-		return nil, errors.Wrap(err, errorMsg)
+		return nil, fmt.Errorf("连接%s数据库失败: %v", connType, err)
 	}
 
-	db.Set("gorm:table_options", "CHARSET=utf8mb4")
-
-	cfg := configs.Get().MySQL.Base
-
-	sqlDB, err := db.DB()
-	if err != nil {
-		return nil, errors.Wrap(err, fmt.Sprintf("获取数据库连接池失败: %s", connInfo))
-	}
-
-	// 设置连接池 用于设置最大打开的连接数，默认值为0表示不限制.设置最大的连接数，可以避免并发太高导致连接mysql出现too many connections的错误。
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConn)
-
-	// 设置最大连接数 用于设置闲置的连接数.设置闲置的连接数则当开启的一个连接使用完成后可以放在池里等候下一次使用。
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConn)
-
-	// 设置最大连接超时
-	sqlDB.SetConnMaxLifetime(time.Minute * cfg.ConnMaxLifeTime)
-
-	// 使用插件
-	db.Use(&TracePlugin{})
+	// 添加Trace支持
+	db = db.Session(&gorm.Session{
+		Logger: &traceLogger{},
+	})
 
 	return db, nil
+}
+
+// traceLogger 实现GORM的Logger接口，用于记录SQL执行信息
+type traceLogger struct{}
+
+func (l *traceLogger) LogMode(level logger.LogLevel) logger.Interface {
+	return l
+}
+
+func (l *traceLogger) Info(ctx context.Context, msg string, data ...interface{}) {
+	// 暂时简化实现，后续完善Trace功能
+}
+
+func (l *traceLogger) Warn(ctx context.Context, msg string, data ...interface{}) {
+	l.Info(ctx, msg, data...)
+}
+
+func (l *traceLogger) Error(ctx context.Context, msg string, data ...interface{}) {
+	l.Info(ctx, msg, data...)
+}
+
+func (l *traceLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	// 暂时简化实现，后续完善Trace功能
+}
+
+// getTraceFromContext 从context中获取Trace信息
+func getTraceFromContext(ctx context.Context) *trace.Trace {
+	// 这里需要根据实际的context类型来获取Trace
+	// 暂时返回nil，后续会完善
+	return nil
 }

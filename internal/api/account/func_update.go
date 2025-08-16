@@ -1,25 +1,26 @@
 package account
 
 import (
+	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
+	"github.com/xinliangnote/go-gin-api/internal/services/account"
+	"go.uber.org/zap"
 )
 
 type updateRequest struct {
-	AccountID   string `uri:"accountId" binding:"required"` // 账户ID
-	Name        string `json:"name"`                        // 姓名
-	Phone       string `json:"phone"`                       // 手机号
-	BelongGroup string `json:"belongGroup"`                 // 所属组
-	BelongTeam  string `json:"belongTeam"`                  // 所属团队
-	Status      string `json:"status"`                      // 状态
+	AccountID string `uri:"accountId" binding:"required"` // 账户ID
+	Name      string `json:"name"`                        // 姓名
+	Phone     string `json:"phone"`                       // 手机号
+	Status    string `json:"status"`                      // 状态
 }
 
 type updateResponse struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
+	Success bool        `json:"success"`
+	Message string      `json:"message"`
+	Data    *accountData `json:"data,omitempty"` // 更新后的账户信息
 }
 
 // UpdateAccount 更新账户
@@ -57,48 +58,61 @@ func (h *handler) UpdateAccount() core.HandlerFunc {
 			return
 		}
 
-		// Mock数据 - 检查账户是否存在
-		mockAccounts := map[string]accountData{
-			"0": {
-				ID:          "0",
-				Username:    "admin",
-				Name:        "系统管理员",
-				RoleType:    "company_manager",
-				Status:      "enabled",
-				Phone:       "13800138000",
-				BelongGroup: &org{ID: 0, Username: "admin_group", Name: "系统管理组", CreatedAt: 1705123200, UpdatedAt: 1705123200, CurrentCnt: 1},
-				BelongTeam:  &org{ID: 0, Username: "admin_team", Name: "系统管理团队", CreatedAt: 1705123200, UpdatedAt: 1705123200, CurrentCnt: 1},
-				CreatedAt:   1705123200,
-				UpdatedAt:   1705123200,
-				LastLoginAt: time.Now().Unix(),
-			},
-			"1": {
-				ID:          "1",
-				Username:    "company_manager",
-				Name:        "张伟",
-				RoleType:    "company_manager",
-				Status:      "enabled",
-				Phone:       "13800138001",
-				BelongGroup: &org{ID: 1, Username: "nanjing_tianyuan", Name: "南京-天元大厦组", CreatedAt: 1705123200, UpdatedAt: 1705123200, CurrentCnt: 15},
-				BelongTeam:  &org{ID: 1, Username: "marketing_team_a", Name: "营销团队A", CreatedAt: 1705123200, UpdatedAt: 1705123200, CurrentCnt: 8},
-				CreatedAt:   1705123200,
-				UpdatedAt:   1705123200,
-				LastLoginAt: time.Now().Unix(),
-			},
-		}
+		// 调用服务层更新账户
+		err := h.accountService.Update(c, req.AccountID, &account.UpdateAccountData{
+			Name:   req.Name,
+			Phone:  req.Phone,
+			Status: req.Status,
+		})
 
-		_, exists := mockAccounts[req.AccountID]
-		if !exists {
+		if err != nil {
+			h.logger.Error("更新账户失败", zap.Error(err))
 			c.AbortWithError(core.Error(
-				http.StatusNotFound,
-				code.AdminDetailError,
-				"账户不存在"),
+				http.StatusInternalServerError,
+				code.ServerError,
+				fmt.Sprintf("更新账户失败: %v", err)).WithError(err),
 			)
 			return
 		}
 
+		// 更新成功后，查询并返回更新后的账户信息
+		updatedAccount, err := h.accountService.Detail(c, req.AccountID)
+		if err != nil {
+			h.logger.Error("查询更新后的账户信息失败", zap.Error(err))
+			// 即使查询失败，更新操作本身是成功的，所以仍然返回成功
+			res.Success = true
+			res.Message = "账户更新成功，但获取更新后信息失败"
+			c.Payload(res)
+			return
+		}
+
+		// 构建返回的账户数据
+		accountData := accountData{
+			ID:        fmt.Sprintf("%d", updatedAccount.Id),
+			Username:  updatedAccount.Username,
+			Name:      updatedAccount.Name,
+			Phone:     updatedAccount.Phone,
+			RoleType:  updatedAccount.RoleType,
+			Status:    updatedAccount.Status,
+			CreatedAt: updatedAccount.CreatedAt.Unix(),
+			UpdatedAt: updatedAccount.UpdatedAt.Unix(),
+			LastLoginAt: func() int64 {
+				if updatedAccount.LastLoginAt != nil {
+					return updatedAccount.LastLoginAt.Unix()
+				}
+				return 0
+			}(),
+		}
+
+		// 根据includeGroup和includeTeam参数决定是否包含组织信息
+		// 这里默认包含组织信息，因为更新后用户通常需要看到完整信息
+		belongGroup, belongTeam := h.getAccountOrgInfo(int(updatedAccount.Id))
+		accountData.BelongGroup = belongGroup
+		accountData.BelongTeam = belongTeam
+
 		res.Success = true
 		res.Message = "账户更新成功"
+		res.Data = &accountData
 
 		c.Payload(res)
 	}

@@ -41,6 +41,7 @@ func main() {
 
 	// 重新解析环境变量
 	env.Active()
+
 	// 初始化 access logger
 	accessLogger, err := logger.NewJSONLogger(
 		// logger.WithDisableConsole(), // 注释掉以启用控制台输出

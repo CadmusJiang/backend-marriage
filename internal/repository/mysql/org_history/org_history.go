@@ -12,7 +12,7 @@ type OrgHistory struct {
 	Id               uint64      `db:"id"`                 // 主键
 	OrgId            uint32      `db:"org_id"`             // 组织ID
 	OrgType          int32       `db:"org_type"`           // 组织类型 1:group 2:team
-	OperateType      string      `db:"operate_type"`       // 操作类型: created, modified
+	OperateType      string      `db:"operate_type"`       // 操作类型: created, updated
 	OccurredAt       time.Time   `db:"occurred_at"`        // 操作发生时间
 	Content          *JSONString `db:"content"`            // 操作内容
 	Operator         string      `db:"operator"`           // 操作人

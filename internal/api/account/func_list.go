@@ -145,7 +145,7 @@ func (h *handler) GetAccountList() core.HandlerFunc {
 				Name:      acc.Name,
 				Phone:     acc.Phone,
 				RoleType:  acc.RoleType,
-				Status:    fmt.Sprintf("%d", acc.Status),
+				Status:    acc.Status, // 直接赋值，不需要格式化
 				CreatedAt: acc.CreatedAt.Unix(),
 				UpdatedAt: acc.UpdatedAt.Unix(),
 				LastLoginAt: func() int64 {

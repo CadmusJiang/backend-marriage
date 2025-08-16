@@ -37,14 +37,14 @@ type accountTrendsResponse struct {
 
 // GetAccountTrends 获取个人趋势数据
 // @Summary 获取个人趋势数据
-// @Description 返回个人在开单或留资方面的趋势数据
+// @Description 返回个人在开单或留资方面的趋势数据，支持按组筛选和时间范围
 // @Tags Analytics
 // @Accept application/x-www-form-urlencoded
 // @Produce json
-// @Param metric query string true "指标类型" Enums(paid_count, lead_count)
-// @Param time query string false "时间范围" Enums(today, week, last7days, month) default(month)
-// @Param top query int false "返回前N名"
-// @Param belongGroupId query string false "归属组ID"
+// @Param metric query string false "指标类型" Enums(paid_count, lead_count) default(paid_count) "paid_count: 开单数, lead_count: 留资数"
+// @Param time query string false "时间范围" Enums(today, week, last7days, month) default(month) "today: 今天, week: 本周, last7days: 最近7天, month: 本月"
+// @Param top query int false "返回前N名" default(10) "限制返回结果数量，默认10"
+// @Param belongGroupId query string false "归属组ID" "按组筛选，不传则返回所有组数据"
 // @Success 200 {object} accountTrendsResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/v1/analytics/account/trends [get]
@@ -55,12 +55,33 @@ func (h *handler) GetAccountTrends() core.HandlerFunc {
 			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, code.Text(code.ParamBindError)).WithError(err))
 			return
 		}
+
+		// 设置默认值和验证
 		if req.Metric == "" {
-			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, "metric is required"))
+			req.Metric = "paid_count" // 设置默认指标为开单数
+		}
+
+		// 验证指标类型
+		validMetrics := map[string]bool{"paid_count": true, "lead_count": true}
+		if !validMetrics[req.Metric] {
+			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, "invalid metric, must be one of: paid_count, lead_count"))
 			return
 		}
+
 		if req.TimeRange == "" {
-			req.TimeRange = "month"
+			req.TimeRange = "month" // 默认时间范围为月
+		}
+
+		// 验证时间范围
+		validTimeRanges := map[string]bool{"today": true, "week": true, "last7days": true, "month": true}
+		if !validTimeRanges[req.TimeRange] {
+			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, "invalid time range, must be one of: today, week, last7days, month"))
+			return
+		}
+
+		// 设置默认Top值
+		if req.Top <= 0 {
+			req.Top = 10 // 默认返回前10名
 		}
 
 		// 范围上限：非公司管理员一律限定在“本组”

@@ -11,7 +11,6 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account"
 	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account_history"
-	"github.com/xinliangnote/go-gin-api/internal/repository/mysql/account_org_relation"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -42,7 +41,7 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 
 	// 准备更新数据
 	updateFields := make(map[string]interface{})
-	updateFields["updated_at"] = uint64(time.Now().Unix())
+	updateFields["updated_at"] = time.Now() // 使用 time.Time 类型，不是 Unix 时间戳
 	updateFields["updated_user"] = ctx.SessionUserInfo().UserName
 
 	// 记录变更内容用于历史记录
@@ -81,54 +80,8 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 		}
 	}
 
-	// 更新组织信息
-	if updateData.BelongGroup != nil {
-		updateFields["belong_group_id"] = updateData.BelongGroup.ID
-
-		// 更新账户-组关联：先删除原 belong 关联，再插入新的
-		qbRel := account_org_relation.NewQueryBuilder()
-		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
-		qbRel.WhereRelationType(mysql.EqualPredicate, "belong")
-		_ = qbRel.Delete(s.db.GetDbW())
-
-		rel := &account_org_relation.AccountOrgRelation{
-			AccountId:    uint32(id),
-			OrgId:        uint32(updateData.BelongGroup.ID),
-			RelationType: "belong",
-			Status:       "active",
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-			CreatedUser:  ctx.SessionUserInfo().UserName,
-			UpdatedUser:  ctx.SessionUserInfo().UserName,
-		}
-		if _, err := rel.Create(s.db.GetDbW()); err != nil {
-			ctx.Logger().Error("更新账户-组关联失败", zap.Error(err))
-		}
-	}
-
-	if updateData.BelongTeam != nil {
-		updateFields["belong_team_id"] = updateData.BelongTeam.ID
-
-		// 更新账户-团队关联：先删除原 belong 关联，再插入新的
-		qbRel := account_org_relation.NewQueryBuilder()
-		qbRel.WhereAccountId(mysql.EqualPredicate, uint64(id))
-		qbRel.WhereRelationType(mysql.EqualPredicate, "belong")
-		_ = qbRel.Delete(s.db.GetDbW())
-
-		rel := &account_org_relation.AccountOrgRelation{
-			AccountId:    uint32(id),
-			OrgId:        uint32(updateData.BelongTeam.ID),
-			RelationType: "belong",
-			Status:       "active",
-			CreatedAt:    time.Now(),
-			UpdatedAt:    time.Now(),
-			CreatedUser:  ctx.SessionUserInfo().UserName,
-			UpdatedUser:  ctx.SessionUserInfo().UserName,
-		}
-		if _, err := rel.Create(s.db.GetDbW()); err != nil {
-			ctx.Logger().Error("更新账户-团队关联失败", zap.Error(err))
-		}
-	}
+	// 注意：账户更新API不支持修改归属组和归属团队
+	// 这些敏感信息需要通过专门的组织管理流程来变更
 
 	// 在一个事务中执行：更新账户 + 写入历史
 	err = s.db.GetDbW().WithContext(ctx.RequestContext()).Transaction(func(tx *gorm.DB) error {
@@ -145,10 +98,11 @@ func (s *service) Update(ctx core.Context, accountId string, updateData *UpdateA
 			_ = accIdUint
 			hist := &account_history.AccountHistory{
 				AccountId:        uint64(id),
-				OperateType:      "modified",
+				OperateType:      "updated",
 				OperatedAt:       now,
 				Content:          string(contentBytes),
-				Operator:         ctx.SessionUserInfo().UserName,
+				OperatorUsername: ctx.SessionUserInfo().UserName,
+				OperatorName:     ctx.SessionUserInfo().UserName,
 				OperatorRoleType: scope.RoleType,
 				CreatedAt:        now,
 				UpdatedAt:        now,
@@ -217,7 +171,8 @@ func (s *service) Delete(ctx core.Context, accountId string) (err error) {
 		AccountId:        accountId,
 		OperateType:      "deleted",
 		Content:          `{"action": "deleted"}`,
-		Operator:         ctx.SessionUserInfo().UserName,
+		OperatorUsername: ctx.SessionUserInfo().UserName,
+		OperatorName:     ctx.SessionUserInfo().UserName,
 		OperatorRoleType: "admin", // 暂时硬编码
 	}
 

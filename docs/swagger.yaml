@@ -219,6 +219,162 @@ definitions:
       success:
         type: boolean
     type: object
+  # 新增：日志相关的数据模型
+  logs.logEntry:
+    properties:
+      raw:
+        description: 原始日志内容
+        type: string
+      message:
+        description: 日志消息
+        type: string
+      type:
+        description: 日志类型 (http, mysql, redis, system)
+        type: string
+      success:
+        description: 是否成功
+        type: boolean
+      timestamp:
+        description: 时间戳
+        type: string
+      details:
+        description: 详细信息
+        type: object
+      method:
+        description: HTTP方法
+        type: string
+      path:
+        description: 请求路径
+        type: string
+      status_code:
+        description: HTTP状态码
+        type: integer
+      duration:
+        description: 执行时长(ms)
+        type: number
+      trace_id:
+        description: 追踪ID
+        type: string
+      operation:
+        description: 操作类型
+        type: string
+      service:
+        description: 服务名称
+        type: string
+    type: object
+  logs.logStats:
+    properties:
+      total:
+        description: 总日志数
+        type: integer
+      http:
+        description: HTTP日志数
+        type: integer
+      mysql:
+        description: MySQL日志数
+        type: integer
+      redis:
+        description: Redis日志数
+        type: integer
+      system:
+        description: 系统日志数
+        type: integer
+      with_sql:
+        description: 包含SQL的日志数
+        type: integer
+      with_redis:
+        description: 包含Redis的日志数
+        type: integer
+    type: object
+  logs.paginatedLogsResponse:
+    properties:
+      logs:
+        description: 日志列表
+        items:
+          $ref: '#/definitions/logs.logEntry'
+        type: array
+      stats:
+        $ref: '#/definitions/logs.logStats'
+      pagination:
+        properties:
+          current_page:
+            description: 当前页码
+            type: integer
+          page_size:
+            description: 每页数量
+            type: integer
+          total_lines:
+            description: 总行数
+            type: integer
+          total_pages:
+            description: 总页数
+            type: integer
+          has_more:
+            description: 是否有更多页
+            type: boolean
+          next_page:
+            description: 下一页页码
+            type: integer
+          previous_page:
+            description: 上一页页码
+            type: integer
+        type: object
+      timestamp:
+        description: 响应时间戳
+        type: string
+    type: object
+  logs.traceLogsResponse:
+    properties:
+      success:
+        description: 是否成功
+        type: boolean
+      data:
+        properties:
+          trace_id:
+            description: 追踪ID
+            type: string
+          logs:
+            description: 日志列表
+            items:
+              $ref: '#/definitions/logs.logEntry'
+            type: array
+          count:
+            description: 日志数量
+            type: integer
+          timestamp:
+            description: 响应时间戳
+            type: string
+        type: object
+    type: object
+  logs.traceLogsByTimeRangeResponse:
+    properties:
+      success:
+        description: 是否成功
+        type: boolean
+      data:
+        properties:
+          trace_id:
+            description: 追踪ID
+            type: string
+          start_time:
+            description: 开始时间
+            type: string
+          end_time:
+            description: 结束时间
+            type: string
+          logs:
+            description: 日志列表
+            items:
+              $ref: '#/definitions/logs.logEntry'
+            type: array
+          count:
+            description: 日志数量
+            type: integer
+          timestamp:
+            description: 响应时间戳
+            type: string
+        type: object
+    type: object
   analytics.accountRankingsResponse:
     properties:
       data:
@@ -1365,9 +1521,171 @@ paths:
       summary: 获取当前用户信息
       tags:
       - CoreAuth
+  # 新增：日志相关的API接口
+  /api/v1/logs/latest:
+    get:
+      description: 获取最近的日志记录
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              file:
+                description: 日志文件路径
+                type: string
+              count:
+                description: 日志数量
+                type: integer
+              lines:
+                description: 日志行内容
+                items:
+                  type: string
+                type: array
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取最近日志
+      tags:
+      - Logs
+  /api/v1/logs/unified:
+    get:
+      description: 获取统一的日志数据，包含统计信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              success:
+                type: boolean
+              data:
+                properties:
+                  logs:
+                    description: 日志列表
+                    items:
+                      $ref: '#/definitions/logs.logEntry'
+                    type: array
+                  stats:
+                    $ref: '#/definitions/logs.logStats'
+                  timestamp:
+                    description: 响应时间戳
+                    type: string
+                type: object
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取统一日志数据
+      tags:
+      - Logs
+  /api/v1/logs/paginated:
+    get:
+      description: 分页获取日志数据，支持按类型筛选
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+        default: 1
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+        default: 10
+      - description: 日志类型筛选
+        in: query
+        name: type
+        type: string
+        enum: [all, http, mysql, redis, system]
+        default: all
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/logs.paginatedLogsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 分页获取日志
+      tags:
+      - Logs
+  /api/v1/logs/trace:
+    get:
+      description: 根据Trace-ID获取全链路日志，用于追踪请求的完整执行过程
+      parameters:
+      - description: 追踪ID，用于关联同一请求的所有日志
+        in: query
+        name: trace_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/logs.traceLogsResponse'
+        "400":
+          description: Bad Request - 缺少trace_id参数
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 获取全链路日志
+      tags:
+      - Logs
+  /api/v1/logs/trace/range:
+    get:
+      description: 根据时间范围和Trace-ID获取日志，支持按时间段筛选全链路日志
+      parameters:
+      - description: 追踪ID，用于关联同一请求的所有日志
+        in: query
+        name: trace_id
+        required: true
+        type: string
+      - description: 开始时间 (格式: YYYY-MM-DD HH:MM:SS)
+        in: query
+        name: start_time
+        type: string
+      - description: 结束时间 (格式: YYYY-MM-DD HH:MM:SS)
+        in: query
+        name: end_time
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/logs.traceLogsByTimeRangeResponse'
+        "400":
+          description: Bad Request - 缺少trace_id参数
+          schema:
+            $ref: '#/definitions/code.Failure'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/code.Failure'
+      summary: 按时间范围获取全链路日志
+      tags:
+      - Logs
 securityDefinitions:
   LoginToken:
     in: header
     name: token
     type: apiKey
+tags:
+  - name: Logs
+    description: 日志管理相关接口，包括日志查询、全链路追踪等功能
 swagger: "2.0"

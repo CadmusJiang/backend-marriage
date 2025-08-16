@@ -34,9 +34,9 @@ type teamsTrendsResponse struct {
 // @Tags Analytics
 // @Accept application/x-www-form-urlencoded
 // @Produce json
-// @Param metric query string false "指标" Enums(paid_count, lead_count) default(paid_count)
-// @Param time query string false "时间范围" Enums(today, week, last7days, month) default(month)
-// @Param top query int false "返回前N条折线"
+// @Param metric query string false "指标" Enums(paid_count, lead_count) default(paid_count) "paid_count: 开单数, lead_count: 留资数"
+// @Param time query string false "时间范围" Enums(today, week, last7days, month) default(month) "today: 今天, week: 本周, last7days: 最近7天, month: 本月"
+// @Param top query int false "返回前N条折线" default(10) "限制返回结果数量，默认10"
 // @Success 200 {object} teamsTrendsResponse
 // @Failure 400 {object} code.Failure
 // @Router /api/v1/analytics/teams/trends [get]
@@ -52,6 +52,25 @@ func (h *handler) GetTeamsTrends() core.HandlerFunc {
 		}
 		if req.TimeRange == "" {
 			req.TimeRange = "month"
+		}
+
+		// 设置默认Top值
+		if req.Top <= 0 {
+			req.Top = 10 // 默认返回前10名
+		}
+
+		// 验证指标类型
+		validMetrics := map[string]bool{"paid_count": true, "lead_count": true}
+		if !validMetrics[req.Metric] {
+			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, "invalid metric, must be one of: paid_count, lead_count"))
+			return
+		}
+
+		// 验证时间范围
+		validTimeRanges := map[string]bool{"today": true, "week": true, "last7days": true, "month": true}
+		if !validTimeRanges[req.TimeRange] {
+			c.AbortWithError(core.Error(http.StatusBadRequest, code.ParamBindError, "invalid time range, must be one of: today, week, last7days, month"))
+			return
 		}
 
 		start, end := resolveTimeRange(req.TimeRange)

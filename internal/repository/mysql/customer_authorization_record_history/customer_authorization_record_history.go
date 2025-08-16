@@ -12,7 +12,7 @@ type CustomerAuthorizationRecordHistory struct {
 	Id                            int32       `db:"id"`                               // 主键
 	HistoryId                     string      `db:"history_id"`                       // 历史记录ID
 	CustomerAuthorizationRecordId string      `db:"customer_authorization_record_id"` // 客户授权记录ID
-	OperateType                   string      `db:"operate_type"`                     // 操作类型: created, modified, deleted
+	OperateType                   string      `db:"operate_type"`                     // 操作类型: created, updated, deleted
 	OperatedAt                    time.Time   `db:"operated_at"`                      // 操作时间
 	Content                       *JSONString `db:"content"`                          // 操作内容
 	OperatorUsername              string      `db:"operator_username"`                // 操作人用户名

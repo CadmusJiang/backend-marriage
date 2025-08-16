@@ -2,7 +2,6 @@ package organization
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
@@ -22,16 +21,6 @@ func (h *handler) GetOrgInfoDetail() core.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.ParseUint(orgID, 10, 32)
-		if err != nil {
-			c.AbortWithError(core.Error(
-				http.StatusBadRequest,
-				code.ParamBindError,
-				"组织ID格式错误").WithError(err),
-			)
-			return
-		}
-
 		// 根据组织类型调用不同的service方法
 		params := c.RequestInputParams()
 		orgType := params.Get("orgType")
@@ -39,9 +28,9 @@ func (h *handler) GetOrgInfoDetail() core.HandlerFunc {
 		var serviceErr error
 
 		if orgType == "team" {
-			orgInfo, serviceErr = h.orgService.GetTeam(h.createContext(c), uint32(id))
+			orgInfo, serviceErr = h.orgService.GetTeam(h.createContext(c), orgID)
 		} else {
-			orgInfo, serviceErr = h.orgService.GetGroup(h.createContext(c), uint32(id))
+			orgInfo, serviceErr = h.orgService.GetGroup(h.createContext(c), orgID)
 		}
 
 		if serviceErr != nil {
@@ -73,18 +62,8 @@ func (h *handler) GetTeam() core.HandlerFunc {
 			return
 		}
 
-		id, err := strconv.ParseUint(teamID, 10, 32)
-		if err != nil {
-			c.AbortWithError(core.Error(
-				http.StatusBadRequest,
-				code.ParamBindError,
-				"团队ID格式错误").WithError(err),
-			)
-			return
-		}
-
 		// 调用service层
-		teamInfo, err := h.orgService.GetTeam(h.createContext(c), uint32(id))
+		teamInfo, err := h.orgService.GetTeam(h.createContext(c), teamID)
 		if err != nil {
 			h.logger.Error("获取团队详情失败", zap.Error(err))
 			c.AbortWithError(core.Error(

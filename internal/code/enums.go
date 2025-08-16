@@ -39,9 +39,9 @@ const (
 
 // 操作类型枚举
 const (
-	OperateTypeCreated  = "created"  // 创建
-	OperateTypeModified = "modified" // 修改
-	OperateTypeDeleted  = "deleted"  // 删除
+	OperateTypeCreated = "created" // 创建
+	OperateTypeUpdated = "updated" // 修改
+	OperateTypeDeleted = "deleted" // 删除
 )
 
 // 发布状态枚举

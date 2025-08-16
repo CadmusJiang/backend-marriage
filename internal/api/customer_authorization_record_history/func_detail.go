@@ -139,7 +139,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 					},
 				},
 				OperatorUsername: "admin",
-				OperatorName: "系统管理员",
+				OperatorName:     "系统管理员",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705123200, 0).Format("2006-01-02T15:04:05Z"),
@@ -148,7 +148,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 				Key:                           2,
 				HistoryId:                     "hist_car_002",
 				CustomerAuthorizationRecordId: "1",
-				OperateType:                   "modified",
+				OperateType:                   "updated",
 				OperatedAt:                    1705209600,
 				Content: map[string]interface{}{
 					"isAuthorized": map[string]interface{}{
@@ -165,7 +165,7 @@ func (h *handler) GetCustomerAuthorizationRecordHistoryDetail() core.HandlerFunc
 					},
 				},
 				OperatorUsername: "zhangwei",
-				OperatorName: "张伟",
+				OperatorName:     "张伟",
 				OperatorRoleType: "company_manager",
 				CreatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),
 				UpdatedAt:        time.Unix(1705209600, 0).Format("2006-01-02T15:04:05Z"),

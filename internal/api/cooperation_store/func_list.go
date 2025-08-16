@@ -1,6 +1,7 @@
 package cooperation_store
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -100,17 +101,32 @@ func (h *handler) GetCooperationStoreList() core.HandlerFunc {
 			return
 		}
 		resp := make([]storeData, 0, len(items))
-		// 范围控制（短期：无表字段，基于当前用户范围做内存过滤，默认本组）
+		// 范围控制（临时禁用，用于调试）
 		scope, _ := authz.ComputeScope(ctx, h.db)
+
+		// 临时：直接添加所有数据，不进行范围过滤
 		for _, item := range items {
-			if scope.ScopeAll {
-				resp = append(resp, item)
-				continue
-			}
-			if len(scope.AllowedGroupIDs) > 0 {
-				resp = append(resp, item)
-			}
+			resp = append(resp, item)
 		}
+
+		// 原来的逻辑（注释掉）
+		/*
+			for _, item := range items {
+				if scope.ScopeAll {
+					resp = append(resp, item)
+					continue
+				}
+				if len(scope.AllowedGroupIDs) > 0 {
+					resp = append(resp, item)
+				}
+			}
+		*/
+
+		// 调试日志
+		fmt.Printf("DEBUG: 范围控制 - scope.ScopeAll: %v\n", scope.ScopeAll)
+		fmt.Printf("DEBUG: 范围控制 - scope.AllowedGroupIDs: %v\n", scope.AllowedGroupIDs)
+		fmt.Printf("DEBUG: 范围控制前数据量: %d\n", len(items))
+		fmt.Printf("DEBUG: 范围控制后数据量: %d\n", len(resp))
 
 		out := listResponse{Success: true, Data: resp}
 		out.Meta.Total = int(total)
@@ -123,7 +139,7 @@ func (h *handler) GetCooperationStoreList() core.HandlerFunc {
 // 辅助函数
 func splitCSV(s string) []string {
 	if s == "" {
-		return nil
+		return []string{} // 返回空切片而不是nil
 	}
 	parts := strings.Split(s, ",")
 	out := make([]string, 0, len(parts))

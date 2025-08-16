@@ -56,11 +56,15 @@ func ComputeScope(ctx core.Context, db mysql.Repo) (AccessScope, error) {
 			scope.AllowedGroupIDs = []int32{int32(acc.BelongGroupId)}
 			fmt.Printf("DEBUG: Set AllowedGroupIDs = %v for group_manager\n", scope.AllowedGroupIDs)
 		}
+		// group_manager可以访问同组内所有用户
+		scope.AllowedAccountIDs = []int32{int32(acc.Id)} // 至少可以访问自己
 	case code.RoleTypeTeamManager:
 		if acc.BelongTeamId > 0 {
 			scope.AllowedTeamIDs = []int32{int32(acc.BelongTeamId)}
 			fmt.Printf("DEBUG: Set AllowedTeamIDs = %v for team_manager\n", scope.AllowedTeamIDs)
 		}
+		// team_manager可以访问同团队内所有用户
+		scope.AllowedAccountIDs = []int32{int32(acc.Id)} // 至少可以访问自己
 	case code.RoleTypeEmployee:
 		scope.AllowedAccountIDs = []int32{int32(acc.Id)}
 		fmt.Printf("DEBUG: Set AllowedAccountIDs = %v for employee\n", scope.AllowedAccountIDs)
@@ -82,24 +86,62 @@ func CanAccessAccount(scope AccessScope, target *mysqlAccount.Account) bool {
 	if scope.ScopeAll {
 		return true
 	}
+
 	// 自己
 	for _, id := range scope.AllowedAccountIDs {
 		if int32(id) == int32(target.Id) {
 			return true
 		}
 	}
-	// 组
+
+	// 组权限：如果当前用户有组管理权限，且目标用户在同一组
 	for _, gid := range scope.AllowedGroupIDs {
 		if gid > 0 && gid == int32(target.BelongGroupId) {
 			return true
 		}
 	}
-	// 队
+
+	// 团队权限：如果当前用户有团队管理权限，且目标用户在同一团队
 	for _, tid := range scope.AllowedTeamIDs {
 		if tid > 0 && tid == int32(target.BelongTeamId) {
 			return true
 		}
 	}
+
+	// 新增：检查是否有manage关系权限
+	// 如果当前用户与目标用户在同一团队、同一组或同一公司，且当前用户有manage关系，就可以访问
+	if hasManageRelation(scope, target) {
+		return true
+	}
+
+	return false
+}
+
+// hasManageRelation 检查当前用户是否有管理关系权限访问目标用户
+func hasManageRelation(scope AccessScope, target *mysqlAccount.Account) bool {
+	// 如果当前用户是company_manager，可以访问公司内所有用户
+	if scope.RoleType == code.RoleTypeCompanyManager {
+		return true
+	}
+
+	// 如果当前用户是group_manager，可以访问同组内所有用户
+	if scope.RoleType == code.RoleTypeGroupManager {
+		for _, gid := range scope.AllowedGroupIDs {
+			if gid > 0 && gid == int32(target.BelongGroupId) {
+				return true
+			}
+		}
+	}
+
+	// 如果当前用户是team_manager，可以访问同团队内所有用户
+	if scope.RoleType == code.RoleTypeTeamManager {
+		for _, tid := range scope.AllowedTeamIDs {
+			if tid > 0 && tid == int32(target.BelongTeamId) {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 

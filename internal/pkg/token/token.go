@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
 )
 
@@ -40,9 +39,9 @@ func GenerateSecureSessionToken(userID int32) (string, error) {
 		return "", fmt.Errorf("加密token失败: %v", err)
 	}
 
-	// Base64编码，确保URL安全
+	// Base64编码，确保URL安全，不去掉填充字符
 	token := base64.URLEncoding.EncodeToString(encryptedToken)
-	return strings.TrimRight(token, "="), nil
+	return token, nil
 }
 
 // DecryptTokenFromString 从字符串解密token数据

@@ -4,8 +4,10 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
+	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -24,6 +26,9 @@ type LogEntry struct {
 	StatusCode int     `json:"statusCode,omitempty"`
 	Duration   float64 `json:"duration,omitempty"`
 	TraceID    string  `json:"traceId,omitempty"`
+	// 新增字段用于业务日志
+	Operation string `json:"operation,omitempty"`
+	Service   string `json:"service,omitempty"`
 }
 
 type LogStats struct {
@@ -91,6 +96,130 @@ func (s *LogService) GetUnifiedLogs(filePath string, maxBytes int64) ([]LogEntry
 	}
 
 	return logs, stats, nil
+}
+
+// GetTraceLogs 获取指定Trace-ID的全链路日志
+func (s *LogService) GetTraceLogs(filePath string, traceID string, maxBytes int64) ([]LogEntry, error) {
+	// 对于Trace日志查询，读取整个文件以确保能找到所有相关日志
+	lines, err := s.readAllLines(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var traceLogs []LogEntry
+	traceIDLower := strings.ToLower(traceID)
+
+	// 调试信息
+	totalLines := len(lines)
+	matchedLines := 0
+	parsedLines := 0
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		// 检查是否包含指定的Trace-ID（多种格式）
+		lineLower := strings.ToLower(line)
+		containsTraceID := false
+
+		// 检查直接包含的trace_id字段
+		if strings.Contains(lineLower, `"trace_id":"`+traceIDLower+`"`) {
+			containsTraceID = true
+		}
+
+		// 检查查询参数中的trace_id
+		if strings.Contains(lineLower, `trace_id=`+traceIDLower) {
+			containsTraceID = true
+		}
+
+		// 检查URL编码的trace_id
+		if strings.Contains(lineLower, `trace_id%3d`+traceIDLower) {
+			containsTraceID = true
+		}
+
+		if containsTraceID {
+			matchedLines++
+			logEntry := s.parseLogLine(line)
+
+			// 检查解析是否成功
+			if logEntry.Timestamp != "" || logEntry.Message != "" || logEntry.Type != "" {
+				parsedLines++
+				logEntry.TraceID = traceID // 确保TraceID字段被设置
+				traceLogs = append(traceLogs, logEntry)
+			}
+		}
+	}
+
+	// 使用日志记录器输出调试信息
+	log.Printf("DEBUG: 总行数=%d, 匹配行数=%d, 解析成功行数=%d, 最终返回行数=%d",
+		totalLines, matchedLines, parsedLines, len(traceLogs))
+
+	// 按时间戳排序，确保日志按时间顺序显示
+	sort.Slice(traceLogs, func(i, j int) bool {
+		return traceLogs[i].Timestamp < traceLogs[j].Timestamp
+	})
+
+	return traceLogs, nil
+}
+
+// GetTraceLogsByTimeRange 根据时间范围获取指定Trace-ID的日志
+func (s *LogService) GetTraceLogsByTimeRange(filePath string, traceID string, startTime, endTime time.Time, maxBytes int64) ([]LogEntry, error) {
+	// 对于Trace日志查询，读取整个文件以确保能找到所有相关日志
+	lines, err := s.readAllLines(filePath)
+	if err != nil {
+		return nil, err
+	}
+
+	var traceLogs []LogEntry
+	traceIDLower := strings.ToLower(traceID)
+
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+
+		// 检查是否包含指定的Trace-ID（多种格式）
+		lineLower := strings.ToLower(line)
+		containsTraceID := false
+
+		// 检查直接包含的trace_id字段
+		if strings.Contains(lineLower, `"trace_id":"`+traceIDLower+`"`) {
+			containsTraceID = true
+		}
+
+		// 检查查询参数中的trace_id
+		if strings.Contains(lineLower, `trace_id=`+traceIDLower) {
+			containsTraceID = true
+		}
+
+		// 检查URL编码的trace_id
+		if strings.Contains(lineLower, `trace_id%3d`+traceIDLower) {
+			containsTraceID = true
+		}
+
+		if containsTraceID {
+			logEntry := s.parseLogLine(line)
+
+			// 解析时间戳并检查是否在指定范围内
+			if logEntry.Timestamp != "" {
+				if logTime, err := time.Parse("2006-01-02 15:04:05", logEntry.Timestamp); err == nil {
+					if (logTime.After(startTime) || logTime.Equal(startTime)) &&
+						(logTime.Before(endTime) || logTime.Equal(endTime)) {
+						logEntry.TraceID = traceID
+						traceLogs = append(traceLogs, logEntry)
+					}
+				}
+			}
+		}
+	}
+
+	// 按时间戳排序
+	sort.Slice(traceLogs, func(i, j int) bool {
+		return traceLogs[i].Timestamp < traceLogs[j].Timestamp
+	})
+
+	return traceLogs, nil
 }
 
 // 新增：获取分页日志数据
@@ -271,6 +400,30 @@ func (s *LogService) readLinesByRange(filePath string, startLine, endLine int64)
 	return lines, nil
 }
 
+// readAllLines 读取整个文件的所有行（用于Trace日志查询）
+func (s *LogService) readAllLines(filePath string) ([]string, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	data, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	content := string(data)
+	lines := strings.Split(content, "\n")
+
+	// 移除最后的空行
+	if len(lines) > 0 && lines[len(lines)-1] == "" {
+		lines = lines[:len(lines)-1]
+	}
+
+	return lines, nil
+}
+
 // readLastNLines 读取文件的最后N行
 func (s *LogService) readLastNLines(filePath string, maxBytes int64, n int) ([]string, error) {
 	f, err := os.Open(filePath)
@@ -404,6 +557,11 @@ func (s *LogService) parseJSONLog(line string, logEntry *LogEntry) bool {
 		return false
 	}
 
+	// 提取trace_id字段（优先）
+	if traceID, ok := jsonData["trace_id"].(string); ok && traceID != "" {
+		logEntry.TraceID = traceID
+	}
+
 	// 检查是否是trace-log格式
 	if msg, ok := jsonData["msg"].(string); ok && msg == "trace-log" {
 		logEntry.Type = "http"
@@ -418,43 +576,87 @@ func (s *LogService) parseJSONLog(line string, logEntry *LogEntry) bool {
 		}
 		if httpCode, ok := jsonData["http_code"].(float64); ok {
 			logEntry.StatusCode = int(httpCode)
-			logEntry.Success = httpCode == 200
+			logEntry.Success = httpCode >= 200 && httpCode < 400
 		}
 		if costSeconds, ok := jsonData["cost_seconds"].(float64); ok {
-			logEntry.Duration = costSeconds
-		}
-		if traceID, ok := jsonData["trace_id"].(string); ok {
-			logEntry.TraceID = traceID
+			logEntry.Duration = costSeconds * 1000 // 转换为毫秒
 		}
 
-		// 如果根级别没有找到，尝试从trace_info中提取
-		if logEntry.Method == "" {
-			if traceInfo, ok := jsonData["trace_info"].(map[string]interface{}); ok {
-				if request, ok := traceInfo["request"].(map[string]interface{}); ok {
-					if method, ok := request["method"].(string); ok {
-						logEntry.Method = method
-					}
-					if path, ok := request["decoded_url"].(string); ok {
-						logEntry.Path = path
-					}
-				}
-				if response, ok := traceInfo["response"].(map[string]interface{}); ok {
-					if httpCode, ok := response["http_code"].(float64); ok {
-						logEntry.StatusCode = int(httpCode)
-						logEntry.Success = httpCode == 200
-					}
-					if costSeconds, ok := response["cost_seconds"].(float64); ok {
-						logEntry.Duration = costSeconds
-					}
-				}
-				if traceID, ok := traceInfo["trace_id"].(string); ok {
-					logEntry.TraceID = traceID
-				}
+		// 检查是否包含SQL或Redis信息
+		if sqls, ok := jsonData["sqls"]; ok && sqls != nil {
+			if sqlArray, ok := sqls.([]interface{}); ok && len(sqlArray) > 0 {
+				logEntry.Type = "mysql"
+				logEntry.Message = "MySQL操作日志"
+			}
+		}
+		if redis, ok := jsonData["redis"]; ok && redis != nil {
+			if redisArray, ok := redis.([]interface{}); ok && len(redisArray) > 0 {
+				logEntry.Type = "redis"
+				logEntry.Message = "Redis操作日志"
 			}
 		}
 
-		// 保存原始数据
-		logEntry.Details["原始数据"] = jsonData
+		// 检查是否包含operation和service字段
+		if operation, ok := jsonData["operation"].(string); ok {
+			logEntry.Operation = operation
+		}
+		if service, ok := jsonData["service"].(string); ok {
+			logEntry.Service = service
+		}
+
+		return true
+	}
+
+	// 检查是否是HTTP请求日志（通过trace_middleware生成）
+	if caller, ok := jsonData["caller"].(string); ok && strings.Contains(caller, "trace_middleware") {
+		logEntry.Type = "http"
+		if msg, ok := jsonData["msg"].(string); ok {
+			logEntry.Message = msg
+		}
+
+		// 提取HTTP相关信息
+		if method, ok := jsonData["method"].(string); ok {
+			logEntry.Method = method
+		}
+		if path, ok := jsonData["path"].(string); ok {
+			logEntry.Path = path
+		}
+		if statusCode, ok := jsonData["status_code"].(float64); ok {
+			logEntry.StatusCode = int(statusCode)
+			logEntry.Success = statusCode >= 200 && statusCode < 400
+		}
+		if responseSizeKB, ok := jsonData["response_size_kb"].(float64); ok {
+			logEntry.Duration = responseSizeKB // 这里存储的是响应大小KB
+		}
+
+		// 检查是否包含operation和service字段
+		if operation, ok := jsonData["operation"].(string); ok {
+			logEntry.Operation = operation
+		}
+		if service, ok := jsonData["service"].(string); ok {
+			logEntry.Service = service
+		}
+
+		return true
+	}
+
+	// 检查是否是其他类型的日志
+	if level, ok := jsonData["level"].(string); ok {
+		logEntry.Type = "system"
+		logEntry.Message = level + " level log"
+
+		// 提取时间戳
+		if timeStr, ok := jsonData["time"].(string); ok {
+			logEntry.Timestamp = timeStr
+		}
+
+		// 检查是否包含operation和service字段
+		if operation, ok := jsonData["operation"].(string); ok {
+			logEntry.Operation = operation
+		}
+		if service, ok := jsonData["service"].(string); ok {
+			logEntry.Service = service
+		}
 
 		return true
 	}

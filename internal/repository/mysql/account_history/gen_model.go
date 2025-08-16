@@ -10,11 +10,12 @@ type AccountHistory struct {
 
 	// 基本信息
 	AccountId        uint64    `gorm:"column:account_id;not null"`        // 账户ID
-	OperateType      string    `gorm:"column:operate_type;size:20"`       // 操作类型: created, modified
+	OperateType      string    `gorm:"column:operate_type;size:20"`       // 操作类型: created, updated
 	OperatedAt       time.Time `gorm:"column:operated_at;not null"`       // 操作时间
 	Content          string    `gorm:"column:content;type:json"`          // 操作内容 (JSON格式)
-	Operator         string    `gorm:"column:operator;size:60"`           // 操作人
-	OperatorRoleType string    `gorm:"column:operator_role_type;size:20"` // 操作人角色
+	OperatorUsername string    `gorm:"column:operator_username;size:32"`  // 操作人用户名
+	OperatorName     string    `gorm:"column:operator_name;size:60"`      // 操作人姓名
+	OperatorRoleType string    `gorm:"column:operator_role_type;size:20"` // 操作人角色类型
 
 	// 审计字段
 	CreatedAt   time.Time `gorm:"column:created_at;not null"`  // 创建时间

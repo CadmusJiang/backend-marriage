@@ -44,7 +44,12 @@ func setApiRouter(r *resource) {
 			authAPI.POST("/login", accountHandler.Login())
 		}
 
-		// helper 接口已删除
+		// 日志相关接口 - 无需认证
+		apiV1.GET("/logs/latest", logsHandler.GetLatestLogs())
+		apiV1.GET("/logs/unified", logsHandler.GetUnifiedLogs())
+		apiV1.GET("/logs/paginated", logsHandler.GetPaginatedLogs())
+		apiV1.GET("/logs/trace", logsHandler.GetTraceLogs())
+		apiV1.GET("/logs/trace/range", logsHandler.GetTraceLogsByTimeRange())
 	}
 
 	// 需要签名验证、登录验证、RBAC 权限验证
@@ -65,8 +70,8 @@ func setApiRouter(r *resource) {
 		api.GET("/v1/teams/:teamId/history", organizationHandler.GetTeamHistory())
 		api.GET("/v1/teams/:teamId/members", organizationHandler.ListTeamMembers())
 		api.POST("/v1/teams/:teamId/members", organizationHandler.AddTeamMember())
-		api.DELETE("/v1/teams/:teamId/members/:memberId", organizationHandler.RemoveTeamMember())
-		api.PUT("/v1/teams/:teamId/members/:memberId/role", organizationHandler.UpdateTeamMemberRole())
+		api.DELETE("/v1/teams/:teamId/members/:accountId", organizationHandler.RemoveTeamMember())
+		api.PATCH("/v1/teams/:teamId/members/:accountId", organizationHandler.UpdateTeamMember())
 		api.GET("/v1/unassigned-account", organizationHandler.ListUnassignedAccounts())
 
 		// Analytics
@@ -81,10 +86,10 @@ func setApiRouter(r *resource) {
 		api.POST("/v1/customer-authorization-records", customerAuthRecordHandler.CreateCustomerAuthorizationRecord())
 		api.GET("/v1/customer-authorization-records/check-phone", customerAuthRecordHandler.CheckPhoneExistence())
 		api.GET("/v1/customer-authorization-records/:id", customerAuthRecordHandler.GetCustomerAuthorizationRecordDetail())
-		api.PUT("/v1/customer-authorization-records/:id", customerAuthRecordHandler.UpdateCustomerAuthorizationRecord())
-		// Customer History
-		api.GET("/v1/customer-authorization-record-histories", customerAuthRecordHistoryHandler.GetCustomerAuthorizationRecordHistoryList())
-		api.GET("/v1/customer-authorization-record-histories/:historyId", customerAuthRecordHistoryHandler.GetCustomerAuthorizationRecordHistoryDetail())
+		api.PATCH("/v1/customer-authorization-records/:id", customerAuthRecordHandler.UpdateCustomerAuthorizationRecord())
+		api.PATCH("/v1/customer-authorization-records/:id/status", customerAuthRecordHandler.UpdateCustomerStatus())
+		api.PATCH("/v1/customer-authorization-records/:id/financial", customerAuthRecordHandler.UpdateCustomerFinancial())
+		api.GET("/v1/customer-authorization-records/:id/history", customerAuthRecordHistoryHandler.GetCustomerAuthorizationRecordHistoryList())
 
 		// CooperationStore
 		api.GET("/v1/cooperation-stores", cooperationStoreHandler.GetCooperationStoreList())
@@ -99,7 +104,7 @@ func setApiRouter(r *resource) {
 		api.GET("/v1/accounts/:accountId", accountHandler.GetAccountDetail())
 		api.PUT("/v1/accounts/:accountId", accountHandler.UpdateAccount())
 		api.PUT("/v1/accounts/:accountId/password", accountHandler.UpdateAccountPassword())
-		api.GET("/v1/account-histories", accountHandler.GetAccountHistories())
+		api.GET("/v1/accounts/:accountId/history", accountHandler.GetAccountHistories())
 
 		// Me (Account)
 		api.GET("/v1/me", accountHandler.Me())

@@ -333,46 +333,46 @@ func (qb *accountHistoryQueryBuilder) OrderByContent(asc bool) *accountHistoryQu
 	return qb
 }
 
-func (qb *accountHistoryQueryBuilder) WhereOperator(p mysql.Predicate, value string) *accountHistoryQueryBuilder {
+func (qb *accountHistoryQueryBuilder) WhereOperatorUsername(p mysql.Predicate, value string) *accountHistoryQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "operator", p),
+		fmt.Sprintf("%v %v ?", "operator_username", p),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountHistoryQueryBuilder) WhereOperatorIn(value []string) *accountHistoryQueryBuilder {
+func (qb *accountHistoryQueryBuilder) WhereOperatorUsernameIn(value []string) *accountHistoryQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "operator", "IN"),
+		fmt.Sprintf("%v %v ?", "operator_username", "IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountHistoryQueryBuilder) WhereOperatorNotIn(value []string) *accountHistoryQueryBuilder {
+func (qb *accountHistoryQueryBuilder) WhereOperatorUsernameNotIn(value []string) *accountHistoryQueryBuilder {
 	qb.where = append(qb.where, struct {
 		prefix string
 		value  interface{}
 	}{
-		fmt.Sprintf("%v %v ?", "operator", "NOT IN"),
+		fmt.Sprintf("%v %v ?", "operator_username", "NOT IN"),
 		value,
 	})
 	return qb
 }
 
-func (qb *accountHistoryQueryBuilder) OrderByOperator(asc bool) *accountHistoryQueryBuilder {
+func (qb *accountHistoryQueryBuilder) OrderByOperatorUsername(asc bool) *accountHistoryQueryBuilder {
 	order := "DESC"
 	if asc {
 		order = "ASC"
 	}
 
-	qb.order = append(qb.order, "operator "+order)
+	qb.order = append(qb.order, "operator_username "+order)
 	return qb
 }
 

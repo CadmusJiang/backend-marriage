@@ -1,7 +1,12 @@
 package account
 
 import (
+	"encoding/json"
 	"net/http"
+	"strconv"
+	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/code"
@@ -9,10 +14,9 @@ import (
 )
 
 type historiesRequest struct {
-	AccountID       string `form:"accountId"`       // 账户ID
-	AccountUsername string `form:"accountUsername"` // 账户用户名
-	Current         int    `form:"current"`         // 当前页码
-	PageSize        int    `form:"pageSize"`        // 每页数量
+	AccountID string `form:"accountId"` // 账户ID（从路径参数获取）
+	Current   int    `form:"current"`   // 当前页码
+	PageSize  int    `form:"pageSize"`  // 每页数量
 }
 
 type accountHistoryData struct {
@@ -40,19 +44,22 @@ type historiesResponse struct {
 // @Tags Account
 // @Accept application/x-www-form-urlencoded
 // @Produce json
-// @Param accountId query string false "账户ID"
-// @Param accountUsername query string false "账户用户名"
+// @Param accountId path string true "账户ID"
 // @Param current query int false "当前页码" default(1)
 // @Param pageSize query int false "每页数量" default(10)
 // @Success 200 {object} historiesResponse
 // @Failure 400 {object} code.Failure
-// @Router /api/v1/account-histories [get]
+// @Router /api/v1/accounts/{accountId}/history [get]
 func (h *handler) GetAccountHistories() core.HandlerFunc {
 	return func(c core.Context) {
 		req := new(historiesRequest)
 		res := new(historiesResponse)
 
-		if err := c.ShouldBindForm(req); err != nil {
+		// 从URL路径参数中获取accountId
+		req.AccountID = c.Param("accountId")
+
+		// 从查询参数中获取分页参数
+		if err := c.ShouldBindQuery(req); err != nil {
 			c.AbortWithError(core.Error(
 				http.StatusBadRequest,
 				code.ParamBindError,
@@ -96,384 +103,70 @@ func (h *handler) GetAccountHistories() core.HandlerFunc {
 			}
 		}
 
-		// Mock数据 - 与前端数据结构保持一致
-		mockHistories := []accountHistoryData{
-			// accountId=1 的历史记录
-			{
-				ID:          "101",
-				AccountID:   "1",
-				OperateType: "created",
-				OperatedAt:  1705123200, // 2024-01-13 10:00:00
-				Content: map[string]interface{}{
-					"username": map[string]string{
-						"old": "",
-						"new": "admin",
-					},
-					"name": map[string]string{
-						"old": "",
-						"new": "系统管理员",
-					},
-					"roleType": map[string]string{
-						"old": "",
-						"new": "company_manager",
-					},
-					"phone": map[string]string{
-						"old": "",
-						"new": "13800138000",
-					},
-					"status": map[string]string{
-						"old": "",
-						"new": "enabled",
-					},
-				},
-				OperatorUsername: "system",
-				OperatorName:     "系统",
-				OperatorRoleType: "system",
-			},
-			{
-				ID:          "102",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705209600, // 2024-01-14 10:00:00
-				Content: map[string]interface{}{
-					"phone": map[string]string{
-						"old": "13800138000",
-						"new": "13800138001",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "系统管理员",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "103",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705296000, // 2024-01-15 10:00:00
-				Content: map[string]interface{}{
-					"name": map[string]string{
-						"old": "系统管理员",
-						"new": "超级管理员",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "系统管理员",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "104",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705382400, // 2024-01-16 10:00:00
-				Content: map[string]interface{}{
-					"status": map[string]string{
-						"old": "enabled",
-						"new": "disabled",
-					},
-					"reason": map[string]string{
-						"old": "",
-						"new": "临时禁用账户",
-					},
-				},
-				OperatorUsername: "zhangwei",
-				OperatorName:     "张伟",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "105",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705468800, // 2024-01-17 10:00:00
-				Content: map[string]interface{}{
-					"status": map[string]string{
-						"old": "disabled",
-						"new": "enabled",
-					},
-					"reason": map[string]string{
-						"old": "临时禁用账户",
-						"new": "问题已解决，恢复账户",
-					},
-				},
-				OperatorUsername: "zhangwei",
-				OperatorName:     "张伟",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "106",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705555200, // 2024-01-18 10:00:00
-				Content: map[string]interface{}{
-					"password": map[string]string{
-						"old": "****",
-						"new": "******",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "超级管理员",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "107",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705641600, // 2024-01-19 10:00:00
-				Content: map[string]interface{}{
-					"name": map[string]string{
-						"old": "超级管理员",
-						"new": "系统管理员",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "超级管理员",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "108",
-				AccountID:   "1",
-				OperateType: "modified",
-				OperatedAt:  1705728000, // 2024-01-20 10:00:00
-				Content: map[string]interface{}{
-					"phone": map[string]string{
-						"old": "13800138001",
-						"new": "13800138000",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "系统管理员",
-				OperatorRoleType: "company_manager",
-			},
-			// accountId=6 的原有历史记录
-			{
-				ID:          "1",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1705923000, // 2024-01-22 14:30:00
-				Content: map[string]interface{}{
-					"roleType": map[string]string{
-						"old": "员工",
-						"new": "小队管理员",
-					},
-					"belongTeam": map[string]string{
-						"old": "无",
-						"new": "营销团队A",
-					},
-					"status": map[string]string{
-						"old": "enabled",
-						"new": "disabled",
-					},
-				},
-				OperatorUsername: "zhangwei",
-				OperatorName:     "张伟",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "2",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1705754700, // 2024-01-20 16:45:00
-				Content: map[string]interface{}{
-					"belongGroup": map[string]string{
-						"old": "南京-天元大厦组",
-						"new": "南京-南京南站组",
-					},
-					"belongTeam": map[string]string{
-						"old": "营销团队A",
-						"new": "营销团队C",
-					},
-				},
-				OperatorUsername: "liming",
-				OperatorName:     "李明",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "3",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1705565700, // 2024-01-18 09:15:00
-				Content: map[string]interface{}{
-					"status": map[string]string{
-						"old": "enabled",
-						"new": "disabled",
-					},
-				},
-				OperatorUsername: "wangfang",
-				OperatorName:     "王芳",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "4",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1705303200, // 2024-01-15 11:20:00
-				Content: map[string]interface{}{
-					"phone": map[string]string{
-						"old": "13800138000",
-						"new": "13900139000",
-					},
-					"belongTeam": map[string]string{
-						"old": "营销团队A",
-						"new": "营销团队B",
-					},
-				},
-				OperatorUsername: "liuqiang",
-				OperatorName:     "刘强",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "5",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1705032000, // 2024-01-12 10:00:00
-				Content: map[string]interface{}{
-					"name": map[string]string{
-						"old": "张三",
-						"new": "张明",
-					},
-					"roleType": map[string]string{
-						"old": "员工",
-						"new": "小队管理员",
-					},
-				},
-				OperatorUsername: "chenjing",
-				OperatorName:     "陈静",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "6",
-				AccountID:   "6",
-				OperateType: "created",
-				OperatedAt:  1704877800, // 2024-01-10 14:30:00
-				Content: map[string]interface{}{
-					"username": map[string]string{
-						"old": "",
-						"new": "employee001",
-					},
-					"name": map[string]string{
-						"old": "",
-						"new": "张三",
-					},
-					"roleType": map[string]string{
-						"old": "",
-						"new": "员工",
-					},
-					"phone": map[string]string{
-						"old": "",
-						"new": "13800138000",
-					},
-					"belongGroup": map[string]string{
-						"old": "",
-						"new": "南京-天元大厦组",
-					},
-					"belongTeam": map[string]string{
-						"old": "",
-						"new": "营销团队A",
-					},
-				},
-				OperatorUsername: "admin",
-				OperatorName:     "系统管理员",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "7",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1704709200, // 2024-01-08 16:20:00
-				Content: map[string]interface{}{
-					"belongGroup": map[string]string{
-						"old": "南京-天元大厦组",
-						"new": "南京-夫子庙组",
-					},
-					"belongTeam": map[string]string{
-						"old": "营销团队A",
-						"new": "营销团队D",
-					},
-				},
-				OperatorUsername: "zhaomin",
-				OperatorName:     "赵敏",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "8",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1704457500, // 2024-01-05 13:45:00
-				Content: map[string]interface{}{
-					"status": map[string]string{
-						"old": "disabled",
-						"new": "enabled",
-					},
-					"reason": map[string]string{
-						"old": "",
-						"new": "问题已解决，恢复账户",
-					},
-				},
-				OperatorUsername: "liming",
-				OperatorName:     "李明",
-				OperatorRoleType: "team_manager",
-			},
-			{
-				ID:          "9",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1704265800, // 2024-01-03 10:30:00
-				Content: map[string]interface{}{
-					"password": map[string]string{
-						"old": "****",
-						"new": "******",
-					},
-				},
-				OperatorUsername: "zhangwei",
-				OperatorName:     "张伟",
-				OperatorRoleType: "company_manager",
-			},
-			{
-				ID:          "10",
-				AccountID:   "6",
-				OperateType: "modified",
-				OperatedAt:  1704081600, // 2024-01-01 09:00:00
-				Content: map[string]interface{}{
-					"password": map[string]string{
-						"old": "****",
-						"new": "******",
-					},
-				},
-				OperatorUsername: "wangfang",
-				OperatorName:     "王芳",
-				OperatorRoleType: "team_manager",
-			},
+		// 从数据库查询历史记录
+		var histories []struct {
+			ID               uint32    `json:"id" gorm:"column:id"`
+			AccountID        uint32    `json:"account_id" gorm:"column:account_id"`
+			OperateType      string    `json:"operate_type" gorm:"column:operate_type"`
+			OperatedAt       time.Time `json:"operated_at" gorm:"column:operated_at"`
+			Content          []byte    `json:"content" gorm:"column:content;type:json"`
+			OperatorUsername string    `json:"operator_username" gorm:"column:operator_username"`
+			OperatorName     string    `json:"operator_name" gorm:"column:operator_name"`
+			OperatorRoleType string    `json:"operator_role_type" gorm:"column:operator_role_type"`
 		}
 
-		// 根据accountId过滤历史记录
-		filteredHistories := []accountHistoryData{}
-		for _, hist := range mockHistories {
-			if hist.AccountID == req.AccountID {
-				filteredHistories = append(filteredHistories, hist)
-			}
+		// 查询指定账户的历史记录
+		if err := h.db.GetDbR().Table("account_history").
+			Where("account_id = ?", req.AccountID).
+			Order("operated_at DESC").
+			Find(&histories).Error; err != nil {
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"查询历史记录失败").WithError(err),
+			)
+			return
 		}
 
-		// 根据accountUsername过滤操作人
-		if req.AccountUsername != "" {
-			var filtered []accountHistoryData
-			for _, hist := range filteredHistories {
-				if hist.OperatorName == req.AccountUsername {
-					filtered = append(filtered, hist)
+		// 转换为响应格式
+		var historyDataList []accountHistoryData
+		for _, hist := range histories {
+			// 解析JSON内容
+			var content map[string]interface{}
+			if len(hist.Content) > 0 {
+				if err := json.Unmarshal(hist.Content, &content); err != nil {
+					// 如果JSON解析失败，记录错误但继续处理
+					zap.L().Warn("JSON解析失败",
+						zap.Uint32("historyID", hist.ID),
+						zap.Error(err),
+						zap.String("rawContent", string(hist.Content)))
+					content = nil
 				}
 			}
-			filteredHistories = filtered
+
+			historyDataList = append(historyDataList, accountHistoryData{
+				ID:               strconv.FormatUint(uint64(hist.ID), 10),
+				AccountID:        strconv.FormatUint(uint64(hist.AccountID), 10),
+				OperateType:      hist.OperateType,
+				OperatedAt:       hist.OperatedAt.Unix(),
+				Content:          content,
+				OperatorUsername: hist.OperatorUsername,
+				OperatorName:     hist.OperatorName,
+				OperatorRoleType: hist.OperatorRoleType,
+			})
 		}
 
 		// 分页逻辑
-		total := len(filteredHistories)
+		total := len(historyDataList)
 		start := (req.Current - 1) * req.PageSize
 		end := start + req.PageSize
 
 		if start >= total {
 			res.Data = []accountHistoryData{}
 		} else if end > total {
-			res.Data = filteredHistories[start:total]
+			res.Data = historyDataList[start:total]
 		} else {
-			res.Data = filteredHistories[start:end]
+			res.Data = historyDataList[start:end]
 		}
 
 		res.Total = total

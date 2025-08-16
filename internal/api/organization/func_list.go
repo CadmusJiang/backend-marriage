@@ -108,7 +108,7 @@ func (h *handler) ListTeams() core.HandlerFunc {
 		var err error
 
 		// 直接调用service层，传递权限范围参数
-		teams, total, err = h.orgService.ListTeams(h.createContext(c), uint32(belongGroupID), current, pageSize, keyword, &effectiveScope)
+		teams, total, err = h.orgService.ListTeams(h.createContext(c), strconv.FormatUint(belongGroupID, 10), current, pageSize, keyword, &effectiveScope)
 
 		if err != nil {
 			h.logger.Error("获取团队列表失败", zap.Error(err))

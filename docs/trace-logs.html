@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全链路日志追踪器</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2em;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-group label {
+            font-weight: 500;
+            color: #495057;
+            min-width: 80px;
+        }
+        .control-group input, .control-group select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1e7e34;
+        }
+        .trace-info {
+            padding: 15px 20px;
+            background: #e3f2fd;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .trace-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .trace-label {
+            font-weight: 500;
+            color: #1976d2;
+        }
+        .trace-value {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid #bbdefb;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .logs-container {
+            padding: 20px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .log-entry-alt {
+            background: #f8f9fa;
+        }
+
+        .log-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .log-timestamp {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #6c757d;
+            background: #f8f9fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .log-method {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+        }
+
+        .method-get { background: #d4edda; color: #155724; }
+        .method-post { background: #cce5ff; color: #004085; }
+        .method-put { background: #fff3cd; color: #856404; }
+        .method-delete { background: #f8d7da; color: #721c24; }
+        .method-patch { background: #e2e3e5; color: #383d41; }
+
+        .log-path {
+            font-family: 'Courier New', monospace;
+            background: #e9ecef;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #495057;
+        }
+
+        .log-status {
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .status-success { background: #d4edda; color: #155724; }
+        .status-client-error { background: #f8d7da; color: #721c24; }
+        .status-server-error { background: #f8d7da; color: #721c24; }
+
+        .log-type {
+            background: #e2e3e5;
+            color: #383d41;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+        }
+
+        .log-message {
+            font-size: 1em;
+            color: #212529;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .log-duration {
+            font-size: 0.9em;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+
+        .log-operation, .log-service {
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .operation-tag {
+            background: #007bff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .service-tag {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .log-details, .log-raw {
+            margin-top: 12px;
+        }
+
+        .log-details summary, .log-raw summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 8px;
+        }
+
+        .log-details pre, .log-raw pre {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 4px;
+            padding: 12px;
+            overflow-x: auto;
+            font-size: 0.85em;
+            color: #495057;
+        }
+        .log-trace-id {
+            font-size: 0.8em;
+            color: #007bff;
+            font-family: monospace;
+            background: #e3f2fd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #f5c6cb;
+            margin: 20px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #c3e6cb;
+            margin: 20px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+        }
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #495057;
+        }
+        .empty-state p {
+            margin-bottom: 20px;
+        }
+        .help-text {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #ffeaa7;
+            margin: 20px;
+        }
+        .help-text h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .help-text ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .help-text li {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 全链路日志追踪器</h1>
+            <p>通过Trace-ID追踪HTTP请求的完整执行链路，包括SQL查询和Redis操作</p>
+        </div>
+
+        <div class="help-text">
+            <h4>📖 使用说明</h4>
+            <ul>
+                <li><strong>Trace-ID</strong>: 在请求头中添加 <code>X-Trace-ID</code> 或 <code>Trace-ID</code> 来标识请求</li>
+                <li><strong>自动生成</strong>: 如果没有提供Trace-ID，系统会自动生成一个</li>
+                <li><strong>全链路追踪</strong>: 系统会自动记录请求过程中的所有SQL查询和Redis操作</li>
+                <li><strong>响应头</strong>: 响应头中会包含 <code>X-Trace-ID</code> 字段</li>
+            </ul>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="traceId">Trace-ID:</label>
+                <input type="text" id="traceId" placeholder="输入Trace-ID或留空自动生成">
+            </div>
+            <div class="control-group">
+                <label for="startTime">开始时间:</label>
+                <input type="datetime-local" id="startTime">
+            </div>
+            <div class="control-group">
+                <label for="endTime">结束时间:</label>
+                <input type="datetime-local" id="endTime">
+            </div>
+            <button class="btn btn-primary" onclick="searchTraceLogs()">🔍 搜索日志</button>
+            <button class="btn btn-secondary" onclick="clearSearch()">🗑️ 清空</button>
+            <button class="btn btn-success" onclick="generateTestRequest()">🧪 生成测试请求</button>
+        </div>
+
+        <div id="traceInfo" class="trace-info" style="display: none;">
+            <div class="trace-item">
+                <span class="trace-label">Trace-ID:</span>
+                <span class="trace-value" id="currentTraceId"></span>
+            </div>
+            <div class="trace-item">
+                <span class="trace-label">日志数量:</span>
+                <span class="trace-value" id="logCount">0</span>
+            </div>
+            <div class="trace-item">
+                <span class="trace-label">时间范围:</span>
+                <span class="trace-value" id="timeRange">-</span>
+            </div>
+        </div>
+
+        <div id="logsContainer" class="logs-container">
+            <div class="empty-state">
+                <h3>🚀 开始追踪</h3>
+                <p>输入Trace-ID或生成测试请求来查看全链路日志</p>
+                <p><small>提示：您可以在任何API请求的响应头中找到X-Trace-ID</small></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设置默认时间范围（最近1小时）
+        function setDefaultTimeRange() {
+            const now = new Date();
+            const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+            
+            // 格式化为datetime-local输入框期望的格式 (YYYY-MM-DDTHH:MM)
+            document.getElementById('startTime').value = oneHourAgo.toISOString().slice(0, 16);
+            document.getElementById('endTime').value = now.toISOString().slice(0, 16);
+        }
+
+        // 页面加载时设置默认时间
+        window.onload = function() {
+            setDefaultTimeRange();
+        };
+
+        // 搜索Trace日志
+        function searchTraceLogs() {
+            const traceId = document.getElementById('traceId').value.trim();
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+
+            if (!traceId) {
+                showError('请输入Trace-ID');
+                return;
+            }
+
+            showLoading();
+            
+            let url = `/api/v1/logs/trace?trace_id=${encodeURIComponent(traceId)}`;
+            if (startTime && endTime) {
+                // 转换时间格式为后端期望的格式
+                const startTimeFormatted = new Date(startTime).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(/\//g, '-');
+                
+                const endTimeFormatted = new Date(endTime).toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                }).replace(/\//g, '-');
+                
+                url = `/api/v1/logs/trace/range?trace_id=${encodeURIComponent(traceId)}&start_time=${encodeURIComponent(startTimeFormatted)}&end_time=${encodeURIComponent(endTimeFormatted)}`;
+            }
+
+            console.log('查询URL:', url); // 调试信息
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('API响应:', data); // 调试信息
+                    if (data.success) {
+                        displayTraceLogs(data);
+                    } else {
+                        showError('获取日志失败: ' + (data.message || '未知错误'));
+                    }
+                })
+                .catch(error => {
+                    console.error('请求错误:', error); // 调试信息
+                    showError('请求失败: ' + error.message);
+                });
+        }
+
+        // 显示Trace日志
+        function displayTraceLogs(data) {
+            const container = document.getElementById('logsContainer');
+            const traceInfo = document.getElementById('traceInfo');
+            
+            // 获取当前搜索的Trace-ID
+            const currentTraceId = document.getElementById('traceId').value.trim();
+            
+            // 处理API返回的嵌套数据结构
+            let logs = [];
+            let traceId = currentTraceId;
+            let startTime = null;
+            let endTime = null;
+            
+            // 调试：打印数据结构
+            console.log('API响应数据结构:', data);
+            
+            if (data && data.data && data.data.data && data.data.data.logs) {
+                // 嵌套结构: data.data.data.logs
+                logs = data.data.data.logs;
+                traceId = data.data.data.trace_id || currentTraceId;
+                startTime = data.data.data.start_time;
+                endTime = data.data.data.end_time;
+            } else if (data && data.data && data.data.logs) {
+                // 直接结构: data.data.logs
+                logs = data.data.logs;
+                traceId = data.data.trace_id || currentTraceId;
+                startTime = data.data.start_time;
+                endTime = data.data.end_time;
+            } else if (data && data.logs) {
+                // 简单结构: data.logs
+                logs = data.logs;
+                traceId = data.trace_id || currentTraceId;
+                startTime = data.start_time;
+                endTime = data.end_time;
+            }
+            
+            console.log('解析后的数据:', { logs, traceId, startTime, endTime });
+            
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 未找到日志</h3>
+                        <p>未找到Trace-ID为 <strong>${currentTraceId}</strong> 的日志记录</p>
+                        <p><small>请检查Trace-ID是否正确，或尝试扩大时间范围</small></p>
+                    </div>
+                `;
+                traceInfo.style.display = 'none';
+                return;
+            }
+
+            // 更新Trace信息
+            document.getElementById('currentTraceId').textContent = traceId;
+            document.getElementById('logCount').textContent = logs.length;
+            if (startTime && endTime) {
+                document.getElementById('timeRange').textContent = `${startTime} ~ ${endTime}`;
+            } else {
+                document.getElementById('timeRange').textContent = '全部时间';
+            }
+            traceInfo.style.display = 'block';
+
+            // 显示日志列表
+            let logsHTML = '';
+            logs.forEach((log, index) => {
+                const logClass = index % 2 === 0 ? 'log-entry' : 'log-entry log-entry-alt';
+                const methodClass = getMethodClass(log.method);
+                const statusClass = getStatusClass(log.status_code);
+                
+                logsHTML += `
+                    <div class="${logClass}">
+                        <div class="log-header">
+                            <span class="log-timestamp">${log.timestamp || 'N/A'}</span>
+                            <span class="log-method ${methodClass}">${log.method || 'N/A'}</span>
+                            <span class="log-path">${log.path || 'N/A'}</span>
+                            <span class="log-status ${statusClass}">${log.status_code || 'N/A'}</span>
+                            <span class="log-type">${log.type || 'N/A'}</span>
+                        </div>
+                        <div class="log-message">${log.message || 'N/A'}</div>
+                        ${log.duration ? `<div class="log-duration">耗时: ${log.duration}ms</div>` : ''}
+                        ${log.operation ? `<div class="log-operation">操作: <span class="operation-tag">${log.operation}</span></div>` : ''}
+                        ${log.service ? `<div class="log-service">服务: <span class="service-tag">${log.service}</span></div>` : ''}
+                        ${log.details && Object.keys(log.details).length > 0 ? 
+                            `<div class="log-details">
+                                <details>
+                                    <summary>详细信息</summary>
+                                    <pre>${JSON.stringify(log.details, null, 2)}</pre>
+                                </details>
+                            </div>` : ''
+                        }
+                        ${log.raw ? 
+                            `<div class="log-raw">
+                                <details>
+                                    <summary>原始数据</summary>
+                                    <pre>${log.raw}</pre>
+                                </details>
+                            </div>` : ''
+                        }
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = logsHTML;
+        }
+
+        // 获取日志CSS类
+        function getLogClass(type) {
+            switch(type) {
+                case 'http': return 'http';
+                case 'mysql': return 'mysql';
+                case 'redis': return 'redis';
+                case 'system': return 'system';
+                default: return '';
+            }
+        }
+
+        // 获取类型CSS类
+        function getTypeClass(type) {
+            switch(type) {
+                case 'http': return 'http';
+                case 'mysql': return 'mysql';
+                case 'redis': return 'redis';
+                case 'system': return 'system';
+                default: return 'system';
+            }
+        }
+
+        // 获取方法CSS类
+        function getMethodClass(method) {
+            if (!method) return '';
+            method = method.toLowerCase();
+            if (method.includes('get')) return 'method-get';
+            if (method.includes('post')) return 'method-post';
+            if (method.includes('put')) return 'method-put';
+            if (method.includes('delete')) return 'method-delete';
+            if (method.includes('patch')) return 'method-patch';
+            if (method.includes('options')) return 'method-options';
+            if (method.includes('head')) return 'method-head';
+            if (method.includes('trace')) return 'method-trace';
+            if (method.includes('connect')) return 'method-connect';
+            return '';
+        }
+
+        // 获取状态CSS类
+        function getStatusClass(statusCode) {
+            if (!statusCode) return '';
+            const code = parseInt(statusCode, 10);
+            if (code >= 200 && code < 300) return 'status-success';
+            if (code >= 400 && code < 500) return 'status-client-error';
+            if (code >= 500 && code < 600) return 'status-server-error';
+            return '';
+        }
+
+        // 显示加载状态
+        function showLoading() {
+            document.getElementById('logsContainer').innerHTML = `
+                <div class="loading">
+                    <h3>⏳ 正在搜索日志...</h3>
+                    <p>请稍候，正在查询全链路日志信息</p>
+                </div>
+            `;
+        }
+
+        // 显示错误信息
+        function showError(message) {
+            document.getElementById('logsContainer').innerHTML = `
+                <div class="error">
+                    <h4>❌ 错误</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        // 清空搜索
+        function clearSearch() {
+            document.getElementById('traceId').value = '';
+            setDefaultTimeRange();
+            document.getElementById('logsContainer').innerHTML = `
+                <div class="empty-state">
+                    <h3>🚀 开始追踪</h3>
+                    <p>输入Trace-ID或生成测试请求来查看全链路日志</p>
+                    <p><small>提示：您可以在任何API请求的响应头中找到X-Trace-ID</small></p>
+                </div>
+            `;
+            document.getElementById('traceInfo').style.display = 'none';
+        }
+
+        // 生成测试请求
+        function generateTestRequest() {
+            const traceId = 'test_' + Date.now();
+            document.getElementById('traceId').value = traceId;
+            
+            // 发送测试请求
+            fetch('/api/v1/accounts', {
+                method: 'GET',
+                headers: {
+                    'X-Trace-ID': traceId,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                const responseTraceId = response.headers.get('X-Trace-ID');
+                if (responseTraceId) {
+                    document.getElementById('traceId').value = responseTraceId;
+                    showSuccess(`测试请求成功！Trace-ID: ${responseTraceId}`);
+                    // 自动搜索日志
+                    setTimeout(() => searchTraceLogs(), 1000);
+                } else {
+                    showError('测试请求成功，但未返回Trace-ID');
+                }
+            })
+            .catch(error => {
+                showError('测试请求失败: ' + error.message);
+            });
+        }
+
+        // 显示成功信息
+        function showSuccess(message) {
+            const container = document.getElementById('logsContainer');
+            container.innerHTML = `
+                <div class="success">
+                    <h4>✅ 成功</h4>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

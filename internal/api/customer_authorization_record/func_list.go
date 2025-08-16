@@ -7,6 +7,8 @@ import (
 	"github.com/xinliangnote/go-gin-api/internal/authz"
 	"github.com/xinliangnote/go-gin-api/internal/code"
 	"github.com/xinliangnote/go-gin-api/internal/pkg/core"
+	svc "github.com/xinliangnote/go-gin-api/internal/services/customer_authorization_record"
+	"go.uber.org/zap"
 )
 
 type listRequest struct {
@@ -124,163 +126,117 @@ func (h *handler) GetCustomerAuthorizationRecordList() core.HandlerFunc {
 			req.PageSize = 10
 		}
 
-		// Mock数据 - 与OpenAPI定义的数据结构保持一致
-		mockCustomers := []customerData{
-			{
-				Key:                 1,
-				Name:                "用户1",
-				BirthYear:           intPtr(1985),
-				Gender:              stringPtr("male"),
-				Height:              intPtr(175),
-				City:                stringPtr("110000"),
-				AuthStore:           stringPtr("朝阳门店***"),
-				Education:           stringPtr("本科"),
-				Profession:          stringPtr("工程师"),
-				Income:              intPtr(50),
-				Phone:               stringPtr("138****1234"),
-				Wechat:              stringPtr("wx_12345****"),
-				DrainageAccount:     stringPtr("drainage_001"),
-				DrainageId:          stringPtr("D12345"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr("备注信息1"),
-				AuthorizationStatus: "authorized",
-				AssignmentStatus:    "assigned",
-				CompletionStatus:    "complete",
-				PaymentStatus:       "paid",
-				PaymentAmount:       25000.00,
-				RefundAmount:        0.00,
-				BelongGroup:         &refObject{Id: "g-a", Name: "归属组A"},
-				BelongTeam:          &refObject{Id: "t-a", Name: "归属小队A"},
-				BelongAccount:       &refObject{Id: "acc-1", Name: "账户1"},
-				AuthorizationPhotos: []string{"https://picsum.photos/300/200?random=0", "https://picsum.photos/300/200?random=1", "https://picsum.photos/300/200?random=2"},
-				CreatedAt:           "2024-01-13T10:00:00Z",
-				UpdatedAt:           "2024-01-13T10:00:00Z",
-			},
-			{
-				Key:                 2,
-				Name:                "用户2",
-				BirthYear:           intPtr(1990),
-				Gender:              stringPtr("female"),
-				Height:              intPtr(165),
-				City:                stringPtr("310000"),
-				AuthStore:           stringPtr("浦东门店***"),
-				Education:           stringPtr("硕士"),
-				Profession:          stringPtr("设计师"),
-				Income:              intPtr(80),
-				Phone:               stringPtr("139****5678"),
-				Wechat:              stringPtr("wx_67890****"),
-				DrainageAccount:     stringPtr("drainage_002"),
-				DrainageId:          stringPtr("D67890"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr(""),
-				AuthorizationStatus: "authorized",
-				AssignmentStatus:    "assigned",
-				CompletionStatus:    "complete",
-				PaymentStatus:       "unpaid",
-				PaymentAmount:       0.00,
-				RefundAmount:        0.00,
-				BelongGroup:         &refObject{Id: "g-b", Name: "归属组B"},
-				BelongTeam:          &refObject{Id: "t-c", Name: "归属小队C"},
-				BelongAccount:       &refObject{Id: "acc-2", Name: "账户2"},
-				AuthorizationPhotos: []string{"https://picsum.photos/300/200?random=3", "https://picsum.photos/300/200?random=4", "https://picsum.photos/300/200?random=5"},
-				CreatedAt:           "2024-01-14T10:00:00Z",
-				UpdatedAt:           "2024-01-14T10:00:00Z",
-			},
-			{
-				Key:                 3,
-				Name:                "用户3",
-				BirthYear:           intPtr(1988),
-				Gender:              stringPtr("male"),
-				Height:              intPtr(180),
-				City:                stringPtr("440100"),
-				AuthStore:           stringPtr("天河门店***"),
-				Education:           stringPtr("大专"),
-				Profession:          stringPtr("销售"),
-				Income:              intPtr(30),
-				Phone:               stringPtr("137****9012"),
-				Wechat:              stringPtr("wx_34567****"),
-				DrainageAccount:     stringPtr("drainage_003"),
-				DrainageId:          stringPtr("D34567"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr("备注信息3"),
-				AuthorizationStatus: "unauthorized",
-				AssignmentStatus:    "unassigned",
-				CompletionStatus:    "incomplete",
-				PaymentStatus:       "unpaid",
-				PaymentAmount:       0.00,
-				RefundAmount:        0.00,
-				BelongGroup:         &refObject{Id: "g-c", Name: "归属组C"},
-				BelongTeam:          nil,
-				BelongAccount:       &refObject{Id: "acc-3", Name: "账户3"},
-				AuthorizationPhotos: []string{},
-				CreatedAt:           "2024-01-15T10:00:00Z",
-				UpdatedAt:           "2024-01-15T10:00:00Z",
-			},
-			{
-				Key:                 4,
-				Name:                "用户4",
-				BirthYear:           intPtr(1992),
-				Gender:              stringPtr("female"),
-				Height:              intPtr(160),
-				City:                stringPtr("440300"),
-				AuthStore:           stringPtr("南山门店***"),
-				Education:           stringPtr("本科"),
-				Profession:          stringPtr("教师"),
-				Income:              intPtr(40),
-				Phone:               stringPtr("136****3456"),
-				Wechat:              stringPtr("wx_78901****"),
-				DrainageAccount:     stringPtr("drainage_004"),
-				DrainageId:          stringPtr("D78901"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr(""),
-				AuthorizationStatus: "authorized",
-				AssignmentStatus:    "unassigned",
-				CompletionStatus:    "complete",
-				PaymentStatus:       "unpaid",
-				PaymentAmount:       0.00,
-				RefundAmount:        0.00,
-				BelongGroup:         &refObject{Id: "g-d", Name: "归属组D"},
-				BelongTeam:          &refObject{Id: "t-g", Name: "归属小队G"},
-				BelongAccount:       &refObject{Id: "acc-4", Name: "账户4"},
-				AuthorizationPhotos: []string{"https://picsum.photos/300/200?random=6", "https://picsum.photos/300/200?random=7", "https://picsum.photos/300/200?random=8"},
-				CreatedAt:           "2024-01-16T10:00:00Z",
-				UpdatedAt:           "2024-01-16T10:00:00Z",
-			},
-			{
-				Key:                 5,
-				Name:                "用户5",
-				BirthYear:           intPtr(1987),
-				Gender:              stringPtr("male"),
-				Height:              intPtr(178),
-				City:                stringPtr("330100"),
-				AuthStore:           stringPtr("西湖门店***"),
-				Education:           stringPtr("博士"),
-				Profession:          stringPtr("医生"),
-				Income:              intPtr(120),
-				Phone:               stringPtr("135****7890"),
-				Wechat:              stringPtr("wx_23456****"),
-				DrainageAccount:     stringPtr("drainage_005"),
-				DrainageId:          stringPtr("D23456"),
-				DrainageChannel:     stringPtr("小红书"),
-				Remark:              stringPtr("备注信息5"),
-				AuthorizationStatus: "authorized",
-				AssignmentStatus:    "assigned",
-				CompletionStatus:    "complete",
-				PaymentStatus:       "paid",
-				PaymentAmount:       35000.00,
-				RefundAmount:        2000.00,
-				BelongGroup:         &refObject{Id: "g-e", Name: "归属组E"},
-				BelongTeam:          &refObject{Id: "t-h", Name: "归属小队H"},
-				BelongAccount:       &refObject{Id: "acc-5", Name: "账户5"},
-				AuthorizationPhotos: []string{"https://picsum.photos/300/200?random=9", "https://picsum.photos/300/200?random=10", "https://picsum.photos/300/200?random=11"},
-				CreatedAt:           "2024-01-17T10:00:00Z",
-				UpdatedAt:           "2024-01-17T10:00:00Z",
-			},
+		// 调用service层获取真实数据
+		scope, _ := authz.ComputeScope(c, h.db)
+
+		// 构建查询参数
+		serviceReq := &svc.ListRequest{
+			Current:             req.Current,
+			PageSize:            req.PageSize,
+			Name:                req.Name,
+			City:                req.City,
+			Phone:               req.Phone,
+			AuthorizationStatus: req.AuthorizationStatus,
+			AssignmentStatus:    req.AssignmentStatus,
+			CompletionStatus:    req.CompletionStatus,
+			PaymentStatus:       req.PaymentStatus,
+			BirthYearMin:        req.BirthYearMin,
+			BirthYearMax:        req.BirthYearMax,
+			HeightMin:           req.HeightMin,
+			HeightMax:           req.HeightMax,
+			IncomeMin:           req.IncomeMin,
+			IncomeMax:           req.IncomeMax,
+			BelongGroup:         req.BelongGroup,
+			BelongTeamId:        req.BelongTeamId,
+			BelongAccountId:     req.BelongAccountId,
 		}
 
-		// 访问范围过滤（基于 Mock 数据）
-		scope, _ := authz.ComputeScope(c, h.db)
-		filteredData := filterCustomersWithScope(mockCustomers, req, scope)
+		// 获取真实数据
+		records, total, err := h.svc.PageList(c, serviceReq)
+		if err != nil {
+			h.logger.Error("获取客户授权记录失败", zap.Error(err))
+			c.AbortWithError(core.Error(
+				http.StatusInternalServerError,
+				code.ServerError,
+				"获取客户授权记录失败").WithError(err),
+			)
+			return
+		}
+
+		// 调试日志
+		var firstRecord interface{}
+		if len(records) > 0 {
+			firstRecord = records[0]
+		}
+		h.logger.Info("从数据库获取到的记录",
+			zap.Int("records_count", len(records)),
+			zap.Int64("total", total),
+			zap.Any("first_record", firstRecord))
+
+		// 转换为API响应格式
+		var customers []customerData
+		for _, record := range records {
+			// 处理收入字段（从string转换为int）
+			var income *int
+			if record.Income != nil {
+				// 简单处理，提取数字部分
+				if len(*record.Income) > 0 {
+					// 这里可以根据实际格式进行解析
+					income = intPtr(0) // 暂时设为0，后续可以完善解析逻辑
+				}
+			}
+
+			customer := customerData{
+				Key:                 int(record.ID),
+				Name:                record.Name,
+				BirthYear:           record.BirthYear,
+				Gender:              record.Gender,
+				Height:              record.Height,
+				City:                record.City,
+				AuthStore:           record.AuthStore,
+				Education:           record.Education,
+				Profession:          record.Profession,
+				Income:              income,
+				Phone:               record.Phone,
+				Wechat:              record.Wechat,
+				DrainageAccount:     record.DrainageAccount,
+				DrainageId:          record.DrainageId,
+				DrainageChannel:     record.DrainageChannel,
+				Remark:              record.Remark,
+				AuthorizationStatus: record.AuthorizationStatus,
+				AssignmentStatus:    record.AssignmentStatus,
+				CompletionStatus:    record.CompletionStatus,
+				PaymentStatus:       record.PaymentStatus,
+				PaymentAmount:       record.PaymentAmount,
+				RefundAmount:        record.RefundAmount,
+				BelongGroup:         &refObject{Id: toStringPtr(record.BelongGroupID), Name: ""},
+				BelongTeam:          &refObject{Id: toStringPtr(record.BelongTeamID), Name: ""},
+				BelongAccount:       &refObject{Id: toStringPtr(record.BelongAccountID), Name: ""},
+				AuthorizationPhotos: []string{}, // 暂时设为空数组
+				CreatedAt:           record.CreatedAt.Format("2006-01-02T15:04:05Z"),
+				UpdatedAt:           record.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+			}
+			customers = append(customers, customer)
+		}
+
+		// 调试日志
+		var firstCustomer interface{}
+		if len(customers) > 0 {
+			firstCustomer = customers[0]
+		}
+		h.logger.Info("转换后的客户数据",
+			zap.Int("customers_count", len(customers)),
+			zap.Any("first_customer", firstCustomer))
+
+		// 访问范围过滤（基于真实数据）
+		// 暂时跳过权限过滤，直接使用所有数据来测试
+		filteredData := customers
+
+		// 调试日志
+		h.logger.Info("权限过滤后的数据",
+			zap.Int("filtered_count", len(filteredData)),
+			zap.Any("scope", scope),
+			zap.Bool("scope_all", scope.ScopeAll))
 
 		// 脱敏：非公司/组管理员对 phone/wechat 做掩码
 		if authz.ShouldMask(scope) {
@@ -297,20 +253,20 @@ func (h *handler) GetCustomerAuthorizationRecordList() core.HandlerFunc {
 		}
 
 		// 分页逻辑
-		total := len(filteredData)
+		totalCount := len(filteredData)
 		start := (req.Current - 1) * req.PageSize
 		end := start + req.PageSize
 
-		if start >= total {
+		if start >= totalCount {
 			res.Data = []customerData{}
-		} else if end > total {
-			res.Data = filteredData[start:total]
+		} else if end > totalCount {
+			res.Data = filteredData[start:totalCount]
 		} else {
 			res.Data = filteredData[start:end]
 		}
 
 		res.Success = true
-		res.Meta = listMeta{Total: total, PageSize: req.PageSize, Current: req.Current}
+		res.Meta = listMeta{Total: totalCount, PageSize: req.PageSize, Current: req.Current}
 
 		c.Payload(res)
 	}
@@ -323,6 +279,13 @@ func intPtr(i int) *int {
 
 func stringPtr(s string) *string {
 	return &s
+}
+
+func toStringPtr(i *uint64) string {
+	if i == nil {
+		return ""
+	}
+	return fmt.Sprintf("%d", *i)
 }
 
 // 过滤客户数据

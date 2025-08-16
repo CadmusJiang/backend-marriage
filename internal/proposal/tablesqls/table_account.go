@@ -54,18 +54,19 @@ func CreateAccountTableSql() (sql string) {
 func CreateAccountTableDataSql() (sql string) {
 	// 预置账户数据，确保与 org 和 account_org_relation 的示例数据相匹配
 	// 密码: 123456 (bcrypt哈希)
-	sql = "INSERT INTO `account` (`username`, `name`, `password`, `phone`, `role_type`, `status`, `belong_group_id`, `belong_team_id`, `last_login_at`, `created_user`, `updated_user`) VALUES"
-	sql += "('admin', '系统管理员', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138001', 'company_manager', 'enabled', 1, 4, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee001', '张三', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138002', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee002', '李四', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138003', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee003', '王五', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138004', 'employee', 'enabled', 3, 7, NULL, '系统管理员', '系统管理员'),"
-	sql += "('group_manager001', '陈静', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138005', 'group_manager', 'enabled', 2, 0, NULL, '系统管理员', '系统管理员'),"
-	sql += "('team_manager001', '赵六', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138006', 'team_manager', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee004', '孙七', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138007', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee005', '周八', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138008', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee006', '吴九', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138009', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee007', '郑十', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138010', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
-	sql += "('employee008', '王十一', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138011', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员');"
+	// 显式指定ID从1开始，确保ID连续性
+	sql = "INSERT INTO `account` (`id`, `username`, `name`, `password`, `phone`, `role_type`, `status`, `belong_group_id`, `belong_team_id`, `last_login_at`, `created_user`, `updated_user`) VALUES"
+	sql += "(1, 'admin', '系统管理员', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138001', 'company_manager', 'enabled', 1, 4, NULL, '系统管理员', '系统管理员'),"
+	sql += "(2, 'employee001', '张三', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138002', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
+	sql += "(3, 'employee002', '李四', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138003', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
+	sql += "(4, 'employee003', '王五', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138004', 'employee', 'enabled', 3, 7, NULL, '系统管理员', '系统管理员'),"
+	sql += "(5, 'group_manager001', '陈静', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138005', 'group_manager', 'enabled', 2, 0, NULL, '系统管理员', '系统管理员'),"
+	sql += "(6, 'team_manager001', '赵六', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138006', 'team_manager', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
+	sql += "(7, 'employee004', '孙七', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138007', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
+	sql += "(8, 'employee005', '周八', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138008', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
+	sql += "(9, 'employee006', '吴九', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138009', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员'),"
+	sql += "(10, 'employee007', '郑十', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138010', 'employee', 'enabled', 3, 6, NULL, '系统管理员', '系统管理员'),"
+	sql += "(11, 'employee008', '王十一', '$2a$10$YVK93ajcju7xXxBkmkBOwOiD24IsZrWSxXFKbmvRToRP/T9g2TPMa', '13800138011', 'employee', 'enabled', 2, 5, NULL, '系统管理员', '系统管理员');"
 
 	return
 }

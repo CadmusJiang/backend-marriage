@@ -102,7 +102,7 @@ func (h *handler) GetAccountDetail() core.HandlerFunc {
 			Name:      accountInfo.Name,
 			Phone:     accountInfo.Phone,
 			RoleType:  accountInfo.RoleType,
-			Status:    fmt.Sprintf("%d", accountInfo.Status),
+			Status:    accountInfo.Status, // 直接赋值，不需要格式化
 			CreatedAt: accountInfo.CreatedAt.Unix(),
 			UpdatedAt: accountInfo.UpdatedAt.Unix(),
 			LastLoginAt: func() int64 {
@@ -191,7 +191,7 @@ func (h *handler) Me() core.HandlerFunc {
 			Name:      accountInfo.Name,
 			Phone:     accountInfo.Phone,
 			RoleType:  accountInfo.RoleType,
-			Status:    fmt.Sprintf("%d", accountInfo.Status),
+			Status:    accountInfo.Status, // 直接赋值，不需要格式化
 			CreatedAt: accountInfo.CreatedAt.Unix(),
 			UpdatedAt: accountInfo.UpdatedAt.Unix(),
 			LastLoginAt: func() int64 {
